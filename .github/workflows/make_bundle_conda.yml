@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          patch: napari-packaging
+          path: napari-packaging
 
       - name: Checkout napari source
         uses: actions/checkout@v2
@@ -186,7 +186,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          patch: napari-packaging
+          path: napari-packaging
 
       - name: Checkout napari/napari
         uses: actions/checkout@v2
