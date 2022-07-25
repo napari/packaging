@@ -252,7 +252,6 @@ jobs:
 
       - name: Download local build artifacts (napari)
         uses: actions/download-artifact@v3
-        working-directory: napari-packaging
         with:
           name: ${{ needs.conda-build.outputs.artifact-id }}
           path: ${{ env.CONDA_BLD_PATH }}/noarch
@@ -361,9 +360,8 @@ jobs:
         # We only sign pushes to main, nightlies, RCs and final releases
         if: runner.os == 'macOS' && (github.event_name == 'schedule' || github.event_name == 'push')
         uses: devbotsxyz/xcode-notarize@v1
-        working-directory: napari-packaging
         with:
-          product-path: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          product-path: ${{ github.workspace }}/napari-packaging/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           appstore-connect-username: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
           appstore-connect-password: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
           primary-bundle-id: org.napari.pkg
@@ -373,18 +371,16 @@ jobs:
         # We only sign pushes to main, nightlies, RCs and final releases
         if: runner.os == 'macOS' && (github.event_name == 'schedule' || github.event_name == 'push')
         uses: devbotsxyz/xcode-staple@v1
-        working-directory: napari-packaging
         with:
-          product-path: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          product-path: ${{ github.workspace }}/napari-packaging/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         # CI artifact uploads only for PRs and pushes to main
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == 'main')
-        working-directory: napari-packaging
         with:
           name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
-          path: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          path: ${{ github.workspace }}/napari-packaging/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
 
       - name: Get Release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -394,24 +390,22 @@ jobs:
       - name: Upload Release Asset
         if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-release-asset@v1
-        working-directory: napari-packaging
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          asset_path: ${{ github.workspace }}/napari-packaging/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           asset_name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           asset_content_type: application/octet-stream
 
       - name: Upload Nightly Build Asset
         if: ${{ github.event_name == 'schedule' }}
         uses: WebFreak001/deploy-nightly@v1.1.0
-        working-directory: napari-packaging
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # nightly build release from https://api.github.com/repos/napari/napari/releases
           upload_url: https://uploads.github.com/repos/napari/napari/releases/34273071/assets{?name,label}
           release_id: 34273071
-          asset_path: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          asset_path: ${{ github.workspace }}/napari-packaging/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           asset_name: napari-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           asset_content_type: application/octet-stream
           max_releases: 1
