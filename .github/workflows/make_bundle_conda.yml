@@ -212,7 +212,7 @@ jobs:
             - conda-build
             - ruamel.yaml
             - conda-standalone
-            - conda >=4.13
+            - conda-forge::conda
             - conda-libmamba-solver
           EOF
       - name: install micromamba

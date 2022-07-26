@@ -194,8 +194,9 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         napari = f"napari={version}=*pyqt*"
     else:
         napari = f"napari={version}=*pyside*"
+    python = f"python={sys.version_info.major}.{sys.version_info.minor}.*=*_cpython"
     base_specs = [
-        f"python={sys.version_info.major}.{sys.version_info.minor}.*",
+        python,
         "conda",
         "mamba",
         "pip",
@@ -203,7 +204,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     napari_specs = [
         napari,
         f"napari-menu={version}",
-        f"python={sys.version_info.major}.{sys.version_info.minor}.*=*_cpython",
+        python,
         "conda",
         "mamba",
         "pip",
