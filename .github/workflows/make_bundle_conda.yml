@@ -178,7 +178,7 @@ jobs:
       DISPLAY: ":99.0"
       CONDA_BLD_PATH: ${{ github.workspace }}/conda-bld
       CONSTRUCTOR_TARGET_PLATFORM: ${{ matrix.target-platform }}
-      CONDA_EXPERIMENTAL_SOLVER: libmamba
+      # CONDA_EXPERIMENTAL_SOLVER: libmamba
 
     outputs:
       licenses-artifact: ${{ steps.licenses.outputs.licenses_artifact }}
@@ -212,8 +212,7 @@ jobs:
             - conda-build
             - ruamel.yaml
             - conda-standalone
-            - conda-forge::conda
-            - conda-libmamba-solver
+            - conda
           EOF
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
