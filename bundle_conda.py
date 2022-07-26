@@ -39,10 +39,10 @@ CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD:
     it might be needed by constructor.
 """
 
+import importlib.metadata
 import json
 import os
 import platform
-import re
 import subprocess
 import sys
 import zipfile
@@ -51,43 +51,34 @@ from distutils.spawn import find_executable
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
+from functools import lru_cache
 
+import requests
 from ruamel import yaml
+
+import napari
+
 
 APP = os.environ.get("CONSTRUCTOR_APP_NAME", "napari")
 # bump this when something in the installer infrastructure changes
 # note that this will affect the default installation path across platforms!
 INSTALLER_VERSION = os.environ.get("CONSTRUCTOR_INSTALLER_VERSION", "0.1")
 HERE = os.path.abspath(os.path.dirname(__file__))
-WINDOWS = os.name == 'nt'
-MACOS = sys.platform == 'darwin'
+WINDOWS = os.name == "nt"
+MACOS = sys.platform == "darwin"
 LINUX = sys.platform.startswith("linux")
 if os.environ.get("CONSTRUCTOR_TARGET_PLATFORM") == "osx-arm64":
     ARCH = "arm64"
 else:
     ARCH = (platform.machine() or "generic").lower().replace("amd64", "x86_64")
 if WINDOWS:
-    EXT, OS = 'exe', 'Windows'
+    EXT, OS = "exe", "Windows"
 elif LINUX:
-    EXT, OS = 'sh', 'Linux'
+    EXT, OS = "sh", "Linux"
 elif MACOS:
-    EXT, OS = 'pkg', 'macOS'
+    EXT, OS = "pkg", "macOS"
 else:
     raise RuntimeError(f"Unrecognized OS: {sys.platform}")
-
-
-def _version(location=HERE):
-    with open(os.path.join(HERE, "napari", "_version.py")) as f:
-        match = re.search(r'version\s?=\s?\'([^\']+)', f.read())
-        if match:
-            return match.groups()[0].split('+')[0]
-
-
-OUTPUT_FILENAME = f"{APP}-{_version()}-{OS}-{ARCH}.{EXT}"
-INSTALLER_DEFAULT_PATH_STEM = os.environ.get(
-    "CONSTRUCTOR_INSTALLER_DEFAULT_PATH_STEM", f"{APP}-{_version()}"
-)
-clean_these_files = []
 
 
 def _use_local():
@@ -98,14 +89,30 @@ def _use_local():
     return os.environ.get("CONSTRUCTOR_USE_LOCAL")
 
 
-def _generate_background_images(installer_type, outpath="resources"):
+@lru_cache
+def _version():
+    if _use_local():
+        return importlib.metadata.version("napari")
+    # else, get latest published on conda-forge
+    r = requests.get(f"https://api.anaconda.org/package/conda-forge/napari")
+    r.raise_for_status()
+    return r.json()["versions"][-1]
+
+
+OUTPUT_FILENAME = f"{APP}-{_version()}-{OS}-{ARCH}.{EXT}"
+INSTALLER_DEFAULT_PATH_STEM = os.environ.get(
+    "CONSTRUCTOR_INSTALLER_DEFAULT_PATH_STEM", f"{APP}-{_version()}"
+)
+clean_these_files = []
+
+
+def _generate_background_images(installer_type, outpath="./"):
+    """Requires pillow"""
     if installer_type == "sh":
         # shell installers are text-based, no graphics
         return
 
     from PIL import Image
-
-    import napari
 
     logo_path = Path(napari.__file__).parent / "resources" / "logo.png"
     logo = Image.open(logo_path, "r")
@@ -146,6 +153,7 @@ def _get_condarc():
         repodata_fns:  #!final
           - repodata.json
         auto_update_conda: false  #!final
+        notify_outdated_conda: false  #!final
         channel_priority: strict  #!final
         env_prompt: '{prompt}'  #! final
         """
@@ -166,12 +174,10 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     ----------
     version: str
         Version of `napari` to be built. Defaults to the
-        one detected by `setuptools-scm` and written to
-        `napari/_version.py`. Run `pip install -e .` to
-        generate that file if it can't be found.
+        one detected by `importlib.metadata` (napari must be installed).
     extra_specs: list of str
         Additional packages to be included in the installer.
-        A list of conda spec strings (`python`, `python=3`, etc)
+        A list of conda spec strings (`numpy`, `python=3`, etc)
         is expected.
     """
     constructor = find_executable("constructor")
@@ -256,18 +262,14 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         ).read_text()
         welcome_file = Path(napari_repo) / "resources" / "osx_pkg_welcome.rtf"
         clean_these_files.append(welcome_file)
-        welcome_file.write_text(
-            welcome_text_tmpl.replace("__VERSION__", version)
-        )
+        welcome_file.write_text(welcome_text_tmpl.replace("__VERSION__", version))
         definitions["welcome_file"] = str(welcome_file)
         definitions["conclusion_text"] = ""
         definitions["readme_text"] = ""
         signing_identity = os.environ.get("CONSTRUCTOR_SIGNING_IDENTITY")
         if signing_identity:
             definitions["signing_identity_name"] = signing_identity
-        notarization_identity = os.environ.get(
-            "CONSTRUCTOR_NOTARIZATION_IDENTITY"
-        )
+        notarization_identity = os.environ.get("CONSTRUCTOR_NOTARIZATION_IDENTITY")
         if notarization_identity:
             definitions["notarization_identity_name"] = notarization_identity
 
@@ -286,13 +288,13 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
                 ),
                 "register_python_default": False,
                 "default_prefix": os.path.join(
-                    '%LOCALAPPDATA%', INSTALLER_DEFAULT_PATH_STEM
+                    "%LOCALAPPDATA%", INSTALLER_DEFAULT_PATH_STEM
                 ),
                 "default_prefix_domain_user": os.path.join(
-                    '%LOCALAPPDATA%', INSTALLER_DEFAULT_PATH_STEM
+                    "%LOCALAPPDATA%", INSTALLER_DEFAULT_PATH_STEM
                 ),
                 "default_prefix_all_users": os.path.join(
-                    '%ALLUSERSPROFILE%', INSTALLER_DEFAULT_PATH_STEM
+                    "%ALLUSERSPROFILE%", INSTALLER_DEFAULT_PATH_STEM
                 ),
                 "check_path_length": False,
                 "installer_type": "exe",
@@ -304,7 +306,8 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
 
     if definitions.get("welcome_image") or definitions.get("header_image"):
         _generate_background_images(
-            definitions.get("installer_type", "all"), outpath="resources"
+            definitions.get("installer_type", "all"),
+            outpath=os.path.join(napari_repo, "resources"),
         )
 
     clean_these_files.append("construct.yaml")
@@ -315,9 +318,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     # (I think it contains an ending newline or something like that, copypaste artifact?)
     pfx_password = os.environ.get("CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD")
     if pfx_password:
-        os.environ[
-            "CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD"
-        ] = pfx_password.strip()
+        os.environ["CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD"] = pfx_password.strip()
 
     with open("construct.yaml", "w") as fin:
         yaml.dump(definitions, fin, default_flow_style=False)
@@ -348,17 +349,13 @@ def licenses():
         raise
 
     zipname = f"licenses.{OS}-{ARCH}.zip"
-    output_zip = zipfile.ZipFile(
-        zipname, mode="w", compression=zipfile.ZIP_DEFLATED
-    )
+    output_zip = zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED)
     output_zip.write("info.json")
     for package_id, license_info in info["_licenses"].items():
         package_name = package_id.split("::", 1)[1]
         for license_type, license_files in license_info.items():
             for i, license_file in enumerate(license_files, 1):
-                arcname = (
-                    f"{package_name}.{license_type.replace(' ', '_')}.{i}.txt"
-                )
+                arcname = f"{package_name}.{license_type.replace(' ', '_')}.{i}.txt"
                 output_zip.write(license_file, arcname=arcname)
     output_zip.close()
     return zipname
@@ -420,11 +417,7 @@ def cli(argv=None):
         action="store_true",
         help="Generate background images from the logo (test only)",
     )
-    p.add_argument(
-        "--location",
-        default=HERE,
-        help="Path to napari source repository"
-    )
+    p.add_argument("--location", default=HERE, help="Path to napari source repository")
     return p.parse_args()
 
 
@@ -452,4 +445,4 @@ if __name__ == "__main__":
         _generate_background_images()
         sys.exit()
 
-    print('created', main(extra_specs=args.extra_specs, napari_repo=args.location))
+    print("created", main(extra_specs=args.extra_specs, napari_repo=args.location))
