@@ -224,7 +224,7 @@ jobs:
         shell: bash -l {0}
         working-directory: napari-packaging
         run: |
-          VER=$(python bundle_conda.py --version)
+          VER=$(python bundle_conda.py --version --location=../napari-source)
           echo "version=${VER}" >> $GITHUB_ENV
           echo "Napari version: ${VER}"
           INST_VER=$(python bundle_conda.py --installer-version)
@@ -333,13 +333,13 @@ jobs:
             libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
             libxcb-xinerama0 libxcb-xfixes0 libxcb-shape0 libqt5gui5
           echo "::endgroup::"
-          xvfb-run --auto-servernum python bundle_conda.py
+          xvfb-run --auto-servernum python bundle_conda.py --location=../napari-source
 
       - name: Make Bundle (MacOS/Windows)
         shell: bash -l {0}
         if: runner.os != 'Linux'
         working-directory: napari-packaging
-        run: python bundle_conda.py
+        run: python bundle_conda.py --location=../napari-source
 
       - name: Collect licenses
         id: licenses

@@ -76,7 +76,7 @@ else:
     raise RuntimeError(f"Unrecognized OS: {sys.platform}")
 
 
-def _version():
+def _version(location=HERE):
     with open(os.path.join(HERE, "napari", "_version.py")) as f:
         match = re.search(r'version\s?=\s?\'([^\']+)', f.read())
         if match:
@@ -157,7 +157,7 @@ def _get_condarc():
     return f.name
 
 
-def _constructor(version=_version(), extra_specs=None):
+def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     """
     Create a temporary `construct.yaml` input file and
     run `constructor`.
@@ -219,7 +219,7 @@ def _constructor(version=_version(), extra_specs=None):
         "conda_default_channels": ["conda-forge"],
         "installer_filename": OUTPUT_FILENAME,
         "initialize_by_default": False,
-        "license_file": os.path.join(HERE, "resources", "bundle_license.rtf"),
+        "license_file": os.path.join(napari_repo, "resources", "bundle_license.rtf"),
         "specs": base_specs,
         "extra_envs": {f"napari-{version}": {"specs": napari_specs}},
         "menu_packages": [
@@ -238,7 +238,7 @@ def _constructor(version=_version(), extra_specs=None):
             "$HOME", ".local", INSTALLER_DEFAULT_PATH_STEM
         )
         definitions["license_file"] = os.path.join(
-            HERE, "resources", "bundle_license.txt"
+            napari_repo, "resources", "bundle_license.txt"
         )
         definitions["installer_type"] = "sh"
 
@@ -249,12 +249,12 @@ def _constructor(version=_version(), extra_specs=None):
         definitions["default_location_pkg"] = "Library"
         definitions["installer_type"] = "pkg"
         definitions["welcome_image"] = os.path.join(
-            HERE, "resources", "napari_1227x600.png"
+            napari_repo, "resources", "napari_1227x600.png"
         )
         welcome_text_tmpl = (
-            Path(HERE) / "resources" / "osx_pkg_welcome.rtf.tmpl"
+            Path(napari_repo) / "resources" / "osx_pkg_welcome.rtf.tmpl"
         ).read_text()
-        welcome_file = Path(HERE) / "resources" / "osx_pkg_welcome.rtf"
+        welcome_file = Path(napari_repo) / "resources" / "osx_pkg_welcome.rtf"
         clean_these_files.append(welcome_file)
         welcome_file.write_text(
             welcome_text_tmpl.replace("__VERSION__", version)
@@ -276,13 +276,13 @@ def _constructor(version=_version(), extra_specs=None):
         definitions.update(
             {
                 "welcome_image": os.path.join(
-                    HERE, "resources", "napari_164x314.png"
+                    napari_repo, "resources", "napari_164x314.png"
                 ),
                 "header_image": os.path.join(
-                    HERE, "resources", "napari_150x57.png"
+                    napari_repo, "resources", "napari_150x57.png"
                 ),
                 "icon_image": os.path.join(
-                    HERE, "napari", "resources", "icon.ico"
+                    napari_repo, "napari", "resources", "icon.ico"
                 ),
                 "register_python_default": False,
                 "default_prefix": os.path.join(
@@ -364,9 +364,9 @@ def licenses():
     return zipname
 
 
-def main(extra_specs=None):
+def main(extra_specs=None, napari_repo=HERE):
     try:
-        _constructor(extra_specs=extra_specs)
+        _constructor(extra_specs=extra_specs, napari_repo=napari_repo)
     finally:
         for path in clean_these_files:
             try:
@@ -420,6 +420,11 @@ def cli(argv=None):
         action="store_true",
         help="Generate background images from the logo (test only)",
     )
+    p.add_argument(
+        "--location",
+        default=HERE,
+        help="Path to napari source repository"
+    )
     return p.parse_args()
 
 
@@ -447,4 +452,4 @@ if __name__ == "__main__":
         _generate_background_images()
         sys.exit()
 
-    print('created', main(extra_specs=args.extra_specs))
+    print('created', main(extra_specs=args.extra_specs, napari_repo=args.location))
