@@ -9,7 +9,7 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'docs/**'
+      - "docs/**"
   schedule:
     - cron: "0 0 * * *"
   # Allows you to run this workflow manually from the Actions tab
@@ -178,6 +178,8 @@ jobs:
       DISPLAY: ":99.0"
       CONDA_BLD_PATH: ${{ github.workspace }}/conda-bld
       CONSTRUCTOR_TARGET_PLATFORM: ${{ matrix.target-platform }}
+      CONDA_EXPERIMENTAL_SOLVER: libmamba
+
     outputs:
       licenses-artifact: ${{ steps.licenses.outputs.licenses_artifact }}
 
@@ -210,9 +212,16 @@ jobs:
             - conda-build
             - ruamel.yaml
             - conda-standalone
+            - conda >=4.13
+            - conda-libmamba-solver
           EOF
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
+
+      - name: Conda info
+        shell: bash -el {0}
+        run: |
+          conda info -a
 
       - name: set up build dependencies
         shell: bash -l {0}
@@ -413,6 +422,8 @@ jobs:
       - name: Test installation (Linux)
         if: runner.os == 'Linux'
         working-directory: napari-packaging
+        env:
+          CONDA_EXPERIMENTAL_SOLVER: classic
         run: |
           bash napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} -bfp "${{ runner.temp }}/napari-${{ env.version }}"
           . "${{ runner.temp }}/napari-${{ env.version }}/etc/profile.d/conda.sh"
@@ -424,6 +435,8 @@ jobs:
       - name: Test installation (macOS)
         if: runner.os == 'macOS' && matrix.target-platform == 'osx-64'
         working-directory: napari-packaging
+        env:
+          CONDA_EXPERIMENTAL_SOLVER: classic
         run: |
           set -x
           installer -pkg napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} -target CurrentUserHomeDirectory -dumplog
@@ -437,6 +450,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd /C call {0}
         working-directory: napari-packaging
+        env:
+          CONDA_EXPERIMENTAL_SOLVER: classic
         run: |
           cmd.exe /c start /wait napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} /S /D=${{ runner.temp }}\napari-${{ env.version }}
           CALL ${{ runner.temp }}\napari-${{ env.version }}\Scripts\activate ${{ runner.temp }}\napari-${{ env.version }}\envs\napari-${{ env.version }}
