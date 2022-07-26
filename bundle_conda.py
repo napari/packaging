@@ -203,7 +203,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     napari_specs = [
         napari,
         f"napari-menu={version}",
-        f"python={sys.version_info.major}.{sys.version_info.minor}.*",
+        f"python={sys.version_info.major}.{sys.version_info.minor}.*=*_cpython",
         "conda",
         "mamba",
         "pip",
