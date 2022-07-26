@@ -106,7 +106,7 @@ INSTALLER_DEFAULT_PATH_STEM = os.environ.get(
 clean_these_files = []
 
 
-def _generate_background_images(installer_type, outpath="./"):
+def _generate_background_images(installer_type, outpath="./", napari_repo=HERE):
     """Requires pillow"""
     if installer_type == "sh":
         # shell installers are text-based, no graphics
@@ -188,6 +188,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         extra_specs = []
 
     # TODO: Temporary while pyside2 is not yet published for arm64
+    resources = os.path.join(napari_repo, "resources")
     target_platform = os.environ.get("CONSTRUCTOR_TARGET_PLATFORM")
     ARM64 = target_platform == "osx-arm64"
     if ARM64:
@@ -222,14 +223,14 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         "conda_default_channels": ["conda-forge"],
         "installer_filename": OUTPUT_FILENAME,
         "initialize_by_default": False,
-        "license_file": os.path.join(napari_repo, "resources", "bundle_license.rtf"),
+        "license_file": os.path.join(resources, "bundle_license.rtf"),
         "specs": base_specs,
         "extra_envs": {f"napari-{version}": {"specs": napari_specs}},
         "menu_packages": [
             "napari-menu",
         ],
         "extra_files": {
-            "resources/bundle_readme.md": "README.txt",
+            os.path.join(resources, "bundle_readme.md"): "README.txt",
             empty_file.name: ".napari_is_bundled_constructor",
             condarc: ".condarc",
         },
@@ -240,9 +241,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         definitions["default_prefix"] = os.path.join(
             "$HOME", ".local", INSTALLER_DEFAULT_PATH_STEM
         )
-        definitions["license_file"] = os.path.join(
-            napari_repo, "resources", "bundle_license.txt"
-        )
+        definitions["license_file"] = os.path.join(resources, "bundle_license.txt")
         definitions["installer_type"] = "sh"
 
     if MACOS:
@@ -251,13 +250,9 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         definitions["pkg_name"] = INSTALLER_DEFAULT_PATH_STEM
         definitions["default_location_pkg"] = "Library"
         definitions["installer_type"] = "pkg"
-        definitions["welcome_image"] = os.path.join(
-            napari_repo, "resources", "napari_1227x600.png"
-        )
-        welcome_text_tmpl = (
-            Path(napari_repo) / "resources" / "osx_pkg_welcome.rtf.tmpl"
-        ).read_text()
-        welcome_file = Path(napari_repo) / "resources" / "osx_pkg_welcome.rtf"
+        definitions["welcome_image"] = os.path.join(resources, "napari_1227x600.png")
+        welcome_text_tmpl = (Path(resources) / "osx_pkg_welcome.rtf.tmpl").read_text()
+        welcome_file = Path(resources) / "osx_pkg_welcome.rtf"
         clean_these_files.append(welcome_file)
         welcome_file.write_text(welcome_text_tmpl.replace("__VERSION__", version))
         definitions["welcome_file"] = str(welcome_file)
@@ -274,12 +269,8 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         definitions["conda_default_channels"].append("defaults")
         definitions.update(
             {
-                "welcome_image": os.path.join(
-                    napari_repo, "resources", "napari_164x314.png"
-                ),
-                "header_image": os.path.join(
-                    napari_repo, "resources", "napari_150x57.png"
-                ),
+                "welcome_image": os.path.join(resources, "napari_164x314.png"),
+                "header_image": os.path.join(resources, "napari_150x57.png"),
                 "icon_image": os.path.join(
                     napari_repo, "napari", "resources", "icon.ico"
                 ),
@@ -304,7 +295,8 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     if definitions.get("welcome_image") or definitions.get("header_image"):
         _generate_background_images(
             definitions.get("installer_type", "all"),
-            outpath=os.path.join(napari_repo, "resources"),
+            outpath=resources,
+            napari_repo=napari_repo,
         )
 
     clean_these_files.append("construct.yaml")
@@ -439,7 +431,7 @@ if __name__ == "__main__":
         print(licenses())
         sys.exit()
     if args.images:
-        _generate_background_images()
+        _generate_background_images(napari_repo=args.location)
         sys.exit()
 
     print("created", main(extra_specs=args.extra_specs, napari_repo=args.location))
