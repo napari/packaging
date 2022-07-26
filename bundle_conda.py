@@ -210,11 +210,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         "pip",
     ] + extra_specs
 
-    channels = (
-        ["napari/label/nightly"]
-        + (["andfoy"] if ARM64 else [])  # TODO: temporary
-        + ["napari/label/bundle_tools", "conda-forge"]
-    )
+    channels = ["napari/label/bundle_tools", "conda-forge"]
     empty_file = NamedTemporaryFile(delete=False)
     condarc = _get_condarc()
     definitions = {
