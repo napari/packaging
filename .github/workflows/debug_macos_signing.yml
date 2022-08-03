@@ -102,7 +102,11 @@ jobs:
       - name: Sign
         shell: bash -el {0}
         run: |
-          which codesign
+          # The conda environment might contain a different codesign!
+          codesign=$(which codesign)
+          if [[ $codesign =~ ${CONDA_PREFIX}.*]]; then
+            mv "${codesign}" "${codesign}.in_conda_env"
+          fi
           codesign  \
             --verbose  \
             --sign "$CONSTRUCTOR_NOTARIZATION_IDENTITY"  \
