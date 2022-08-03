@@ -21,7 +21,7 @@ jobs:
   conda-build:
     name: Create packages
     runs-on: ubuntu-latest
-    if: false # github.repository == 'napari/packaging'
+    if: github.repository == 'napari/packaging'
     env:
       conda_bld_suffix: /napari-feedstock/build_artifacts/
     outputs:
