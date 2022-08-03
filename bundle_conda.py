@@ -347,7 +347,7 @@ def licenses():
                 arcname = f"{package_name}.{license_type.replace(' ', '_')}.{i}.txt"
                 output_zip.write(license_file, arcname=arcname)
     output_zip.close()
-    return zipname
+    return os.path.abspath(zipname)
 
 
 def main(extra_specs=None, napari_repo=HERE):
