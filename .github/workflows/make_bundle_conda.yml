@@ -155,7 +155,7 @@ jobs:
   constructor-bundle:
     name: Bundle ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
-    # needs: conda-build
+    needs: conda-build
     if: github.repository == 'napari/packaging'
     strategy:
       fail-fast: false
