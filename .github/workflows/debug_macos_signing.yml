@@ -90,7 +90,7 @@ jobs:
           curl -LO https://anaconda.org/napari/conda-standalone/4.12a/download/osx-64/conda-standalone-4.12a-h694c41f_10.tar.bz2
           tar xvf conda-standalone-*.tar.bz2
       - name: Sign
-        shell: bash -el {0}
+        # shell: bash -el {0}
         run: |
           codesign  \
             --verbose  \
