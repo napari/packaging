@@ -35,7 +35,7 @@ jobs:
             - napari/label/bundle_tools
             - conda-forge
           dependencies:
-            - python ${{ matrix.python-version }}
+            - python 3.9
             - pip
             - constructor
             - conda-build
@@ -46,11 +46,15 @@ jobs:
           EOF
       # - name: install micromamba
       #   uses: mamba-org/provision-with-micromamba@main
-
-      # - name: Conda info
-      #   shell: bash -el {0}
-      #   run: |
-      #     conda info -a
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: build-bundle
+          environment-file: environment.yml
+          auto-activate-base: false
+      - name: Conda info
+        shell: bash -el {0}
+        run: |
+          conda info -a
       - name: Load signing certificate
         shell: bash -el {0}
         env:
