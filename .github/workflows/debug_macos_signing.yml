@@ -71,5 +71,5 @@ jobs:
             --prefix org.napari  \
             --options runtime  \
             --force  \
-            --entitlement entitlement.plist  \
+            --entitlement entitlements.plist  \
             standalone_conda/conda.exe
