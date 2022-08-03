@@ -44,13 +44,8 @@ jobs:
             - conda
             - conda-libmamba-solver
           EOF
-      # - name: install micromamba
-      #   uses: mamba-org/provision-with-micromamba@main
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          activate-environment: build-bundle
-          environment-file: environment.yml
-          auto-activate-base: false
+      - name: install micromamba
+        uses: mamba-org/provision-with-micromamba@main
       - name: Conda info
         shell: bash -el {0}
         run: |
@@ -93,9 +88,21 @@ jobs:
         run: |
           curl -LO https://anaconda.org/napari/conda-standalone/4.12a/download/osx-64/conda-standalone-4.12a-h694c41f_10.tar.bz2
           tar xvf conda-standalone-*.tar.bz2
+      - name: Sign (no conda activation)
+        run: |
+          which codesign
+          codesign  \
+            --verbose  \
+            --sign "$CONSTRUCTOR_NOTARIZATION_IDENTITY"  \
+            --prefix org.napari  \
+            --options runtime  \
+            --force  \
+            --entitlement entitlements.plist  \
+            standalone_conda/conda.exe
       - name: Sign
         shell: bash -el {0}
         run: |
+          which codesign
           codesign  \
             --verbose  \
             --sign "$CONSTRUCTOR_NOTARIZATION_IDENTITY"  \
