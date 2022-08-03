@@ -284,7 +284,7 @@ jobs:
       - name: Load signing certificate (MacOS)
         shell: bash -l {0}
         # We only sign pushes to main, nightlies, RCs and final releases
-        if: false # runner.os == 'macOS' && (github.event_name == 'schedule' || github.event_name == 'push')
+        if: runner.os == 'macOS' && (github.event_name == 'schedule' || github.event_name == 'push')
         env:
           APPLE_APPLICATION_CERTIFICATE_BASE64: ${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}
           APPLE_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}
@@ -316,6 +316,13 @@ jobs:
 
           echo "CONSTRUCTOR_SIGNING_IDENTITY=${signing_identity}" >> $GITHUB_ENV
           echo "CONSTRUCTOR_NOTARIZATION_IDENTITY=${notarization_identity}" >> $GITHUB_ENV
+
+          # The conda environment might contain a totally different codesign
+          # which would clobber the Apple's codesign (the one we need)
+          _codesign=$(which codesign)
+          if [[ $_codesign =~ ${CONDA_PREFIX}.* ]]; then
+            mv "${_codesign}" "${_codesign}.in_conda_env"
+          fi
 
       - name: Load signing certificate (Windows)
         # We only sign pushes to main, nightlies, RCs and final releases
