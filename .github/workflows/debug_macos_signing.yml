@@ -44,13 +44,13 @@ jobs:
             - conda
             - conda-libmamba-solver
           EOF
-      - name: install micromamba
-        uses: mamba-org/provision-with-micromamba@main
+      # - name: install micromamba
+      #   uses: mamba-org/provision-with-micromamba@main
 
-      - name: Conda info
-        shell: bash -el {0}
-        run: |
-          conda info -a
+      # - name: Conda info
+      #   shell: bash -el {0}
+      #   run: |
+      #     conda info -a
       - name: Load signing certificate
         shell: bash -el {0}
         env:
@@ -90,7 +90,7 @@ jobs:
           curl -LO https://anaconda.org/napari/conda-standalone/4.12a/download/osx-64/conda-standalone-4.12a-h694c41f_10.tar.bz2
           tar xvf conda-standalone-*.tar.bz2
       - name: Sign
-        # shell: bash -el {0}
+        shell: bash -el {0}
         run: |
           codesign  \
             --verbose  \
