@@ -312,7 +312,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     with open("construct.yaml", "w") as fin:
         yaml.dump(definitions, fin, default_flow_style=False)
 
-    args = [constructor, "-v", "--debug", "."]
+    args = [constructor, "-v", "."]
     conda_exe = os.environ.get("CONSTRUCTOR_CONDA_EXE")
     if target_platform and conda_exe:
         args += ["--platform", target_platform, "--conda-exe", conda_exe]
