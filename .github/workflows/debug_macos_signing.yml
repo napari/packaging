@@ -26,8 +26,33 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Create environment.yml
+        shell: bash
+        run: |
+          cat <<EOF > environment.yml
+          name: build-bundle
+          channels:
+            - napari/label/bundle_tools
+            - conda-forge
+          dependencies:
+            - python ${{ matrix.python-version }}
+            - pip
+            - constructor
+            - conda-build
+            - ruamel.yaml
+            - conda-standalone
+            - conda
+            - conda-libmamba-solver
+          EOF
+      - name: install micromamba
+        uses: mamba-org/provision-with-micromamba@main
 
+      - name: Conda info
+        shell: bash -el {0}
+        run: |
+          conda info -a
       - name: Load signing certificate
+        shell: bash -el {0}
         env:
           APPLE_APPLICATION_CERTIFICATE_BASE64: ${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}
           APPLE_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}
@@ -60,10 +85,12 @@ jobs:
           echo "CONSTRUCTOR_SIGNING_IDENTITY=${signing_identity}" >> $GITHUB_ENV
           echo "CONSTRUCTOR_NOTARIZATION_IDENTITY=${notarization_identity}" >> $GITHUB_ENV
       - name: Download conda-standalone
+        shell: bash -el {0}
         run: |
           curl -LO https://anaconda.org/napari/conda-standalone/4.12a/download/osx-64/conda-standalone-4.12a-h694c41f_10.tar.bz2
           tar xvf conda-standalone-*.tar.bz2
       - name: Sign
+        shell: bash -el {0}
         run: |
           codesign  \
             --verbose  \
