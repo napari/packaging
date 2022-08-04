@@ -400,7 +400,7 @@ jobs:
 
       - name: Test installation (Linux)
         if: runner.os == 'Linux'
-        working-directory: napari-packaging
+        working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
         run: |
@@ -413,7 +413,7 @@ jobs:
 
       - name: Test installation (macOS)
         if: runner.os == 'macOS' && matrix.target-platform == 'osx-64'
-        working-directory: napari-packaging
+        working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
         run: |
@@ -428,7 +428,7 @@ jobs:
       - name: Test installation (Windows)
         if: runner.os == 'Windows'
         shell: cmd /C call {0}
-        working-directory: napari-packaging
+        working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
         run: |
