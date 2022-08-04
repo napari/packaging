@@ -376,7 +376,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
 
 def licenses():
     try:
-        with open("info.json") as f:
+        with open(Path("_work") / "info.json") as f:
             info = json.load(f)
     except FileNotFoundError:
         print(
