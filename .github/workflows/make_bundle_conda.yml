@@ -233,7 +233,7 @@ jobs:
       - name: Download local build artifacts (napari)
         uses: actions/download-artifact@v3
         with:
-          name: ${{ needs.conda-build.outputs.artifact-id }}
+          name: ${{ needs.packages.outputs.artifact-id }}
           path: ${{ env.CONDA_BLD_PATH }}/noarch
 
       - name: Index local packages (if any)
