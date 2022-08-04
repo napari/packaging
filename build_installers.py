@@ -98,14 +98,12 @@ def _use_local():
 @lru_cache
 def _version():
     if _use_local():
-        version = importlib.metadata.version("napari")
+        return importlib.metadata.version("napari")
     else:
         # get latest published on conda-forge
         r = requests.get(f"https://api.anaconda.org/package/conda-forge/napari")
         r.raise_for_status()
-        version = r.json()["versions"][-1]
-    version = version.replace("+", "_")
-    return version
+        return r.json()["versions"][-1]
 
 
 OUTPUT_FILENAME = f"{APP}-{_version()}-{OS}-{ARCH}.{EXT}"
@@ -224,7 +222,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         "name": APP,
         "company": "Napari",
         "reverse_domain_identifier": "org.napari",
-        "version": version,
+        "version": version.replace("+", "_"),
         "channels": base_env["channels"],
         "conda_default_channels": ["conda-forge"],
         "installer_filename": OUTPUT_FILENAME,
