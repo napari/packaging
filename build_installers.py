@@ -43,21 +43,24 @@ import importlib.metadata
 import json
 import os
 import platform
-import subprocess
 import sys
 import zipfile
 from argparse import ArgumentParser
 from distutils.spawn import find_executable
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from textwrap import dedent
-from functools import lru_cache
+from textwrap import dedent, indent
+from functools import lru_cache, partial
+from subprocess import check_call, check_output
 
 import requests
-from ruamel import yaml
+from ruamel.yaml import YAML
 
 import napari
 
+yaml = YAML()
+yaml.indent(mapping=2)
+indent4 = partial(indent, prefix="    ")
 
 APP = os.environ.get("CONSTRUCTOR_APP_NAME", "napari")
 # bump this when something in the installer infrastructure changes
@@ -71,6 +74,9 @@ if os.environ.get("CONSTRUCTOR_TARGET_PLATFORM") == "osx-arm64":
     ARCH = "arm64"
 else:
     ARCH = (platform.machine() or "generic").lower().replace("amd64", "x86_64")
+TARGET_PLATFORM = os.environ.get("CONSTRUCTOR_TARGET_PLATFORM")
+ARM64 = ARCH == "arm64"
+PY_VER = f"{sys.version_info.major}.{sys.version_info.minor}"
 if WINDOWS:
     EXT, OS = "exe", "Windows"
 elif LINUX:
@@ -92,11 +98,14 @@ def _use_local():
 @lru_cache
 def _version():
     if _use_local():
-        return importlib.metadata.version("napari")
-    # else, get latest published on conda-forge
-    r = requests.get(f"https://api.anaconda.org/package/conda-forge/napari")
-    r.raise_for_status()
-    return r.json()["versions"][-1]
+        version = importlib.metadata.version("napari")
+    else:
+        # get latest published on conda-forge
+        r = requests.get(f"https://api.anaconda.org/package/conda-forge/napari")
+        r.raise_for_status()
+        version = r.json()["versions"][-1]
+    version = version.replace("+", "_")
+    return version
 
 
 OUTPUT_FILENAME = f"{APP}-{_version()}-{OS}-{ARCH}.{EXT}"
@@ -165,53 +174,50 @@ def _get_condarc():
     return f.name
 
 
-def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
-    """
-    Create a temporary `construct.yaml` input file and
-    run `constructor`.
+def _base_env(python_version=PY_VER):
+    return {
+        "name": "base",
+        "channels": [
+            "napari/label/bundle_tools",
+            "conda-forge",
+        ],
+        "specs": [
+            f"python={python_version}=*_cpython",
+            "conda",
+            "mamba",
+            "pip",
+        ],
+    }
 
-    Parameters
-    ----------
-    version: str
-        Version of `napari` to be built. Defaults to the
-        one detected by `importlib.metadata` (napari must be installed).
-    extra_specs: list of str
-        Additional packages to be included in the installer.
-        A list of conda spec strings (`numpy`, `python=3`, etc)
-        is expected.
-    """
-    constructor = find_executable("constructor")
-    if not constructor:
-        raise RuntimeError("Constructor must be installed.")
 
-    if extra_specs is None:
-        extra_specs = []
+def _napari_env(
+    python_version=PY_VER,
+    napari_version=_version(),
+    extra_specs=None,
+):
+    qt = "pyside" if ARM64 else "pyqt"
+    exclude = ("pyqt",) if ARM64 else ()
+    # TODO: ^ Temporary while pyside2 is not yet published for arm64
+    return {
+        "name": f"napari-{napari_version}",
+        # "channels": same as _base_env(), omit to inherit :)
+        "specs": [
+            f"python={python_version}=*_cpython",
+            f"napari={napari_version}=*{qt}*",
+            f"napari-menu={napari_version}",
+            "conda",
+            "mamba",
+            "pip",
+        ]
+        + (extra_specs or []),
+        # "exclude": exclude, # TODO: not supported yet in constructor
+    }
 
-    # TODO: Temporary while pyside2 is not yet published for arm64
+
+def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
     resources = os.path.join(napari_repo, "resources")
-    target_platform = os.environ.get("CONSTRUCTOR_TARGET_PLATFORM")
-    ARM64 = target_platform == "osx-arm64"
-    if ARM64:
-        napari = f"napari={version}=*pyqt*"
-    else:
-        napari = f"napari={version}=*pyside*"
-    python = f"python={sys.version_info.major}.{sys.version_info.minor}.*=*_cpython"
-    base_specs = [
-        python,
-        "conda",
-        "mamba",
-        "pip",
-    ]
-    napari_specs = [
-        napari,
-        f"napari-menu={version}",
-        python,
-        "conda",
-        "mamba",
-        "pip",
-    ] + extra_specs
-
-    channels = ["napari/label/bundle_tools", "conda-forge"]
+    base_env = _base_env()
+    napari_env = _napari_env(napari_version="*", extra_specs=extra_specs)
     empty_file = NamedTemporaryFile(delete=False)
     condarc = _get_condarc()
     definitions = {
@@ -219,13 +225,17 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         "company": "Napari",
         "reverse_domain_identifier": "org.napari",
         "version": version,
-        "channels": channels,
+        "channels": base_env["channels"],
         "conda_default_channels": ["conda-forge"],
         "installer_filename": OUTPUT_FILENAME,
         "initialize_by_default": False,
         "license_file": os.path.join(resources, "bundle_license.rtf"),
-        "specs": base_specs,
-        "extra_envs": {f"napari-{version}": {"specs": napari_specs}},
+        "specs": base_env["specs"],
+        "extra_envs": {
+            napari_env["name"]: {
+                "specs": napari_env["specs"],
+            },
+        },
         "menu_packages": [
             "napari-menu",
         ],
@@ -303,25 +313,63 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     clean_these_files.append(empty_file.name)
     clean_these_files.append(condarc)
 
+    return definitions
+
+
+def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
+    """
+    Create a temporary `construct.yaml` input file and
+    run `constructor`.
+
+    Parameters
+    ----------
+    version: str
+        Version of `napari` to be built. Defaults to the
+        one detected by `importlib.metadata` (napari must be installed).
+    extra_specs: list of str
+        Additional packages to be included in the installer.
+        A list of conda spec strings (`numpy`, `python=3`, etc)
+        is expected.
+    napari_repo: str
+        location where the napari/napari repository was cloned
+    """
+    constructor = find_executable("constructor")
+    if not constructor:
+        raise RuntimeError("Constructor must be installed and in PATH.")
+
     # TODO: temporarily patching password - remove block when the secret has been fixed
     # (I think it contains an ending newline or something like that, copypaste artifact?)
     pfx_password = os.environ.get("CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD")
     if pfx_password:
         os.environ["CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD"] = pfx_password.strip()
 
-    with open("construct.yaml", "w") as fin:
-        yaml.dump(definitions, fin, default_flow_style=False)
+    definitions = _definitions(
+        version=version, extra_specs=extra_specs, napari_repo=napari_repo
+    )
 
     args = [constructor, "-v", "--debug", "."]
     conda_exe = os.environ.get("CONSTRUCTOR_CONDA_EXE")
-    if target_platform and conda_exe:
-        args += ["--platform", target_platform, "--conda-exe", conda_exe]
+    if TARGET_PLATFORM and conda_exe:
+        args += ["--platform", TARGET_PLATFORM, "--conda-exe", conda_exe]
     env = os.environ.copy()
     env["CONDA_CHANNEL_PRIORITY"] = "strict"
 
-    print(f"Calling {args} with these definitions:")
-    print(yaml.dump(definitions, default_flow_style=False))
-    subprocess.check_call(args, env=env)
+    print("+++++++++++++++++")
+    print("Command:", " ".join(args))
+    print("Configuration:")
+    yaml.dump(definitions, sys.stdout, transform=indent4)
+    print("\nConda config:\n")
+    print(
+        indent4(check_output(["conda", "config", "--show-sources"], text=True, env=env))
+    )
+    print("Conda info:")
+    print(indent4(check_output(["conda", "info"], text=True, env=env)))
+    print("+++++++++++++++++")
+
+    with open("construct.yaml", "w") as fin:
+        yaml.dump(definitions, fin)
+
+    check_call(args, env=env)
 
     return OUTPUT_FILENAME
 
@@ -352,15 +400,20 @@ def licenses():
 
 def main(extra_specs=None, napari_repo=HERE):
     try:
+        cwd = os.getcwd()
+        workdir = Path("_work")
+        workdir.mkdir(exist_ok=True)
+        os.chdir(workdir)
         _constructor(extra_specs=extra_specs, napari_repo=napari_repo)
+        assert Path(OUTPUT_FILENAME).exists(), f"{OUTPUT_FILENAME} was not created!"
     finally:
         for path in clean_these_files:
             try:
                 os.unlink(path)
             except OSError:
-                print("! Could not remove", path)
-    assert Path(OUTPUT_FILENAME).exists()
-    return OUTPUT_FILENAME
+                print("!! Could not remove", path, file=sys.stderr)
+        os.chdir(cwd)
+    return workdir / OUTPUT_FILENAME
 
 
 def cli(argv=None):
@@ -406,7 +459,12 @@ def cli(argv=None):
         action="store_true",
         help="Generate background images from the logo (test only)",
     )
-    p.add_argument("--location", default=HERE, help="Path to napari source repository")
+    p.add_argument(
+        "--location",
+        default=HERE,
+        help="Path to napari source repository",
+        type=os.path.abspath,
+    )
     return p.parse_args()
 
 
@@ -434,4 +492,4 @@ if __name__ == "__main__":
         _generate_background_images(napari_repo=args.location)
         sys.exit()
 
-    print("created", main(extra_specs=args.extra_specs, napari_repo=args.location))
+    print("Created", main(extra_specs=args.extra_specs, napari_repo=args.location))
