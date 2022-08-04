@@ -217,7 +217,7 @@ def _napari_env(
 def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
     resources = os.path.join(napari_repo, "resources")
     base_env = _base_env()
-    napari_env = _napari_env(napari_version="*", extra_specs=extra_specs)
+    napari_env = _napari_env(napari_version=version, extra_specs=extra_specs)
     empty_file = NamedTemporaryFile(delete=False)
     condarc = _get_condarc()
     definitions = {
