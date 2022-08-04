@@ -18,7 +18,7 @@ on:
 name: Conda
 
 jobs:
-  conda-build:
+  packages:
     name: Create packages
     runs-on: ubuntu-latest
     if: github.repository == 'napari/packaging'
@@ -51,7 +51,7 @@ jobs:
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: napari-packaging/data/packages_environment.yml
+          environment-file: napari-packaging/data/ci_packages_environment.yml
 
       - name: install napari
         shell: bash -el {0}
@@ -134,10 +134,10 @@ jobs:
             $label_args \
             ${GITHUB_WORKSPACE}${conda_bld_suffix}noarch/*.tar.bz2
 
-  constructor-bundle:
+  installers:
     name: Bundle ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
-    needs: conda-build
+    needs: packages
     if: github.repository == 'napari/packaging'
     strategy:
       fail-fast: false
@@ -183,14 +183,16 @@ jobs:
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: napari-packaging/data/packages_environment.yml
+          environment-file: napari-packaging/data/ci_installers_environment.yml
           extra-specs: |
             python=${{ matrix.python-version }}
 
       - name: Conda info
         shell: bash -el {0}
         run: |
+          set -x
           conda info -a
+          conda config --show-sources
 
       - name: set up build dependencies
         shell: bash -el {0}
