@@ -28,7 +28,7 @@ jobs:
       artifact-id: ${{ steps.artifact-id.outputs.name }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout packaging code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -48,27 +48,10 @@ jobs:
           repository: conda-forge/napari-feedstock
           path: napari-feedstock
 
-      - name: Create environment.yml
-        shell: bash
-        run: |
-          cat <<EOF > environment.yml
-          name: test
-          channels:
-            - conda-forge
-          dependencies:
-            - conda-smithy
-            - python 3.8
-            - pip
-            - tomlkit
-            - ruamel.yaml
-            - anaconda-client
-          EOF
-
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: install micromamba
+        uses: mamba-org/provision-with-micromamba@main
         with:
-          miniforge-version: latest
-          environment-file: environment.yml
+          environment-file: napari-packaging/data/packages_environment.yml
 
       - name: install napari
         shell: bash -el {0}
@@ -76,10 +59,8 @@ jobs:
         run: |
           set -x
           pip install -e . --no-deps -vvv
-          version=$(python bundle.py --version)
-          arch=$(python bundle.py --arch)
-          echo NAPARI_VERSION=${version} >> $GITHUB_ENV
-          echo NAPARI_ARCH=${arch} >> $GITHUB_ENV
+          echo "NAPARI_VERSION=$(python bundle.py --version)" >> $GITHUB_ENV
+          echo "NAPARI_ARCH=$(python bundle.py --arch)" >> $GITHUB_ENV
 
       - name: Patch and rerender feedstock
         shell: bash -el {0}
@@ -107,8 +88,9 @@ jobs:
           DOCKER_IMAGE: quay.io/condaforge/linux-anvil-comp7
           CONFIG: linux_64_qt_bindingspyqt # filename under feedstock's .ci_support/
           CI: github_actions
+          CONDA_BLD_PATH: "${{ github.workspace }}${{ env.conda_bld_suffix }}"
         run: |
-          export CONDA_BLD_PATH="${{ github.workspace }}${{ env.conda_bld_suffix }}"
+          export
           ./.scripts/run_docker_build.sh
 
       - name: Run build scripts (PySide)
@@ -118,8 +100,8 @@ jobs:
           DOCKER_IMAGE: quay.io/condaforge/linux-anvil-comp7
           CONFIG: linux_64_qt_bindingspyside2 # filename under feedstock's .ci_support/
           CI: github_actions
+          CONDA_BLD_PATH: "${{ github.workspace }}${{ env.conda_bld_suffix }}"
         run: |
-          export CONDA_BLD_PATH="${{ github.workspace }}${{ env.conda_bld_suffix }}"
           ./.scripts/run_docker_build.sh
 
       - name: Export artifact identifier
@@ -198,26 +180,12 @@ jobs:
           repository: napari/napari
           path: napari-source
 
-      - name: Create environment.yml
-        shell: bash
-        run: |
-          cat <<EOF > environment.yml
-          name: build-bundle
-          channels:
-            - napari/label/bundle_tools
-            - conda-forge
-          dependencies:
-            - python ${{ matrix.python-version }}
-            - pip
-            - constructor
-            - conda-build
-            - ruamel.yaml
-            - conda-standalone
-            - conda
-            - conda-libmamba-solver
-          EOF
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: napari-packaging/data/packages_environment.yml
+          extra-specs: |
+            python=${{ matrix.python-version }}
 
       - name: Conda info
         shell: bash -el {0}
@@ -234,19 +202,19 @@ jobs:
         shell: bash -el {0}
         working-directory: napari-packaging
         run: |
-          VER=$(python bundle_conda.py --version --location=../napari-source)
+          VER=$(python build_installers.py --version --location=../napari-source)
           echo "version=${VER}" >> $GITHUB_ENV
           echo "Napari version: ${VER}"
-          INST_VER=$(python bundle_conda.py --installer-version)
+          INST_VER=$(python build_installers.py --installer-version)
           echo "installer_version=${INST_VER}" >> $GITHUB_ENV
           echo "Installer version: ${INST_VER}"
-          ARCH_SUFFIX=$(python bundle_conda.py --arch)
+          ARCH_SUFFIX=$(python build_installers.py --arch)
           echo "arch-suffix=${ARCH_SUFFIX}" >> $GITHUB_ENV
           echo "Machine: ${ARCH_SUFFIX}"
-          EXTENSION=$(python bundle_conda.py --ext)
+          EXTENSION=$(python build_installers.py --ext)
           echo "extension=${EXTENSION}" >> $GITHUB_ENV
           echo "Extension: ${EXTENSION}"
-          ARTIFACT_NAME=$(python bundle_conda.py --artifact-name)
+          ARTIFACT_NAME=$(python build_installers.py --artifact-name)
           echo "artifact-name=${ARTIFACT_NAME}" >> $GITHUB_ENV
           echo "Expected artifact name: ${ARTIFACT_NAME}"
 
@@ -350,20 +318,20 @@ jobs:
             libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
             libxcb-xinerama0 libxcb-xfixes0 libxcb-shape0 libqt5gui5
           echo "::endgroup::"
-          xvfb-run --auto-servernum python bundle_conda.py --location=../napari-source
+          xvfb-run --auto-servernum python build_installers.py --location=../napari-source
 
       - name: Make Bundle (MacOS/Windows)
         shell: bash -el {0}
         if: runner.os != 'Linux'
         working-directory: napari-packaging
-        run: python bundle_conda.py --location=../napari-source
+        run: python build_installers.py --location=../napari-source
 
       - name: Collect licenses
         id: licenses
         shell: bash -el {0}
         working-directory: napari-packaging
         run: |
-          zipname=$(python bundle_conda.py --licenses)
+          zipname=$(python build_installers.py --licenses)
           echo "LICENSES_ARTIFACT_PATH=$zipname" >> $GITHUB_ENV
           echo "LICENSES_ARTIFACT_NAME=$(basename ${zipname})" >> $GITHUB_ENV
           echo "::set-output name=licenses_artifact::$zipname"

@@ -1,0 +1,10 @@
+name: packages
+channels:
+  - conda-forge
+dependencies:
+  - conda-smithy
+  - python 3.9
+  - pip
+  - tomlkit
+  - ruamel.yaml
+  - anaconda-client
