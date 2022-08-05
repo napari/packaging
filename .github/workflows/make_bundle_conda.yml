@@ -18,7 +18,7 @@ on:
 name: Conda
 
 jobs:
-  conda-build:
+  packages:
     name: Create packages
     runs-on: ubuntu-latest
     if: github.repository == 'napari/packaging'
@@ -28,7 +28,7 @@ jobs:
       artifact-id: ${{ steps.artifact-id.outputs.name }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout packaging code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -48,27 +48,10 @@ jobs:
           repository: conda-forge/napari-feedstock
           path: napari-feedstock
 
-      - name: Create environment.yml
-        shell: bash
-        run: |
-          cat <<EOF > environment.yml
-          name: test
-          channels:
-            - conda-forge
-          dependencies:
-            - conda-smithy
-            - python 3.8
-            - pip
-            - tomlkit
-            - ruamel.yaml
-            - anaconda-client
-          EOF
-
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: install micromamba
+        uses: mamba-org/provision-with-micromamba@main
         with:
-          miniforge-version: latest
-          environment-file: environment.yml
+          environment-file: napari-packaging/data/ci_packages_environment.yml
 
       - name: install napari
         shell: bash -el {0}
@@ -76,10 +59,9 @@ jobs:
         run: |
           set -x
           pip install -e . --no-deps -vvv
-          version=$(python bundle.py --version)
-          arch=$(python bundle.py --arch)
-          echo NAPARI_VERSION=${version} >> $GITHUB_ENV
-          echo NAPARI_ARCH=${arch} >> $GITHUB_ENV
+          napari_version=$(python -c 'from importlib.metadata import version; print(version("napari"))')
+          echo "NAPARI_VERSION=$napari_version" >> $GITHUB_ENV
+          echo "NAPARI_ARCH=$(python ../napari-packaging/build_installers.py --arch)" >> $GITHUB_ENV
 
       - name: Patch and rerender feedstock
         shell: bash -el {0}
@@ -107,8 +89,9 @@ jobs:
           DOCKER_IMAGE: quay.io/condaforge/linux-anvil-comp7
           CONFIG: linux_64_qt_bindingspyqt # filename under feedstock's .ci_support/
           CI: github_actions
+          CONDA_BLD_PATH: "${{ github.workspace }}${{ env.conda_bld_suffix }}"
         run: |
-          export CONDA_BLD_PATH="${{ github.workspace }}${{ env.conda_bld_suffix }}"
+          export
           ./.scripts/run_docker_build.sh
 
       - name: Run build scripts (PySide)
@@ -118,8 +101,8 @@ jobs:
           DOCKER_IMAGE: quay.io/condaforge/linux-anvil-comp7
           CONFIG: linux_64_qt_bindingspyside2 # filename under feedstock's .ci_support/
           CI: github_actions
+          CONDA_BLD_PATH: "${{ github.workspace }}${{ env.conda_bld_suffix }}"
         run: |
-          export CONDA_BLD_PATH="${{ github.workspace }}${{ env.conda_bld_suffix }}"
           ./.scripts/run_docker_build.sh
 
       - name: Export artifact identifier
@@ -152,10 +135,10 @@ jobs:
             $label_args \
             ${GITHUB_WORKSPACE}${conda_bld_suffix}noarch/*.tar.bz2
 
-  constructor-bundle:
+  installers:
     name: Bundle ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
-    needs: conda-build
+    needs: packages
     if: github.repository == 'napari/packaging'
     strategy:
       fail-fast: false
@@ -198,31 +181,20 @@ jobs:
           repository: napari/napari
           path: napari-source
 
-      - name: Create environment.yml
-        shell: bash
-        run: |
-          cat <<EOF > environment.yml
-          name: build-bundle
-          channels:
-            - napari/label/bundle_tools
-            - conda-forge
-          dependencies:
-            - python ${{ matrix.python-version }}
-            - pip
-            - constructor
-            - conda-build
-            - ruamel.yaml
-            - conda-standalone
-            - conda
-            - conda-libmamba-solver
-          EOF
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: napari-packaging/data/ci_installers_environment.yml
+          extra-specs: |
+            python=${{ matrix.python-version }}
 
       - name: Conda info
         shell: bash -el {0}
         run: |
+          set -x
           conda info -a
+          conda config --show-sources
+          mkdir -p ${CONDA_BLD_PATH}/noarch
 
       - name: set up build dependencies
         shell: bash -el {0}
@@ -230,23 +202,42 @@ jobs:
         run: |
           python -m pip install -e '.[bundle_build]'
 
+      - name: Download local build artifacts (napari)
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.packages.outputs.artifact-id }}
+          path: ${{ env.CONDA_BLD_PATH }}/noarch
+
+      - name: Index local packages (if any)
+        shell: bash -el {0}
+        working-directory: napari-packaging
+        run: |
+          pkgs=$(shopt -s nullglob dotglob; echo "${CONDA_BLD_PATH}/noarch/*.tar.bz2")
+          if (( ${#pkgs} )); then
+            conda index "${CONDA_BLD_PATH}"
+            conda search -c local --override-channels
+            echo CONSTRUCTOR_USE_LOCAL=1 >> $GITHUB_ENV
+          else
+            echo "No local packages found, assuming latest release"
+          fi
+
       - name: get tag / arch-suffix / extension / artifact-name / conda-standalone
         shell: bash -el {0}
         working-directory: napari-packaging
         run: |
-          VER=$(python bundle_conda.py --version --location=../napari-source)
+          VER=$(python build_installers.py --version --location=../napari-source)
           echo "version=${VER}" >> $GITHUB_ENV
           echo "Napari version: ${VER}"
-          INST_VER=$(python bundle_conda.py --installer-version)
+          INST_VER=$(python build_installers.py --installer-version)
           echo "installer_version=${INST_VER}" >> $GITHUB_ENV
           echo "Installer version: ${INST_VER}"
-          ARCH_SUFFIX=$(python bundle_conda.py --arch)
+          ARCH_SUFFIX=$(python build_installers.py --arch)
           echo "arch-suffix=${ARCH_SUFFIX}" >> $GITHUB_ENV
           echo "Machine: ${ARCH_SUFFIX}"
-          EXTENSION=$(python bundle_conda.py --ext)
+          EXTENSION=$(python build_installers.py --ext)
           echo "extension=${EXTENSION}" >> $GITHUB_ENV
           echo "Extension: ${EXTENSION}"
-          ARTIFACT_NAME=$(python bundle_conda.py --artifact-name)
+          ARTIFACT_NAME=$(python build_installers.py --artifact-name)
           echo "artifact-name=${ARTIFACT_NAME}" >> $GITHUB_ENV
           echo "Expected artifact name: ${ARTIFACT_NAME}"
 
@@ -257,27 +248,6 @@ jobs:
               conda create -yq -p "${prefix}" -c napari/label/bundle_tools conda-standalone
             echo "CONSTRUCTOR_CONDA_EXE=${prefix}/standalone_conda/conda.exe" >> $GITHUB_ENV
           fi
-
-          mkdir -p ${CONDA_BLD_PATH}/noarch
-
-      # - name: Download local build artifacts (napari)
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: ${{ needs.conda-build.outputs.artifact-id }}
-      #     path: ${{ env.CONDA_BLD_PATH }}/noarch
-
-      # - name: Index local packages (if any)
-      #   shell: bash -el {0}
-      #   working-directory: napari-packaging
-      #   run: |
-      #     pkgs=$(shopt -s nullglob dotglob; echo "${CONDA_BLD_PATH}/noarch/*.tar.bz2")
-      #     if (( ${#pkgs} )); then
-      #       conda index "${CONDA_BLD_PATH}"
-      #       conda search -c local --override-channels
-      #       echo CONSTRUCTOR_USE_LOCAL=1 >> $GITHUB_ENV
-      #     else
-      #       echo "No local packages found, assuming latest release"
-      #     fi
 
       # instructions taken from
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development#add-a-step-to-your-workflow
@@ -326,7 +296,7 @@ jobs:
 
       - name: Load signing certificate (Windows)
         # We only sign pushes to main, nightlies, RCs and final releases
-        if: runner.os == 'Windows' # && (github.event_name == 'schedule' || github.event_name == 'push')
+        if: runner.os == 'Windows' && (github.event_name == 'schedule' || github.event_name == 'push')
         # We are signing with Apple's certificate to provide _something_
         # This is not trusted by Windows so the warnings are still there, but curious users
         # will be able to check it's actually us if necessary
@@ -350,36 +320,36 @@ jobs:
             libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
             libxcb-xinerama0 libxcb-xfixes0 libxcb-shape0 libqt5gui5
           echo "::endgroup::"
-          xvfb-run --auto-servernum python bundle_conda.py --location=../napari-source
+          xvfb-run --auto-servernum python build_installers.py --location=../napari-source
 
       - name: Make Bundle (MacOS/Windows)
         shell: bash -el {0}
         if: runner.os != 'Linux'
         working-directory: napari-packaging
-        run: python bundle_conda.py --location=../napari-source
+        run: python build_installers.py --location=../napari-source
 
       - name: Collect licenses
         id: licenses
         shell: bash -el {0}
         working-directory: napari-packaging
         run: |
-          zipname=$(python bundle_conda.py --licenses)
-          echo "LICENSES_ARTIFACT_PATH=$zipname" >> $GITHUB_ENV
-          echo "LICENSES_ARTIFACT_NAME=$(basename ${zipname})" >> $GITHUB_ENV
-          echo "::set-output name=licenses_artifact::$zipname"
+          licenses_zip_path=$(python build_installers.py --licenses)
+          echo "LICENSES_ARTIFACT_PATH=$licenses_zip_path" >> $GITHUB_ENV
+          echo "LICENSES_ARTIFACT_NAME=$(basename ${licenses_zip_path})" >> $GITHUB_ENV
+          echo "::set-output name=licenses_artifact::$licenses_zip_path"
 
       - name: Upload License Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.LICENSES_ARTIFACT_PATH }}
-          path: ${{ env.LICENSES_ARTIFACT_NAME }}
+          path: ${{ env.LICENSES_ARTIFACT_PATH }}
+          name: ${{ env.LICENSES_ARTIFACT_NAME }}
 
       - name: Notarize Bundle (macOS)
         # We only sign pushes to main, nightlies, RCs and final releases
         if: runner.os == 'macOS' && (github.event_name == 'schedule' || github.event_name == 'push')
         uses: devbotsxyz/xcode-notarize@v1
         with:
-          product-path: ${{ github.workspace }}/napari-packaging/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          product-path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           appstore-connect-username: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
           appstore-connect-password: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
           primary-bundle-id: org.napari.pkg
@@ -390,7 +360,7 @@ jobs:
         if: runner.os == 'macOS' && (github.event_name == 'schedule' || github.event_name == 'push')
         uses: devbotsxyz/xcode-staple@v1
         with:
-          product-path: ${{ github.workspace }}/napari-packaging/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          product-path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
@@ -398,7 +368,7 @@ jobs:
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == 'main')
         with:
           name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
-          path: ${{ github.workspace }}/napari-packaging/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
 
       # - name: Get Release
       #   if: startsWith(github.ref, 'refs/tags/v')
@@ -410,7 +380,7 @@ jobs:
       #   uses: actions/upload-release-asset@v1
       #   with:
       #     upload_url: ${{ steps.get_release.outputs.upload_url }}
-      #     asset_path: ${{ github.workspace }}/napari-packaging/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+      #     asset_path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
       #     asset_name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
       #     asset_content_type: application/octet-stream
 
@@ -423,14 +393,14 @@ jobs:
       #     # nightly build release from https://api.github.com/repos/napari/napari/releases
       #     upload_url: https://uploads.github.com/repos/napari/napari/releases/34273071/assets{?name,label}
       #     release_id: 34273071
-      #     asset_path: ${{ github.workspace }}/napari-packaging/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+      #     asset_path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
       #     asset_name: napari-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
       #     asset_content_type: application/octet-stream
       #     max_releases: 1
 
       - name: Test installation (Linux)
         if: runner.os == 'Linux'
-        working-directory: napari-packaging
+        working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
         run: |
@@ -443,7 +413,7 @@ jobs:
 
       - name: Test installation (macOS)
         if: runner.os == 'macOS' && matrix.target-platform == 'osx-64'
-        working-directory: napari-packaging
+        working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
         run: |
@@ -458,7 +428,7 @@ jobs:
       - name: Test installation (Windows)
         if: runner.os == 'Windows'
         shell: cmd /C call {0}
-        working-directory: napari-packaging
+        working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
         run: |

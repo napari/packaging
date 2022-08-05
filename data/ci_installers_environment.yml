@@ -1,0 +1,13 @@
+name: build-bundle
+channels:
+  - napari/label/bundle_tools
+  - conda-forge
+dependencies:
+  - python
+  - pip
+  - constructor
+  - conda-build
+  - ruamel.yaml
+  - conda-standalone
+  - conda
+  - conda-libmamba-solver
