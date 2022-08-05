@@ -180,7 +180,7 @@ def _base_env(python_version=PY_VER):
             "conda-forge",
         ],
         "specs": [
-            f"python={python_version}=*_cpython",
+            f"python={python_version}.*=*_cpython",
             "conda",
             "mamba",
             "pip",
@@ -200,7 +200,7 @@ def _napari_env(
         "name": f"napari-{napari_version}",
         # "channels": same as _base_env(), omit to inherit :)
         "specs": [
-            f"python={python_version}=*_cpython",
+            f"python={python_version}.*=*_cpython",
             f"napari={napari_version}=*{qt}*",
             f"napari-menu={napari_version}",
             "conda",
