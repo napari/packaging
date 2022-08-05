@@ -194,12 +194,32 @@ jobs:
           set -x
           conda info -a
           conda config --show-sources
+          mkdir -p ${CONDA_BLD_PATH}/noarch
 
       - name: set up build dependencies
         shell: bash -el {0}
         working-directory: napari-source
         run: |
           python -m pip install -e '.[bundle_build]'
+
+      - name: Download local build artifacts (napari)
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.packages.outputs.artifact-id }}
+          path: ${{ env.CONDA_BLD_PATH }}/noarch
+
+      - name: Index local packages (if any)
+        shell: bash -el {0}
+        working-directory: napari-packaging
+        run: |
+          pkgs=$(shopt -s nullglob dotglob; echo "${CONDA_BLD_PATH}/noarch/*.tar.bz2")
+          if (( ${#pkgs} )); then
+            conda index "${CONDA_BLD_PATH}"
+            conda search -c local --override-channels
+            echo CONSTRUCTOR_USE_LOCAL=1 >> $GITHUB_ENV
+          else
+            echo "No local packages found, assuming latest release"
+          fi
 
       - name: get tag / arch-suffix / extension / artifact-name / conda-standalone
         shell: bash -el {0}
@@ -227,27 +247,6 @@ jobs:
             CONDA_SUBDIR=$CONSTRUCTOR_TARGET_PLATFORM \
               conda create -yq -p "${prefix}" -c napari/label/bundle_tools conda-standalone
             echo "CONSTRUCTOR_CONDA_EXE=${prefix}/standalone_conda/conda.exe" >> $GITHUB_ENV
-          fi
-
-          mkdir -p ${CONDA_BLD_PATH}/noarch
-
-      - name: Download local build artifacts (napari)
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ needs.packages.outputs.artifact-id }}
-          path: ${{ env.CONDA_BLD_PATH }}/noarch
-
-      - name: Index local packages (if any)
-        shell: bash -el {0}
-        working-directory: napari-packaging
-        run: |
-          pkgs=$(shopt -s nullglob dotglob; echo "${CONDA_BLD_PATH}/noarch/*.tar.bz2")
-          if (( ${#pkgs} )); then
-            conda index "${CONDA_BLD_PATH}"
-            conda search -c local --override-channels
-            echo CONSTRUCTOR_USE_LOCAL=1 >> $GITHUB_ENV
-          else
-            echo "No local packages found, assuming latest release"
           fi
 
       # instructions taken from
