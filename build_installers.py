@@ -384,7 +384,7 @@ def licenses():
         )
         raise
 
-    zipname = f"licenses.{OS}-{ARCH}.zip"
+    zipname = Path("_work") / f"licenses.{OS}-{ARCH}.zip"
     output_zip = zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED)
     output_zip.write(info_path)
     for package_id, license_info in info["_licenses"].items():
@@ -394,7 +394,7 @@ def licenses():
                 arcname = f"{package_name}.{license_type.replace(' ', '_')}.{i}.txt"
                 output_zip.write(license_file, arcname=arcname)
     output_zip.close()
-    return os.path.abspath(zipname)
+    return zipname.resolve()
 
 
 def main(extra_specs=None, napari_repo=HERE):
