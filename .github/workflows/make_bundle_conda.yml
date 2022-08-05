@@ -59,7 +59,7 @@ jobs:
         run: |
           set -x
           pip install -e . --no-deps -vvv
-          echo "NAPARI_VERSION=$(python -c "from importlib.metadata import version; print(version('napari')))" >> $GITHUB_ENV
+          echo "NAPARI_VERSION=$(python -c 'from importlib.metadata import version; print(version(\'napari\')))'" >> $GITHUB_ENV
           echo "NAPARI_ARCH=$(python ../napari-packaging/build_installers.py --arch)" >> $GITHUB_ENV
 
       - name: Patch and rerender feedstock
