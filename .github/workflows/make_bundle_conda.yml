@@ -44,6 +44,7 @@ jobs:
         with:
           fetch-depth: 0
           repository: napari/packaging
+          ref: always-pyside # temporary
           path: napari-packaging
 
       - name: Checkout napari source
@@ -186,6 +187,7 @@ jobs:
         with:
           fetch-depth: 0
           repository: napari/packaging
+          ref: always-pyside # temporary
           path: napari-packaging
 
       - name: Checkout napari/napari
