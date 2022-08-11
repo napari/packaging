@@ -489,7 +489,7 @@ jobs:
   check_setup_cfg:
     name: Report setup.cfg changes
     runs-on: ubuntu-latest
-    if: input.event_name == 'push'
+    if: inputs.event_name == 'push'
     steps:
       - name: Check modified files
         run: |
