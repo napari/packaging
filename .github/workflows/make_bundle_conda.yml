@@ -13,7 +13,7 @@ on:
       event_payload:
         description: "The original github.event object in the caller workflow"
         required: true
-        type: string
+        type: object
     secrets:
       ANACONDA_TOKEN:
         description: "The token used to upload conda packages to anaconda.org/napari"
@@ -22,7 +22,7 @@ on:
       APPLE_INSTALLER_CERTIFICATE_BASE64:
         description: "Installer certificate issued by Apple, base64-encoded. Used to sign the PKG."
       APPLE_INSTALLER_CERTIFICATE_PASSWORD:
-        description: "Password that protects the Installer and Application certificates (same for both),"
+        description: "Password that protects the Installer and Application certificates (same for both)."
       APPLE_NOTARIZATION_USERNAME:
         description: "Apple.com email address used to submit the notarization request to Apple servers"
       APPLE_NOTARIZATION_PASSWORD:
