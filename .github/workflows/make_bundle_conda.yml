@@ -11,9 +11,9 @@ on:
         required: true
         type: string
       event_payload:
-        description: "The original github.event object in the caller workflow"
+        description: "The original github.event object in the caller workflow, passed as string: toJSON(github.event)."
         required: true
-        type: mapping
+        type: string
     secrets:
       ANACONDA_TOKEN:
         description: "The token used to upload conda packages to anaconda.org/napari"
@@ -493,8 +493,8 @@ jobs:
     steps:
       - name: Check modified files
         run: |
-          echo "${{ inputs.event_payload.commits.*.modified }}" | jq "."
-          if [[ "${{ inputs.event_payload.commits.*.modified }}" == *"setup.cfg"* ]];
+          echo "${{ fromJSON(inputs.event_payload).commits.*.modified }}" | jq "."
+          if [[ "${{ fromJSON(inputs.event_payload).commits.*.modified }}" == *"setup.cfg"* ]];
             echo "SETUP_CFG_MODIFIED=1" >> $GITHUB_ENV
           fi
 
