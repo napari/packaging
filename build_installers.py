@@ -171,6 +171,17 @@ def _get_condarc():
     return f.name
 
 
+def _get_conda_meta_state():
+    data = {
+        "env_vars": {
+            "QT_API": "pyside2",
+        }
+    }
+    with NamedTemporaryFile(delete=False, mode="w+") as f:
+        json.dump(data, f)
+    return f.name
+
+
 def _base_env(python_version=PY_VER):
     return {
         "name": "base",
@@ -214,6 +225,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
     napari_env = _napari_env(napari_version=version, extra_specs=extra_specs)
     empty_file = NamedTemporaryFile(delete=False)
     condarc = _get_condarc()
+    env_state = _get_conda_meta_state()
     definitions = {
         "name": APP,
         "company": "Napari",
@@ -237,6 +249,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             os.path.join(resources, "bundle_readme.md"): "README.txt",
             empty_file.name: ".napari_is_bundled_constructor",
             condarc: ".condarc",
+            env_state: os.path.join("envs", napari_env["name"], "conda-meta", "state"),
         },
     }
     if _use_local():
@@ -306,6 +319,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
     clean_these_files.append("construct.yaml")
     clean_these_files.append(empty_file.name)
     clean_these_files.append(condarc)
+    clean_these_files.append(env_state)
 
     return definitions
 

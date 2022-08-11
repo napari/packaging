@@ -51,7 +51,7 @@ jobs:
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: napari-packaging/data/ci_packages_environment.yml
+          environment-file: napari-packaging/environments/ci_packages_environment.yml
 
       - name: install napari
         shell: bash -el {0}
@@ -68,15 +68,16 @@ jobs:
         working-directory: napari-feedstock
         run: |
           set -euxo pipefail
-          # This is the source path once mounted _inside_ the Docker image!
-          source_path="/home/conda/feedstock_root/napari-source"
+          # rm recipe from conda-forge's feedstock and replace with our napari/packaging version
+          rm -rf recipe/
+          cp -r ../napari-packaging/conda-recipe recipe
 
           sed -i -e "s|{% set version = \".*\" %}|{% set version = \"${NAPARI_VERSION}\" %}|" \
-                 -e "s|  - url: https://pypi.*|  path: ${source_path}|" \
-                 -e "s|  - url: https://raw\.github.*||" \
-                 -e "s|    folder:.*||" \
-                 -e "s|    sha256:.*||g"  \
+                 -e "s|{% set build = [0-9]+ %}|{% set build = 0 %}|" \
                  recipe/meta.yaml
+          # make sure the meta.yaml points to the local source, in case we break
+          # this when updating from upstream
+          grep -e "path: /home/conda" recipe/meta.yaml
 
           conda-smithy rerender
           git diff
@@ -184,7 +185,7 @@ jobs:
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: napari-packaging/data/ci_installers_environment.yml
+          environment-file: napari-packaging/environments/ci_installers_environment.yml
           extra-specs: |
             python=${{ matrix.python-version }}
 

@@ -1,0 +1,3 @@
+qt_bindings:
+  - pyside2
+  - pyqt
