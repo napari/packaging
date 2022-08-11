@@ -270,14 +270,16 @@ jobs:
       - name: Load signing certificate (MacOS)
         shell: bash -el {0}
         # We only sign pushes to main, nightlies, RCs and final releases
-        if: >
-          runner.os == 'macOS' &&
-          secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 &&
-          secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 &&
-          secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD &&
-          secrets.TEMP_KEYCHAIN_PASSWORD &&
-          (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+        if: runner.os == 'macOS' && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         run: |
+          if [ -z '${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}' ] || \
+             [ -z '${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}' ]   || \
+             [ -z '${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}' ] || \
+             [ -z '${{ secrets.TEMP_KEYCHAIN_PASSWORD }}' ]; then
+              echo "::warning::Skipping task because one or more required secrets were not set!"
+              exit 0
+          fi
+
           # create variables
           INSTALLER_CERTIFICATE_PATH="$RUNNER_TEMP/installer_developer_cert.p12"
           APPLICATION_CERTIFICATE_PATH="$RUNNER_TEMP/application_developer_cert.p12"
@@ -313,15 +315,20 @@ jobs:
 
       - name: Load signing certificate (Windows)
         # We only sign pushes to main, nightlies, RCs and final releases
-        if: >
-          runner.os == 'Windows' &&
-          secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 &&
-          secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD &&
-          (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+        if: runner.os == 'Windows' && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         # We are signing with Apple's certificate to provide _something_
         # This is not trusted by Windows so the warnings are still there, but curious users
         # will be able to check it's actually us if necessary
         run: |
+          if (
+            !'${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}' -or
+            !'${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}'   -or
+            !'${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}' -or
+            !'${{ secrets.TEMP_KEYCHAIN_PASSWORD }}'
+          ) {
+            Write-Host "::warning::Skipping task because one or more required secrets were not set!"
+            Exit 0
+          }
           Set-Content -Path "${{ runner.temp }}/certificate.b64.txt" -Value '${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}'
           certutil -decode "${{ runner.temp }}/certificate.b64.txt" "${{ runner.temp }}/certificate.pfx"
 
@@ -369,8 +376,7 @@ jobs:
         # We only sign pushes to main, nightlies, RCs and final releases
         if: >
           runner.os == 'macOS' &&
-          secrets.APPLE_NOTARIZATION_USERNAME &&
-          secrets.APPLE_NOTARIZATION_PASSWORD &&
+          env.CONSTRUCTOR_NOTARIZATION_IDENTITY &&
           (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         uses: devbotsxyz/xcode-notarize@v1
         with:
