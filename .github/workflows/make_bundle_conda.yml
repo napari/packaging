@@ -491,15 +491,8 @@ jobs:
     runs-on: ubuntu-latest
     if: inputs.event_name == 'push'
     steps:
-      - name: Check modified files
-        run: |
-          echo "${{ fromJSON(inputs.event_payload).commits.*.modified }}" | jq "."
-          if [[ "${{ fromJSON(inputs.event_payload).commits.*.modified }}" == *"setup.cfg"* ]];
-            echo "SETUP_CFG_MODIFIED=1" >> $GITHUB_ENV
-          fi
-
       - name: Checkout packaging code
-        if: env.SETUP_CFG_MODIFIED
+        if: contains(fromJSON(inputs.event_payload).commits.*.modified, 'setup.cfg')
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -508,7 +501,7 @@ jobs:
           path: napari-packaging
 
       - name: Report Failures
-        if: env.SETUP_CFG_MODIFIED
+        if: contains(fromJSON(inputs.event_payload).commits.*.modified, 'setup.cfg')
         uses: JasonEtco/create-an-issue@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
