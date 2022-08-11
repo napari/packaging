@@ -75,7 +75,6 @@ if os.environ.get("CONSTRUCTOR_TARGET_PLATFORM") == "osx-arm64":
 else:
     ARCH = (platform.machine() or "generic").lower().replace("amd64", "x86_64")
 TARGET_PLATFORM = os.environ.get("CONSTRUCTOR_TARGET_PLATFORM")
-ARM64 = ARCH == "arm64"
 PY_VER = f"{sys.version_info.major}.{sys.version_info.minor}"
 if WINDOWS:
     EXT, OS = "exe", "Windows"
@@ -193,15 +192,12 @@ def _napari_env(
     napari_version=_version(),
     extra_specs=None,
 ):
-    qt = "pyside" if ARM64 else "pyqt"
-    exclude = ("pyqt",) if ARM64 else ()
-    # TODO: ^ Temporary while pyside2 is not yet published for arm64
     return {
         "name": f"napari-{napari_version}",
         # "channels": same as _base_env(), omit to inherit :)
         "specs": [
             f"python={python_version}.*=*_cpython",
-            f"napari={napari_version}=*{qt}*",
+            f"napari={napari_version}=*pyside*",
             f"napari-menu={napari_version}",
             "conda",
             "mamba",
