@@ -11,25 +11,18 @@ on:
     secrets:
       ANACONDA_TOKEN:
         description: "The token used to upload conda packages to anaconda.org/napari"
-        type: string
       APPLE_APPLICATION_CERTIFICATE_BASE64:
         description: "Application certificate issued by Apple, base64-encoded. Used to sign executables inside the PKG, and required for notarization."
-        type: string
       APPLE_INSTALLER_CERTIFICATE_BASE64:
         description: "Installer certificate issued by Apple, base64-encoded. Used to sign the PKG."
-        type: string
       APPLE_INSTALLER_CERTIFICATE_PASSWORD:
         description: "Password that protects the Installer and Application certificates (same for both),"
-        type: string
       APPLE_NOTARIZATION_USERNAME:
         description: "Apple.com email address used to submit the notarization request to Apple servers"
-        type: string
       APPLE_NOTARIZATION_PASSWORD:
         description: "Password for the apple.com email address used in notarization requests."
-        type: string
       TEMP_KEYCHAIN_PASSWORD:
         description: "A password to temporarily create a keychain that stores the certificates (any value can do as long as it is a secret)"
-        type: string
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
