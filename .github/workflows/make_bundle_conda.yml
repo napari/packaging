@@ -491,6 +491,15 @@ jobs:
     runs-on: ubuntu-latest
     if: inputs.event_name == 'push'
     steps:
+      - name: Debug
+        run: |
+          set +e
+          set -x
+          echo "${{ fromJSON(inputs.event_payload) }}" | jq -r "."
+          echo "${{ fromJSON(inputs.event_payload) }}" | jq -r ".commits"
+          echo "${{ fromJSON(inputs.event_payload) }}" | jq -r ".commits[].modified"
+          echo "${{ fromJSON(inputs.event_payload) }}" | jq -r ".commits.*.modified"
+
       - name: Checkout packaging code
         if: contains(fromJSON(inputs.event_payload).commits.*.modified, 'setup.cfg')
         uses: actions/checkout@v2
