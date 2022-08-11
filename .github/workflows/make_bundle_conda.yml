@@ -499,12 +499,10 @@ jobs:
         if: contains(steps.changed-files.outputs.modified_files, 'setup.cfg')
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
           repository: napari/packaging
           ref: always-pyside # temporary
-          path: napari-packaging
 
-      - name: Report Failures
+      - name: Create issue
         if: contains(steps.changed-files.outputs.modified_files, 'setup.cfg')
         uses: JasonEtco/create-an-issue@v2
         env:
