@@ -135,7 +135,8 @@ jobs:
         shell: bash -el {0}
         # Only upload to anaconda.org/napari if it's a nightly (version with *dev* suffix)
         # or a tag event (either RC or final). Nightlies and RCs go to the nightly channel.
-        if: inputs.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v')
+        if: inputs.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/v')
+        # if: inputs.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v')
         run: |
           label_args=""
           if [[ $NAPARI_VERSION == *rc* || $NAPARI_VERSION == *dev* ]]; then
@@ -187,7 +188,7 @@ jobs:
         with:
           fetch-depth: 0
           repository: napari/packaging
-          ref: always-pyside # temporary TODO
+          ref: always-pyside # temporary
           path: napari-packaging
 
       - name: Checkout napari/napari
