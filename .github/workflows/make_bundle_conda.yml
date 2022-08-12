@@ -32,7 +32,7 @@ jobs:
   packages:
     name: Create packages
     runs-on: ubuntu-latest
-    # if: startsWith(github.repository == 'napari')
+    if: startsWith(github.repository == 'napari')
     env:
       conda_bld_suffix: /napari-feedstock/build_artifacts/
     outputs:
@@ -153,7 +153,7 @@ jobs:
     name: Bundle ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
     needs: packages
-    # if: github.repository == 'napari/packaging'
+    if: startsWith(github.repository == 'napari')
     strategy:
       fail-fast: false
       matrix:
@@ -187,7 +187,7 @@ jobs:
         with:
           fetch-depth: 0
           repository: napari/packaging
-          ref: always-pyside # temporary
+          ref: always-pyside # temporary TODO
           path: napari-packaging
 
       - name: Checkout napari/napari
@@ -270,7 +270,8 @@ jobs:
       - name: Load signing certificate (MacOS)
         shell: bash -el {0}
         # We only sign pushes to main, nightlies, RCs and final releases
-        if: runner.os == 'macOS' && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+        if: runner.os == 'macOS' && (inputs.event_name == 'schedule' || inputs.event_name == 'pull_request')
+        # if: runner.os == 'macOS' && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         run: |
           if [ -z '${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}' ] || \
              [ -z '${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}' ]   || \
@@ -315,7 +316,8 @@ jobs:
 
       - name: Load signing certificate (Windows)
         # We only sign pushes to main, nightlies, RCs and final releases
-        if: runner.os == 'Windows' && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+        if: runner.os == 'Windows' && (inputs.event_name == 'schedule' || inputs.event_name == 'pull_request')
+        # if: runner.os == 'Windows' && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         # We are signing with Apple's certificate to provide _something_
         # This is not trusted by Windows so the warnings are still there, but curious users
         # will be able to check it's actually us if necessary
@@ -377,7 +379,8 @@ jobs:
         if: >
           runner.os == 'macOS' &&
           env.CONSTRUCTOR_NOTARIZATION_IDENTITY &&
-          (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+          (inputs.event_name == 'schedule' || inputs.event_name == 'pull_request')
+        # (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         uses: devbotsxyz/xcode-notarize@v1
         with:
           product-path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
@@ -391,7 +394,8 @@ jobs:
         if: >
           runner.os == 'macOS' &&
           env.CONSTRUCTOR_NOTARIZATION_IDENTITY &&
-          (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+          (inputs.event_name == 'schedule' || inputs.event_name == 'pull_request')
+        # (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         uses: devbotsxyz/xcode-staple@v1
         with:
           product-path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
@@ -399,7 +403,8 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         # CI artifact uploads only pushes to main
-        if: inputs.event_name == 'push' && github.ref_name == 'main'
+        if: inputs.event_name == 'pull_request'
+        # if: inputs.event_name == 'push' && github.ref_name == 'main'
         with:
           name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
