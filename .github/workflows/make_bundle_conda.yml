@@ -154,7 +154,7 @@ jobs:
     name: Bundle ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
     needs: packages
-    if: startsWith(github.repository == 'napari')
+    if: startsWith(github.repository, 'napari')
     strategy:
       fail-fast: false
       matrix:
