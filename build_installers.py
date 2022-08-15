@@ -75,7 +75,6 @@ if os.environ.get("CONSTRUCTOR_TARGET_PLATFORM") == "osx-arm64":
 else:
     ARCH = (platform.machine() or "generic").lower().replace("amd64", "x86_64")
 TARGET_PLATFORM = os.environ.get("CONSTRUCTOR_TARGET_PLATFORM")
-ARM64 = ARCH == "arm64"
 PY_VER = f"{sys.version_info.major}.{sys.version_info.minor}"
 if WINDOWS:
     EXT, OS = "exe", "Windows"
@@ -172,6 +171,17 @@ def _get_condarc():
     return f.name
 
 
+def _get_conda_meta_state():
+    data = {
+        "env_vars": {
+            "QT_API": "pyside2",
+        }
+    }
+    with NamedTemporaryFile(delete=False, mode="w+") as f:
+        json.dump(data, f)
+    return f.name
+
+
 def _base_env(python_version=PY_VER):
     return {
         "name": "base",
@@ -193,15 +203,12 @@ def _napari_env(
     napari_version=_version(),
     extra_specs=None,
 ):
-    qt = "pyside" if ARM64 else "pyqt"
-    exclude = ("pyqt",) if ARM64 else ()
-    # TODO: ^ Temporary while pyside2 is not yet published for arm64
     return {
         "name": f"napari-{napari_version}",
         # "channels": same as _base_env(), omit to inherit :)
         "specs": [
             f"python={python_version}.*=*_cpython",
-            f"napari={napari_version}=*{qt}*",
+            f"napari={napari_version}=*pyside*",
             f"napari-menu={napari_version}",
             "conda",
             "mamba",
@@ -218,6 +225,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
     napari_env = _napari_env(napari_version=version, extra_specs=extra_specs)
     empty_file = NamedTemporaryFile(delete=False)
     condarc = _get_condarc()
+    env_state = _get_conda_meta_state()
     definitions = {
         "name": APP,
         "company": "Napari",
@@ -241,6 +249,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             os.path.join(resources, "bundle_readme.md"): "README.txt",
             empty_file.name: ".napari_is_bundled_constructor",
             condarc: ".condarc",
+            env_state: os.path.join("envs", napari_env["name"], "conda-meta", "state"),
         },
     }
     if _use_local():
@@ -310,6 +319,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
     clean_these_files.append("construct.yaml")
     clean_these_files.append(empty_file.name)
     clean_these_files.append(condarc)
+    clean_these_files.append(env_state)
 
     return definitions
 

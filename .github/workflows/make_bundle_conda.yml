@@ -1,27 +1,42 @@
+name: Conda
+
 on:
-  push:
-    # Sequence of patterns matched against refs/tags
-    tags:
-      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
-    branches:
-      - main
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - "docs/**"
-  schedule:
-    - cron: "0 0 * * *"
+  workflow_call:
+    inputs:
+      event_name:
+        description: "The original github.event_name object in the caller workflow"
+        required: true
+        type: string
+    secrets:
+      ANACONDA_TOKEN:
+        description: "The token used to upload conda packages to anaconda.org/napari"
+      APPLE_APPLICATION_CERTIFICATE_BASE64:
+        description: "Application certificate issued by Apple, base64-encoded. Used to sign executables inside the PKG, and required for notarization."
+      APPLE_INSTALLER_CERTIFICATE_BASE64:
+        description: "Installer certificate issued by Apple, base64-encoded. Used to sign the PKG."
+      APPLE_INSTALLER_CERTIFICATE_PASSWORD:
+        description: "Password that protects the Installer and Application certificates (same for both)."
+      APPLE_NOTARIZATION_USERNAME:
+        description: "Apple.com email address used to submit the notarization request to Apple servers"
+      APPLE_NOTARIZATION_PASSWORD:
+        description: "Password for the apple.com email address used in notarization requests."
+      TEMP_KEYCHAIN_PASSWORD:
+        description: "A password to temporarily create a keychain that stores the certificates (any value can do as long as it is a secret)"
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
-name: Conda
+    inputs:
+      ref:
+        description: "`napari/napari` will be checked out using this commit hash or git reference."
+        required: false
 
 jobs:
   packages:
     name: Create packages
     runs-on: ubuntu-latest
-    if: github.repository == 'napari/packaging'
+    if: startsWith(github.repository, 'napari')
     env:
       conda_bld_suffix: /napari-feedstock/build_artifacts/
     outputs:
@@ -32,6 +47,8 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          repository: napari/packaging
+          ref: always-pyside # temporary
           path: napari-packaging
 
       - name: Checkout napari source
@@ -40,6 +57,8 @@ jobs:
           fetch-depth: 0
           repository: napari/napari
           path: napari-source
+          # if we are not on workflow_dispatch, then inputs is not defined -> use '' in that case
+          ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: Checkout conda-forge feedstock
         uses: actions/checkout@v2
@@ -51,7 +70,7 @@ jobs:
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: napari-packaging/data/ci_packages_environment.yml
+          environment-file: napari-packaging/environments/ci_packages_environment.yml
 
       - name: install napari
         shell: bash -el {0}
@@ -68,15 +87,16 @@ jobs:
         working-directory: napari-feedstock
         run: |
           set -euxo pipefail
-          # This is the source path once mounted _inside_ the Docker image!
-          source_path="/home/conda/feedstock_root/napari-source"
+          # rm recipe from conda-forge's feedstock and replace with our napari/packaging version
+          rm -rf recipe/
+          cp -r ../napari-packaging/conda-recipe recipe
 
           sed -i -e "s|{% set version = \".*\" %}|{% set version = \"${NAPARI_VERSION}\" %}|" \
-                 -e "s|  - url: https://pypi.*|  path: ${source_path}|" \
-                 -e "s|  - url: https://raw\.github.*||" \
-                 -e "s|    folder:.*||" \
-                 -e "s|    sha256:.*||g"  \
+                 -e "s|{% set build = [0-9]+ %}|{% set build = 0 %}|" \
                  recipe/meta.yaml
+          # make sure the meta.yaml points to the local source, in case we break
+          # this when updating from upstream
+          grep -e "path: /home/conda" recipe/meta.yaml
 
           conda-smithy rerender
           git diff
@@ -121,7 +141,7 @@ jobs:
         shell: bash -el {0}
         # Only upload to anaconda.org/napari if it's a nightly (version with *dev* suffix)
         # or a tag event (either RC or final). Nightlies and RCs go to the nightly channel.
-        if: github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v')
+        if: inputs.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v')
         run: |
           label_args=""
           if [[ $NAPARI_VERSION == *rc* || $NAPARI_VERSION == *dev* ]]; then
@@ -139,7 +159,7 @@ jobs:
     name: Bundle ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
     needs: packages
-    if: github.repository == 'napari/packaging'
+    if: startsWith(github.repository, 'napari')
     strategy:
       fail-fast: false
       matrix:
@@ -172,6 +192,8 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          repository: napari/packaging
+          ref: always-pyside # temporary
           path: napari-packaging
 
       - name: Checkout napari/napari
@@ -184,7 +206,7 @@ jobs:
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: napari-packaging/data/ci_installers_environment.yml
+          environment-file: napari-packaging/environments/ci_installers_environment.yml
           extra-specs: |
             python=${{ matrix.python-version }}
 
@@ -200,7 +222,7 @@ jobs:
         shell: bash -el {0}
         working-directory: napari-source
         run: |
-          python -m pip install -e '.[bundle_build]'
+          python -m pip install -e . --no-deps
 
       - name: Download local build artifacts (napari)
         uses: actions/download-artifact@v3
@@ -254,30 +276,33 @@ jobs:
       - name: Load signing certificate (MacOS)
         shell: bash -el {0}
         # We only sign pushes to main, nightlies, RCs and final releases
-        if: runner.os == 'macOS' && (github.event_name == 'schedule' || github.event_name == 'push')
-        env:
-          APPLE_APPLICATION_CERTIFICATE_BASE64: ${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}
-          APPLE_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}
-          APPLE_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}
-          TEMP_KEYCHAIN_PASSWORD: ${{ secrets.TEMP_KEYCHAIN_PASSWORD }}
+        if: runner.os == 'macOS' && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         run: |
+          if [ -z '${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}' ] || \
+             [ -z '${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}' ]   || \
+             [ -z '${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}' ] || \
+             [ -z '${{ secrets.TEMP_KEYCHAIN_PASSWORD }}' ]; then
+              echo "::warning::Skipping task because one or more required secrets were not set!"
+              exit 0
+          fi
+
           # create variables
           INSTALLER_CERTIFICATE_PATH="$RUNNER_TEMP/installer_developer_cert.p12"
           APPLICATION_CERTIFICATE_PATH="$RUNNER_TEMP/application_developer_cert.p12"
           KEYCHAIN_PATH="$RUNNER_TEMP/installer-signing.keychain-db"
 
           # import certificate and provisioning profile from secrets
-          echo -n "$APPLE_INSTALLER_CERTIFICATE_BASE64" | base64 --decode --output $INSTALLER_CERTIFICATE_PATH
-          echo -n "$APPLE_APPLICATION_CERTIFICATE_BASE64" | base64 --decode --output $APPLICATION_CERTIFICATE_PATH
+          echo -n "${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}" | base64 --decode --output $INSTALLER_CERTIFICATE_PATH
+          echo -n "${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}" | base64 --decode --output $APPLICATION_CERTIFICATE_PATH
 
           # create temporary keychain
-          security create-keychain -p "$TEMP_KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security create-keychain -p "${{ secrets.TEMP_KEYCHAIN_PASSWORD }}" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$TEMP_KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security unlock-keychain -p "${{ secrets.TEMP_KEYCHAIN_PASSWORD }}" $KEYCHAIN_PATH
 
           # import certificate to keychain
-          security import $INSTALLER_CERTIFICATE_PATH -P $APPLE_INSTALLER_CERTIFICATE_PASSWORD -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security import $APPLICATION_CERTIFICATE_PATH -P $APPLE_INSTALLER_CERTIFICATE_PASSWORD -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security import $INSTALLER_CERTIFICATE_PATH -P ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }} -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security import $APPLICATION_CERTIFICATE_PATH -P ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }} -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
           # export identity name
@@ -296,11 +321,20 @@ jobs:
 
       - name: Load signing certificate (Windows)
         # We only sign pushes to main, nightlies, RCs and final releases
-        if: runner.os == 'Windows' && (github.event_name == 'schedule' || github.event_name == 'push')
+        if: runner.os == 'Windows' && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         # We are signing with Apple's certificate to provide _something_
         # This is not trusted by Windows so the warnings are still there, but curious users
         # will be able to check it's actually us if necessary
         run: |
+          if (
+            !'${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}' -or
+            !'${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}'   -or
+            !'${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}' -or
+            !'${{ secrets.TEMP_KEYCHAIN_PASSWORD }}'
+          ) {
+            Write-Host "::warning::Skipping task because one or more required secrets were not set!"
+            Exit 0
+          }
           Set-Content -Path "${{ runner.temp }}/certificate.b64.txt" -Value '${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}'
           certutil -decode "${{ runner.temp }}/certificate.b64.txt" "${{ runner.temp }}/certificate.pfx"
 
@@ -346,7 +380,10 @@ jobs:
 
       - name: Notarize Bundle (macOS)
         # We only sign pushes to main, nightlies, RCs and final releases
-        if: runner.os == 'macOS' && (github.event_name == 'schedule' || github.event_name == 'push')
+        if: >
+          runner.os == 'macOS' &&
+          env.CONSTRUCTOR_NOTARIZATION_IDENTITY &&
+          (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         uses: devbotsxyz/xcode-notarize@v1
         with:
           product-path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
@@ -357,46 +394,49 @@ jobs:
 
       - name: Staple Bundle (macOS)
         # We only sign pushes to main, nightlies, RCs and final releases
-        if: runner.os == 'macOS' && (github.event_name == 'schedule' || github.event_name == 'push')
+        if: >
+          runner.os == 'macOS' &&
+          env.CONSTRUCTOR_NOTARIZATION_IDENTITY &&
+          (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         uses: devbotsxyz/xcode-staple@v1
         with:
           product-path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
-        # CI artifact uploads only for PRs and pushes to main
-        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == 'main')
+        # CI artifact uploads only on manual runs
+        if: inputs.event_name == 'workflow_dispatch'
         with:
           name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
 
-      # - name: Get Release
-      #   if: startsWith(github.ref, 'refs/tags/v')
-      #   id: get_release
-      #   uses: bruceadams/get-release@v1.2.3
+      - name: Get Release
+        if: inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        id: get_release
+        uses: bruceadams/get-release@v1.2.3
 
-      # - name: Upload Release Asset
-      #   if: startsWith(github.ref, 'refs/tags/v')
-      #   uses: actions/upload-release-asset@v1
-      #   with:
-      #     upload_url: ${{ steps.get_release.outputs.upload_url }}
-      #     asset_path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
-      #     asset_name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
-      #     asset_content_type: application/octet-stream
+      - name: Upload Release Asset
+        if: inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          asset_name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          asset_content_type: application/octet-stream
 
-      # - name: Upload Nightly Build Asset
-      #   if: ${{ github.event_name == 'schedule' }}
-      #   uses: WebFreak001/deploy-nightly@v1.1.0
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     # nightly build release from https://api.github.com/repos/napari/napari/releases
-      #     upload_url: https://uploads.github.com/repos/napari/napari/releases/34273071/assets{?name,label}
-      #     release_id: 34273071
-      #     asset_path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
-      #     asset_name: napari-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
-      #     asset_content_type: application/octet-stream
-      #     max_releases: 1
+      - name: Upload Nightly Build Asset
+        if: ${{ inputs.event_name == 'schedule' }}
+        uses: WebFreak001/deploy-nightly@v1.1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # nightly build release from https://api.github.com/repos/napari/napari/releases
+          upload_url: https://uploads.github.com/repos/napari/napari/releases/34273071/assets{?name,label}
+          release_id: 34273071
+          asset_path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          asset_name: napari-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          asset_content_type: application/octet-stream
+          max_releases: 1
 
       - name: Test installation (Linux)
         if: runner.os == 'Linux'
@@ -447,3 +487,32 @@ jobs:
       #     tag-name: latest
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  check_setup_cfg:
+    name: Report setup.cfg changes
+    runs-on: ubuntu-latest
+    if: inputs.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files using defaults
+        id: changed-files
+        uses: tj-actions/changed-files@v25
+
+      - name: Checkout packaging code
+        if: contains(steps.changed-files.outputs.modified_files, 'setup.cfg')
+        uses: actions/checkout@v2
+        with:
+          repository: napari/packaging
+          ref: always-pyside # temporary
+
+      - name: Create issue
+        if: contains(steps.changed-files.outputs.modified_files, 'setup.cfg')
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/SETUP_CFG_UPDATED_TEMPLATE.md
+          update_existing: true

@@ -1,0 +1,178 @@
+{% set name = "napari" %}
+{% set version = "0.4.16" %}
+{% set build = 0 %}
+
+package:
+  name: napari-meta
+
+source:
+  # This section has been patched from the original conda-forge feedstock
+  # so it uses the mounted volume of the cloned repo in a Docker image
+  path: /home/conda/feedstock_root/napari-source
+
+build:
+  number: {{ build }}
+
+outputs:
+  - name: napari
+    version: {{ version }}
+    build:
+      noarch: python
+      number: {{ build }}
+      string: pyh{{ PKG_HASH }}_{{ build }}_{{ qt_bindings }}
+      script: PIP_NO_INDEX=True PIP_NO_DEPENDENCIES=True PIP_NO_BUILD_ISOLATION=False PIP_IGNORE_INSTALLED=True PYTHONDONTWRITEBYTECODE=True {{ PREFIX }}/bin/python -m pip install . -vv
+      entry_points:
+        - napari = napari.__main__:main
+      # de-prioritize pyside so pyqt gets installed by default if unspecified
+      track_features:   # [qt_bindings == 'pyside2']
+        - napari_pyside2  # [qt_bindings == 'pyside2']
+
+    requirements:
+      build:
+        - pep517
+        - setuptools_scm
+      host:
+        - python >=3.8
+        - pip
+        - setuptools_scm
+      run:
+        - python >=3.8
+
+        # dependencies matched to pip
+        - appdirs >=1.4.4
+        - app-model>=0.0.6,<0.3.0
+        - cachey >=0.2.1
+        - certifi >=2020.6.20
+        - dask >=2.15.0,!=2.28.0
+        - imageio >=2.5.0,!=2.11.0
+        - jsonschema >=3.2.0
+        - magicgui >=0.3.6
+        - napari-console >=0.0.4
+        - napari-plugin-engine >=0.1.9
+        - napari-svg >=0.1.6
+        - npe2 >=0.5.2
+        - numpy >=1.18.5
+        - numpydoc >=0.9.2
+        - pandas >=1.3.0
+        - pillow !=7.1.0,!=7.1.1
+        - pint >=0.17
+        - psutil >=5.0
+        - psygnal>=0.3.4
+        - pyopengl >=3.1.0
+        - pyyaml >=5.1
+        - pydantic >=1.9.0
+        - pygments >=2.4.0
+        - qtpy >=1.7.0
+        - scipy >=1.5.4
+        - scikit-image >=0.19.1
+        - superqt >=0.2.5
+        - tifffile >=2020.2.16
+        - typing_extensions
+        - toolz >=0.10.0
+        - tqdm >=4.56.0
+        - vispy>=0.11.0,<0.12
+        - wrapt >=1.11.1
+
+        # additional dependencies for convenience in conda-forge
+        - fsspec
+        - pooch >=1.3.0
+        - zarr
+
+        # variants
+        - pyside2 >=5.13.2,!=5.15.0  # [qt_bindings == 'pyside2']
+        - pyqt >=5.12.3,!=5.15.0  # [qt_bindings == 'pyqt']
+
+    test:
+    #  requires:
+        #  - hypothesis
+        #  - pytest
+        #  - pytest-faulthandler
+        #  - pytest-qt
+        #  - xarray
+        #  - pandas
+        #  - pytest-timeout
+      imports:
+        - napari
+      commands:
+        - setx QT_API "pyqt5"  # [win]
+        - export QT_API=pyqt5  # [unix]
+        - which napari
+        - napari --info  # [not linux]
+        - QT_DEBUG_PLUGINS=1 LIBGL_DEBUG=verbose xvfb-run --auto-servernum napari --info || true  # [linux]
+        # - pytest --pyargs napari
+
+    about:
+      home: http://napari.org
+      license: BSD-3-Clause AND MIT
+      license_file:
+        - LICENSE
+        # - napari/_vendor/cpython/LICENSE
+        # - napari/_vendor/darkdetect/LICENSE
+        - napari/_vendor/experimental/cachetools/LICENSE
+        - napari/_vendor/experimental/humanize/LICENCE
+        - napari/_vendor/qt_json_builder/LICENSE
+      summary: a fast n-dimensional image viewer in Python
+      description: a fast n-dimensional image viewer in Python
+      doc_url: http://napari.org
+      dev_url: https://github.com/napari/napari
+
+  - name: napari-menu
+    version: {{ version }}
+    build:
+      noarch: python
+      skip: true  # [qt_bindings == 'pyside2']
+      number: {{ build }}
+      script:
+        - mkdir -p "${PREFIX}/Menu"
+        - sed "s/__PKG_VERSION__/{{ PKG_VERSION }}/" "{{ SRC_DIR }}/resources/conda_menu_config.json" > "{{ PREFIX }}/Menu/napari-menu.json"
+        - cp "{{ SRC_DIR }}/napari/resources/logo.png" "{{ PREFIX }}/Menu/napari.png"
+        - cp "{{ SRC_DIR }}/napari/resources/icon.icns" "{{ PREFIX }}/Menu/napari.icns"
+        - cp "{{ SRC_DIR }}/napari/resources/icon.ico" "{{ PREFIX }}/Menu/napari.ico"
+    requirements:
+      build:
+        - sed     # [unix]
+      run:
+        - napari {{ version }}.*
+    test:
+      imports:
+        - napari
+      commands:
+        - test -f ${CONDA_PREFIX}/Menu/napari-menu.json
+
+    # app:
+    #   entry: python -m napari
+    #   icon: "{{ SRC_DIR|replace('\\', '/') }}/napari/resources/logo.png"
+    #   summary: a fast n-dimensional image viewer in Python
+    #   own_environment: True
+
+    about:
+      home: http://napari.org
+      license: BSD-3-Clause
+      license_family: BSD
+      license_file: LICENSE
+      summary: provides menu icons for napari
+      description: provides menu icons for napari
+      doc_url: http://napari.org
+      dev_url: https://github.com/napari/napari
+
+about:
+  home: http://napari.org
+  license: BSD-3-Clause
+  license_family: BSD
+  license_file: LICENSE
+  summary: a fast n-dimensional image viewer in Python
+  description: a fast n-dimensional image viewer in Python
+  doc_url: http://napari.org
+  dev_url: https://github.com/napari/napari
+
+extra:
+  feedstock-name: napari
+  recipe-maintainers:
+    - jni
+    - sofroniewn
+    - kne42
+    - royerloic
+    - AhmetCanSolak
+    - tlambert03
+    - goanpeca
+    - jaimergp
