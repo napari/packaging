@@ -48,7 +48,6 @@ jobs:
         with:
           fetch-depth: 0
           repository: napari/packaging
-          ref: always-pyside # temporary
           path: napari-packaging
 
       - name: Checkout napari source
@@ -193,7 +192,6 @@ jobs:
         with:
           fetch-depth: 0
           repository: napari/packaging
-          ref: always-pyside # temporary
           path: napari-packaging
 
       - name: Checkout napari/napari
@@ -506,7 +504,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: napari/packaging
-          ref: always-pyside # temporary
 
       - name: Create issue
         if: contains(steps.changed-files.outputs.modified_files, 'setup.cfg')
