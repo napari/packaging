@@ -1,0 +1,37 @@
+name: Plugins
+
+on:
+  schedule:
+    # Every Monday and Thursday, at 6am
+    - "0 6 * * 1,4"
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  packages:
+    name: Installability
+    runs-on: ubuntu-latest
+    if: startsWith(github.repository, 'napari')
+    strategy:
+      fail-fast: false
+      matrix:
+        subdir:
+          - "linux-64"
+          - "osx-64"
+          - "osx-arm64"
+          - "win-64"
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: environments/installability.yml
+      - name: Run script
+        shell: bash -el {0}
+        env:
+          CONDA_SUBDIR: ${{ matrix.subdir }}
+        run: python ci_scripts/check_installability_plugins.py
+

@@ -1,0 +1,7 @@
+name: installability
+channels:
+  - conda-forge
+dependencies:
+  - conda
+  - mamba
+  - python
