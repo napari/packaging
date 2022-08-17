@@ -73,3 +73,7 @@ def main():
             specs.append(conda_name.replace("/", "::"))
 
     result = solve(specs)
+
+
+if __name__ == "__main__":
+    main()
