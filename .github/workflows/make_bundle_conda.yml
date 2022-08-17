@@ -138,7 +138,7 @@ jobs:
 
       - name: Check token availability
         run: |
-          if [[ -n "${{ secrets.ANACONDA_TOKEN }}" ]];
+          if [[ -n "${{ secrets.ANACONDA_TOKEN }}" ]]; then
             echo "ANACONDA_TOKEN_AVAILABLE=1" >> $GITHUB_ENV
           fi
 
