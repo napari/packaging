@@ -104,7 +104,7 @@ def _version():
             # we just want the version tag, number of commits after tag,
             # and git hash;  so we discard the date
             pre, post = version.split("+", 1)
-            version = f"{pre}_{post.split('.')[0]}"
+            version = f"{pre}+{post.split('.')[0]}"
             return version
     else:
         # get latest published on conda-forge
