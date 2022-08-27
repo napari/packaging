@@ -97,12 +97,14 @@ def _use_local():
 @lru_cache
 def _version():
     if _use_local():
-        return importlib.metadata.version("napari")
+        version = importlib.metadata.version("napari")
+        if "+" in version:  # discard git hash and date
+            return version.split("+")[0]
     else:
         # get latest published on conda-forge
         r = requests.get(f"https://api.anaconda.org/package/conda-forge/napari")
         r.raise_for_status()
-        return r.json()["versions"][-1]
+        return r.json()["latest_version"]
 
 
 OUTPUT_FILENAME = f"{APP}-{_version()}-{OS}-{ARCH}.{EXT}"
