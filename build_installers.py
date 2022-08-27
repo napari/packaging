@@ -98,8 +98,14 @@ def _use_local():
 def _version():
     if _use_local():
         version = importlib.metadata.version("napari")
-        if "+" in version:  # discard git hash and date
-            return version.split("+")[0]
+        if "+" in version:
+            # a version string can be something like:
+            # 0.4.16rc2.dev252+gf6bdd623.d20220827
+            # we just want the version tag, number of commits after tag,
+            # and git hash;  so we discard the date
+            pre, post = version.split("+", 1)
+            version = f"{pre}_{post.split('.')[0]}"
+            return version
     else:
         # get latest published on conda-forge
         r = requests.get(f"https://api.anaconda.org/package/conda-forge/napari")
