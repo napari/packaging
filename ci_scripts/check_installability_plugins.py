@@ -93,7 +93,7 @@ def main():
         "PYTHON_VERSION", f"{sys.version_info.major}.{sys.version_info.minor}"
     )
     python_spec = f"python={pyver}"
-    napari_spec = f"napari={latest_napari_on_conda_forge()}"
+    napari_spec = f"napari={latest_napari_on_conda_forge()}=*pyside*"
     plugin_names = all_plugin_names()
     plugin_specs = []
     for _, conda_name in plugin_names.items():
@@ -122,11 +122,15 @@ def main():
                             f'{pkg["name"]}=={pkg["version"]} '
                             f"is not the latest version ({pkg_latest_version})"
                         )
+                elif pkg["name"].lower().startswith("pyqt"):
+                    failures[task].append(
+                        f"Solution includes {pkg['name']}=={pkg['version']}"
+                    )
         else:
             failures[task].extend(result["solver_problems"])
     print("-" * 20)
     for task, failure_list in failures.items():
-        print("Installation attempt for", *task, "did not succeed!")
+        print("Installation attempt for", *task, "has errors!")
         print("Reasons:")
         for failure in failure_list:
             print(" - ", failure)
