@@ -33,11 +33,15 @@ jobs:
       - uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: environments/installability.yml
-          extra-specs: |
-            python=${{ matrix.python-version }}
-      - name: Run script
+      - name: Check installability one by one
         shell: bash -el {0}
         env:
           CONDA_SUBDIR: ${{ matrix.subdir }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: python ci_scripts/check_installability_plugins.py
-
+      - name: Check installability of all plugins at once
+        shell: bash -el {0}
+        env:
+          CONDA_SUBDIR: ${{ matrix.subdir }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: python ci_scripts/check_installability_plugins.py --all
