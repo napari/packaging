@@ -1,6 +1,6 @@
 # napari packaging
 
-This repository stores the CI pipelines and helper scripts needed to create the conda-based installers for Linux, macOS and Windows.
+This repository stores the CI pipelines and helper scripts needed to create conda-based napari installers for Linux, macOS and Windows.
 
 You can find more information in the following resources:
 
