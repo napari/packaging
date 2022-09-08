@@ -18,7 +18,6 @@ import os
 import sys
 import time
 
-from tqdm import tqdm
 from conda.models.version import VersionOrder
 import requests
 
@@ -26,44 +25,44 @@ NPE2API_CONDA = "https://npe2api.vercel.app/api/conda"
 
 
 @lru_cache
-def latest_napari_on_conda_forge():
+def _latest_napari_on_conda_forge():
     r = requests.get("https://api.anaconda.org/package/conda-forge/napari")
     r.raise_for_status()
     return r.json()["latest_version"]
 
 
 @lru_cache
-def all_plugin_names():
+def _all_plugin_names():
     r = requests.get(NPE2API_CONDA)
     r.raise_for_status()
     return r.json()
 
 
 @lru_cache
-def latest_version(name):
+def _latest_plugin_version(name):
     r = requests.get(f"{NPE2API_CONDA}/{name}")
+    time.sleep(0.1)
     if r.ok:
         return r.json()["latest_version"]
 
 
 def _check_if_latest(pkg):
     failures = []
-    pkg_latest_version = latest_version(pkg["name"])
-    if pkg_latest_version:
-        if VersionOrder(pkg["version"]) < VersionOrder(pkg_latest_version):
-            failures.append(
-                f'{pkg["name"]}=={pkg["version"]} '
-                f"is not the latest version ({pkg_latest_version})"
-            )
+    name, version = pkg["name"], pkg["version"]
+    if name == "napari":
+        latest_v = _latest_napari_on_conda_forge()
     else:
-        failures.append(
-            f'Warning: Could not check version for {pkg["name"]}=={pkg["version"]}'
-        )
+        latest_v = _latest_plugin_version(name)
+    if latest_v:
+        if VersionOrder(version) < VersionOrder(latest_v):
+            failures.append(f"{name}=={version} is not the latest version ({latest_v})")
+    else:
+        failures.append(f"Warning: Could not check version for {name}=={version}")
     return failures
 
 
 @lru_cache
-def patched_environment():
+def _patched_environment():
     platform = os.environ.get("CONDA_SUBDIR")
     if not platform:
         return
@@ -79,7 +78,7 @@ def patched_environment():
     return env
 
 
-def solve(*args):
+def _solve(*args):
     command = [
         "micromamba",
         "create",
@@ -92,7 +91,7 @@ def solve(*args):
         # we only process truthy args
         *(arg for arg in args if arg),
     ]
-    resp = run(command, stdout=PIPE, stderr=PIPE, text=True, env=patched_environment())
+    resp = run(command, stdout=PIPE, stderr=PIPE, text=True, env=_patched_environment())
     try:
         return json.loads(resp.stdout)
     except json.JSONDecodeError:
@@ -101,7 +100,7 @@ def solve(*args):
         raise
 
 
-def cli():
+def _cli():
     p = ArgumentParser()
     p.add_argument("--all", action="store_true")
     return p.parse_args()
@@ -112,14 +111,14 @@ def main():
         "PYTHON_VERSION", f"{sys.version_info.major}.{sys.version_info.minor}"
     )
     python_spec = f"python={pyver}"
-    napari_spec = f"napari={latest_napari_on_conda_forge()}=*pyside*"
-    plugin_names = all_plugin_names()
+    napari_spec = f"napari={_latest_napari_on_conda_forge()}=*pyside*"
+    plugin_names = _all_plugin_names()
     plugin_specs = []
     for _, conda_name in plugin_names.items():
         if conda_name is not None:
             plugin_specs.append(conda_name.replace("/", "::"))
 
-    args = cli()
+    args = _cli()
     if args.all:
         tasks = [(python_spec, napari_spec, *plugin_specs)]
     else:
@@ -134,7 +133,7 @@ def main():
     names_to_check = {"napari", *plugin_names}
     for i, task in enumerate(tasks, 1):
         print(f"Task {i:4d}/{n_tasks}:", *task)
-        result = solve(*task)
+        result = _solve(*task)
         if result["success"] is True:
             # Even if the solver is able to find a solution
             # it doesn't mean it's a valid one because metadata
