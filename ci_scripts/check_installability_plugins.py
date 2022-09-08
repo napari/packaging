@@ -42,9 +42,24 @@ def all_plugin_names():
 @lru_cache
 def latest_version(name):
     r = requests.get(f"{NPE2API_CONDA}/{name}")
-    r.raise_for_status()
-    time.sleep(0.1)
-    return r.json()["latest_version"]
+    if r.ok:
+        return r.json()["latest_version"]
+
+
+def _check_if_latest(pkg):
+    failures = []
+    pkg_latest_version = latest_version(pkg["name"])
+    if pkg_latest_version:
+        if VersionOrder(pkg["version"]) < VersionOrder(pkg_latest_version):
+            failures.append(
+                f'{pkg["name"]}=={pkg["version"]} '
+                f"is not the latest version ({pkg_latest_version})"
+            )
+    else:
+        failures.append(
+            f'Warning: Could not check version for {pkg["name"]}=={pkg["version"]}'
+        )
+    return failures
 
 
 @lru_cache
@@ -74,7 +89,8 @@ def solve(*args):
         "-c",
         "conda-forge",
         "--json",
-        *args,
+        # we only process truthy args
+        *(arg for arg in args if arg),
     ]
     resp = run(command, stdout=PIPE, stderr=PIPE, text=True, env=patched_environment())
     try:
@@ -107,25 +123,32 @@ def main():
     if args.all:
         tasks = [(python_spec, napari_spec, *plugin_specs)]
     else:
+        # We add an empty string plugin to test for just napari with no plugins
         tasks = [
-            (python_spec, napari_spec, plugin_spec) for plugin_spec in plugin_specs
+            (python_spec, napari_spec, plugin_spec)
+            for plugin_spec in ("", *plugin_specs)
         ]
 
     failures = defaultdict(list)
     n_tasks = len(tasks)
+    names_to_check = {"napari", *plugin_names}
     for i, task in enumerate(tasks, 1):
         print(f"Task {i:4d}/{n_tasks}:", *task)
         result = solve(*task)
         if result["success"] is True:
+            # Even if the solver is able to find a solution
+            # it doesn't mean it's a valid one because metadata
+            # can have errors!
             for pkg in result["actions"]["LINK"]:
-                if pkg["name"] in plugin_names:
-                    pkg_latest_version = latest_version(pkg["name"])
-                    if VersionOrder(pkg["version"]) < VersionOrder(pkg_latest_version):
-                        failures[task].append(
-                            f'{pkg["name"]}=={pkg["version"]} '
-                            f"is not the latest version ({pkg_latest_version})"
-                        )
+                if pkg["name"] in names_to_check:
+                    # 1) We should have obtained the latest version
+                    #    of the plugin. If not, metadata is faulty!
+                    maybe_failures = _check_if_latest(pkg)
+                    if maybe_failures:
+                        failures[task].extend(maybe_failures)
                 elif pkg["name"].lower().startswith("pyqt"):
+                    # 2) We want pyside only. If pyqt lands in the env
+                    #    it was pulled by the plugin or its dependencies.
                     failures[task].append(
                         f"Solution includes {pkg['name']}=={pkg['version']}"
                     )
