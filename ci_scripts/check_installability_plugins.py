@@ -105,7 +105,7 @@ def main():
         tasks = [(python_spec, napari_spec, *plugin_specs)]
     else:
         tasks = [
-            (python_spec, napari_spec, plugin_spec) for plugin_spec in plugin_specs[:10]
+            (python_spec, napari_spec, plugin_spec) for plugin_spec in plugin_specs
         ]
 
     failures = defaultdict(list)

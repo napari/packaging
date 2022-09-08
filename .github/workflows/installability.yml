@@ -41,6 +41,7 @@ jobs:
         run: python ci_scripts/check_installability_plugins.py
       - name: Check installability of all plugins at once
         shell: bash -el {0}
+        if: always()
         env:
           CONDA_SUBDIR: ${{ matrix.subdir }}
           PYTHON_VERSION: ${{ matrix.python-version }}
