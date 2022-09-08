@@ -12,7 +12,7 @@ on:
 
 jobs:
   packages:
-    name: Installability
+    name: Installability, ${{ matrix.subdir }}, Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     if: startsWith(github.repository, 'napari')
     strategy:
@@ -23,12 +23,18 @@ jobs:
           - "osx-64"
           - "osx-arm64"
           - "win-64"
+        python-version:
+          - "3.8"
+          - "3.9"
+          - "3.10"
 
     steps:
       - uses: actions/checkout@v2
       - uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: environments/installability.yml
+          extra-specs: |
+            python=${{ matrix.python-version }}
       - name: Run script
         shell: bash -el {0}
         env:
