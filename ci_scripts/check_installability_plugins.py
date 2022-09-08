@@ -54,10 +54,13 @@ def patched_environment():
         return
     env = os.environ.copy()
     if platform.startswith("linux-"):
+        env.setdefault("CONDA_OVERRIDE_LINUX", "1")
         env.setdefault("CONDA_OVERRIDE_GLIBC", "2.17")
         env.setdefault("CONDA_OVERRIDE_CUDA", "11.2")
     elif platform.startswith("osx-"):
         env.setdefault("CONDA_OVERRIDE_OSX", "11.2")
+    elif platform.startswith("win-"):
+        env.setdefault("CONDA_OVERRIDE_WIN", "1")
     return env
 
 
