@@ -110,7 +110,7 @@ def main():
     pyver = os.environ.get(
         "PYTHON_VERSION", f"{sys.version_info.major}.{sys.version_info.minor}"
     )
-    python_spec = f"python={pyver}=*cpython"
+    python_spec = f"python={pyver}.*=*cpython"
     napari_spec = f"napari={_latest_napari_on_conda_forge()}=*pyside*"
     plugin_names = _all_plugin_names()
     plugin_specs = []
