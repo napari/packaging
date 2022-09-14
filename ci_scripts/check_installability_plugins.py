@@ -169,8 +169,12 @@ def main():
         for failure in failure_list:
             print(" - ", failure)
         print("-" * 20)
-
-    return len(failures)
+    if args.all:
+        # single task, the exit code is the number of problems
+        return sum(len(problems) for problems in failures.values())
+    else:
+        # several tasks, the exit code is the number of tasks that failed
+        return len(failures)
 
 
 if __name__ == "__main__":
