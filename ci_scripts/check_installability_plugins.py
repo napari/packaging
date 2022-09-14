@@ -116,7 +116,7 @@ def main():
     names_to_check = {"napari"}
     plugin_specs = []
     print("Preparing tasks...")
-    for i, (pypi_name, conda_name) in enumerate(plugin_names.items()):
+    for pypi_name, conda_name in plugin_names.items():
         if conda_name is not None:
             plugin_spec = conda_name.replace("/", "::")
             if not args.all:
@@ -125,8 +125,6 @@ def main():
                     plugin_spec += f"=={latest_version}"
             plugin_specs.append(plugin_spec)
             names_to_check.add(conda_name.split("/")[1])
-        if i > 9:
-            break
 
     if args.all:
         tasks = [(python_spec, napari_spec, *plugin_specs)]
