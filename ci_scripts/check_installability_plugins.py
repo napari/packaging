@@ -107,18 +107,27 @@ def _cli():
 
 
 def main():
-    pyver = os.environ.get(
-        "PYTHON_VERSION", f"{sys.version_info.major}.{sys.version_info.minor}"
-    )
+    args = _cli()
+    current_pyver = f"{sys.version_info.major}.{sys.version_info.minor}"
+    pyver = os.environ.get("PYTHON_VERSION", current_pyver)
     python_spec = f"python={pyver}.*=*cpython"
     napari_spec = f"napari={_latest_napari_on_conda_forge()}=*pyside*"
     plugin_names = _all_plugin_names()
+    names_to_check = {"napari"}
     plugin_specs = []
-    for _, conda_name in plugin_names.items():
+    print("Preparing tasks...")
+    for i, (pypi_name, conda_name) in enumerate(plugin_names.items()):
         if conda_name is not None:
-            plugin_specs.append(conda_name.replace("/", "::"))
+            plugin_spec = conda_name.replace("/", "::")
+            if not args.all:
+                latest_version = _latest_plugin_version(pypi_name)
+                if latest_version:
+                    plugin_spec += f"=={latest_version}"
+            plugin_specs.append(plugin_spec)
+            names_to_check.add(conda_name.split("/")[1])
+        if i > 9:
+            break
 
-    args = _cli()
     if args.all:
         tasks = [(python_spec, napari_spec, *plugin_specs)]
     else:
@@ -130,7 +139,6 @@ def main():
 
     failures = defaultdict(list)
     n_tasks = len(tasks)
-    names_to_check = {"napari", *[name.lower() for name in plugin_names]}
     for i, task in enumerate(tasks, 1):
         print(f"Task {i:4d}/{n_tasks}:", *task)
         result = _solve(*task)
@@ -140,19 +148,20 @@ def main():
             # can have errors!
             for pkg in result["actions"]["LINK"]:
                 pkg_name_lower = pkg["name"].lower()
-                if pkg_name_lower in names_to_check:
+                if args.all and pkg_name_lower in names_to_check:
                     # 1) We should have obtained the latest version
                     #    of the plugin. If not, metadata is faulty!
+                    #    In one by one tests, this is forced in the spec.
+                    #    In "all at once", we don't force it, so better check.
                     maybe_failures = _check_if_latest(pkg)
                     if maybe_failures:
                         failures[task].extend(maybe_failures)
-                elif pkg_name_lower.startswith("pyqt") and pkg_name_lower != "pyqtgraph":
+                elif pkg_name_lower[:4] == "pyqt" and pkg_name_lower != "pyqtgraph":
                     # 2) We want pyside only. If pyqt lands in the env
                     #    it was pulled by the plugin or its dependencies.
                     #    Note that pyqtgraph, despite the name, can use pyside too.
-                    failures[task].append(
-                        f"Solution includes {pkg['name']}=={pkg['version']}"
-                    )
+                    failure = f"solution has {pkg['name']}=={pkg['version']}"
+                    failures[task].append(failure)
         else:
             failures[task].extend(result["solver_problems"])
     print("-" * 20)
