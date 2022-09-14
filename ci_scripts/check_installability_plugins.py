@@ -130,7 +130,7 @@ def main():
 
     failures = defaultdict(list)
     n_tasks = len(tasks)
-    names_to_check = {"napari", *plugin_names}
+    names_to_check = {"napari", *[name.lower() for name in plugin_names]}
     for i, task in enumerate(tasks, 1):
         print(f"Task {i:4d}/{n_tasks}:", *task)
         result = _solve(*task)
@@ -139,15 +139,17 @@ def main():
             # it doesn't mean it's a valid one because metadata
             # can have errors!
             for pkg in result["actions"]["LINK"]:
-                if pkg["name"] in names_to_check:
+                pkg_name_lower = pkg["name"].lower()
+                if pkg_name_lower in names_to_check:
                     # 1) We should have obtained the latest version
                     #    of the plugin. If not, metadata is faulty!
                     maybe_failures = _check_if_latest(pkg)
                     if maybe_failures:
                         failures[task].extend(maybe_failures)
-                elif pkg["name"].lower().startswith("pyqt"):
+                elif pkg_name_lower.startswith("pyqt") and pkg_name_lower != "pyqtgraph":
                     # 2) We want pyside only. If pyqt lands in the env
                     #    it was pulled by the plugin or its dependencies.
+                    #    Note that pyqtgraph, despite the name, can use pyside too.
                     failures[task].append(
                         f"Solution includes {pkg['name']}=={pkg['version']}"
                     )
