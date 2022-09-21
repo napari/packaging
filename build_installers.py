@@ -98,6 +98,8 @@ def _use_local():
 def _version():
     if _use_local():
         version = importlib.metadata.version("napari")
+        if version is None:
+            raise RuntimeError("Could not get napari version! Is it installed?")
         if "+" in version:
             # a version string can be something like:
             # 0.4.16rc2.dev252+gf6bdd623.d20220827
@@ -106,6 +108,7 @@ def _version():
             pre, post = version.split("+", 1)
             version = f"{pre}+{post.split('.')[0]}"
             return version
+        return version
     else:
         # get latest published on conda-forge
         r = requests.get(f"https://api.anaconda.org/package/conda-forge/napari")
