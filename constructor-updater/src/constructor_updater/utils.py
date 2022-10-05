@@ -4,14 +4,19 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Literal, Tuple, Union
+from typing import Dict, List, Literal, Tuple, Union, TYPE_CHECKING
 from urllib import request
 
-from .pypi import get_package_versions
-from .misc import is_dev, parse_version, running_as_constructor_app
+# from .pypi import get_package_versions
+# from .misc import is_dev, parse_version, running_as_constructor_app
 
 InstallerTypes = Literal['pip', 'conda']
 LETTERS_PATTERN = re.compile(r'[a-zA-Z]')
+
+
+
+if TYPE_CHECKING:
+    import packaging.version
 
 
 def normalized_name(name: str) -> str:
@@ -193,3 +198,30 @@ def is_dev() -> bool:
     except ImportError:
         dev_check = True
     return dev_check
+
+
+def _is_stable_version(version: Union[Tuple[str], str]) -> bool:
+    """
+    Return ``True`` if version is stable.
+    Stable version examples: ``0.4.12``, ``0.4.1``.
+    Non-stable version examples: ``0.4.15beta``, ``0.4.15rc1``, ``0.4.15dev0``.
+    """
+    if not isinstance(version, tuple):
+        version = version.split('.')
+
+    return not LETTERS_PATTERN.search(version[-1])
+
+
+def parse_version(v) -> 'packaging.version._BaseVersion':
+    """Parse a version string and return a packaging.version.Version obj."""
+    import packaging.version
+
+    try:
+        return packaging.version.Version(v)
+    except packaging.version.InvalidVersion:
+        return packaging.version.LegacyVersion(v)
+
+
+def create_sentinel_file(package_name, version):
+    """"""
+    # TODO
