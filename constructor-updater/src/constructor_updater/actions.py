@@ -4,7 +4,6 @@ import subprocess
 from typing import Dict
 
 from constructor_updater.defaults import DEFAULT_CHANNEL
-from constructor_updater.installer import CondaInstaller
 from constructor_updater.utils.anaconda import conda_package_versions
 from constructor_updater.utils.io import get_installed_versions
 from constructor_updater.utils.versions import is_stable_version, parse_version
@@ -12,18 +11,15 @@ from constructor_updater.utils.versions import is_stable_version, parse_version
 
 def _create_with_plugins():
     """Update the package."""
-    pass
 
 
 def _create_with_plugins_one_by_one():
     """Update the package."""
-    pass
 
 
 def _execute(cmd):
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
-    for stdout_line in iter(popen.stdout.readline, ""):
-        yield stdout_line 
+    yield from iter(popen.stdout.readline, "")
     popen.stdout.close()
     return_code = popen.wait()
     if return_code:
@@ -31,8 +27,8 @@ def _execute(cmd):
 
 
 def check_updates(
-    package_name : str,
-    current_version : str,
+    package_name: str,
+    current_version: str,
     stable: bool = True,
     channel: str = DEFAULT_CHANNEL,
 ) -> Dict:
@@ -77,11 +73,10 @@ def check_updates(
 
 def update():
     """Update the package."""
-    pass
     # Try with all plugins
     # Try with one by one plugins
 
-    # Must print results iteratively 
+    # Must print results iteratively
     # Example
     for path in _execute(["locate", "a"]):
         print(path, end="")
@@ -93,7 +88,6 @@ def clean_all():
 
 def clean():
     """Update the package."""
-    pass
 
 
 package_name = "napari"

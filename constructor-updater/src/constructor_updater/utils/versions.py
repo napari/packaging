@@ -1,9 +1,9 @@
 """Version handling utilities."""
 
 import re
-from typing import Tuple, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple, Union
 
-LETTERS_PATTERN = re.compile(r'[a-zA-Z]')
+LETTERS_PATTERN = re.compile(r"[a-zA-Z]")
 
 if TYPE_CHECKING:
     import packaging.version
@@ -28,12 +28,12 @@ def is_stable_version(version: Union[Tuple[str], str]) -> bool:
     Non-stable version examples: ``0.4.15beta``, ``0.4.15rc1``, ``0.4.15dev0``.
     """
     if not isinstance(version, tuple):
-        version = version.split('.')
+        version = version.split(".")
 
     return not LETTERS_PATTERN.search(version[-1])
 
 
-def parse_version(version : str) -> 'packaging.version._BaseVersion':
+def parse_version(version: str) -> "packaging.version._BaseVersion":
     """Parse a version string and return a packaging.version.Version obj.
 
     Parameters

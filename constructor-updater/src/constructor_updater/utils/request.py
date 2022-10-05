@@ -17,7 +17,7 @@ def _user_agent() -> str:
     return f"constructor-updater-{__version__}"
 
 
-def get_request(url : str) -> requests.Response:
+def get_request(url: str) -> requests.Response:
     """Return a requests session with a user agent.
 
     Parameters
@@ -31,5 +31,5 @@ def get_request(url : str) -> requests.Response:
         Response object.
     """
     session = requests.Session()
-    session.headers.update({'user-agent': _user_agent()})
+    session.headers.update({"user-agent": _user_agent()})
     return session.get(url)

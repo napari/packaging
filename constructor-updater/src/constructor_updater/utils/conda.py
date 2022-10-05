@@ -4,7 +4,10 @@ import re
 import sys
 from pathlib import Path
 
-from constructor_updater.defaults import SENTINEL_FILE_PREFIX, SENTINEL_FILE_SUFFIX
+from constructor_updater.defaults import (
+    SENTINEL_FILE_PREFIX,
+    SENTINEL_FILE_SUFFIX,
+)
 
 
 def normalized_name(name: str) -> str:
@@ -30,9 +33,7 @@ def check_if_constructor_app(package_name, path=None) -> bool:
     if path is None:
         path = Path(sys.prefix)
 
-    return (
-        path.parent.parent / sentinel_file_name(package_name)
-    ).exists()
+    return (path.parent.parent / sentinel_file_name(package_name)).exists()
 
 
 def sentinel_file_name(package_name):
@@ -68,4 +69,4 @@ def check_if_conda_environment(path=None) -> bool:
     if path is None:
         path = Path(sys.prefix)
 
-    return (Path(path) / 'conda-meta' / 'history').exists()
+    return (Path(path) / "conda-meta" / "history").exists()

@@ -1,12 +1,3 @@
-import contextlib
-import logging
-import os
-import shutil
-import sys
-from pathlib import Path
-from tempfile import gettempdir
-from typing import Deque, Optional, Sequence, Tuple
-
 # from qtpy.QtCore import QObject, QProcess, QProcessEnvironment, Signal
 
 # from ...utils._appdirs import user_plugin_dir, user_site_packages
@@ -14,7 +5,8 @@ from typing import Deque, Optional, Sequence, Tuple
 
 JobId = int
 
-class CondaInstaller():
+
+class CondaInstaller:
     pass
 
 

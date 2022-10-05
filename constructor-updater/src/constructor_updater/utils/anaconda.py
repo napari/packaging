@@ -3,12 +3,12 @@
 from functools import lru_cache
 from typing import List
 
-from constructor_updater.utils.request import get_request
 from constructor_updater.defaults import DEFAULT_CHANNEL
+from constructor_updater.utils.request import get_request
 
 
 @lru_cache
-def conda_package_data(package_name : str, channel : str = DEFAULT_CHANNEL) -> dict:
+def conda_package_data(package_name: str, channel: str = DEFAULT_CHANNEL) -> dict:
     """Return information on package from given channel.
 
     Parameters
@@ -29,7 +29,9 @@ def conda_package_data(package_name : str, channel : str = DEFAULT_CHANNEL) -> d
 
 
 @lru_cache
-def conda_package_versions(package_name: str, channel : str = DEFAULT_CHANNEL) -> List[str]:
+def conda_package_versions(
+    package_name: str, channel: str = DEFAULT_CHANNEL
+) -> List[str]:
     """Return information on package from given channel.
 
     Parameters
@@ -44,4 +46,4 @@ def conda_package_versions(package_name: str, channel : str = DEFAULT_CHANNEL) -
     list of str
         Package versions.
     """
-    return conda_package_data(package_name, channel=channel).get('versions', [])
+    return conda_package_data(package_name, channel=channel).get("versions", [])
