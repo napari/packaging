@@ -139,6 +139,7 @@ class AbstractInstaller:
         self._on_process_finished(job_id, return_code, 0)
 
     def _on_output(self, line):
+        # TODO: Write to file for logging and querying status
         print(line, end="")
         self._messages.append(line)
 

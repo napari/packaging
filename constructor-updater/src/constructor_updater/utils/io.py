@@ -103,8 +103,8 @@ def create_sentinel_file(package_name, version):
     """"""
     package_name = normalized_name(package_name)
     env_name = f"{package_name}-{version}"
-    prefix = get_prefix_by_name(env_name, package_name)
-    with open(get_sentinel_path(prefix), "w") as f:
+    prefix = get_prefix_by_name(env_name)
+    with open(get_sentinel_path(prefix, package_name), "w") as f:
         f.write("")
 
 
@@ -112,5 +112,5 @@ def remove_sentinel_file(package_name, version):
     """"""
     package_name = normalized_name(package_name)
     env_name = f"{package_name}-{version}"
-    prefix = get_prefix_by_name(env_name, package_name)
-    os.remove(get_sentinel_path(prefix))
+    prefix = get_prefix_by_name(env_name)
+    os.remove(get_sentinel_path(prefix, package_name))

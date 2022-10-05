@@ -85,8 +85,9 @@ def check_updates(
     }
 
 
-def update(package_name, package_version, build, plugins):
+def update(package_name, package_version, build="", plugins=()):
     """Update the package."""
+    plugins = list(plugins)
     return_code = _create_with_plugins(package_name, package_version, build, plugins)
 
     if bool(return_code):
@@ -96,6 +97,7 @@ def update(package_name, package_version, build, plugins):
 
     if not bool(return_code):
         create_sentinel_file(package_name, package_version)
+        # TODO: Create a lock file?
 
     print("finished!")
 
@@ -128,12 +130,16 @@ def clean_all(package_name):
 def check_updates_clean_and_launch(package_name, current_version, stable, channel):
     """Check for updates and clean."""
     res = check_updates(package_name, current_version, stable, channel)
+    found_versions = res["found_versions"]
+
+    # Remove any prior installations
     if res["installed"]:
-        remove_sentinel_file(package_name, current_version)
+        for version in found_versions:
+            if version != res["latest_version"]:
+                remove_sentinel_file(package_name, version)
+
+        # Launch the detached application
+        print(f"launching {package_name} version {res['latest_version']}")
+
+        # Remove any prior installations
         clean_all(package_name)
-        # Launch the application
-
-
-# update("napari", "0.4.16", "pyside", ["napari-arboretum"])
-print(check_updates("napari", "0.4.15", stable=True, channel="conda-forge"))
-# clean_all("napari")
