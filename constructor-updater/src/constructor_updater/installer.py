@@ -1,246 +1,257 @@
-# from qtpy.QtCore import QObject, QProcess, QProcessEnvironment, Signal
-
-# from ...utils._appdirs import user_plugin_dir, user_site_packages
-# from ...utils.misc import running_as_bundled_app
-
-JobId = int
-
-
-class CondaInstaller:
-    pass
+import contextlib
+import logging
+import os
+import sys
+import shutil
+from pathlib import Path
+import subprocess
+from typing import Optional, Sequence, Tuple, Deque
 
 
-# class AbstractInstaller(QProcess):
-#     """Abstract base class for package installers (pip, conda, etc)."""
-
-#     # emitted when all jobs are finished
-#     # not to be confused with finished, which is emitted when each job is finished
-#     allFinished = Signal()
-
-#     # abstract method
-#     def _modify_env(self, env: QProcessEnvironment):
-#         raise NotImplementedError()
-
-#     # abstract method
-#     def _get_install_args(
-#         self, pkg_list: Sequence[str], prefix: Optional[str] = None
-#     ) -> Tuple[str, ...]:
-#         raise NotImplementedError()
-
-#     # abstract method
-#     def _get_uninstall_args(
-#         self, pkg_list: Sequence[str], prefix: Optional[str] = None
-#     ) -> Tuple[str, ...]:
-#         raise NotImplementedError()
-
-#     def __init__(self, parent: Optional[QObject] = None) -> None:
-#         super().__init__(parent)
-#         self._queue: Deque[Tuple[str, ...]] = Deque()
-#         self.setProcessChannelMode(QProcess.MergedChannels)
-
-#         env = QProcessEnvironment.systemEnvironment()
-#         self._modify_env(env)
-#         self.setProcessEnvironment(env)
-
-#         self.finished.connect(self._on_process_finished)
-
-#     # -------------------------- Public API ------------------------------
-#     def install(
-#         self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
-#     ) -> JobId:
-#         """Install packages in `pkg_list` into `prefix`.
-
-#         Parameters
-#         ----------
-#         pkg_list : Sequence[str]
-#             List of packages to install.
-#         prefix : Optional[str], optional
-#             Optional prefix to install packages into.
-
-#         Returns
-#         -------
-#         JobId : int
-#             ID that can be used to cancel the process.
-#         """
-#         return self._queue_args(self._get_install_args(pkg_list, prefix))
-
-#     def uninstall(
-#         self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
-#     ) -> JobId:
-#         """Uninstall packages in `pkg_list` from `prefix`.
-
-#         Parameters
-#         ----------
-#         pkg_list : Sequence[str]
-#             List of packages to uninstall.
-#         prefix : Optional[str], optional
-#             Optional prefix from which to uninstall packages.
-
-#         Returns
-#         -------
-#         JobId : int
-#             ID that can be used to cancel the process.
-#         """
-#         return self._queue_args(self._get_uninstall_args(pkg_list))
-
-#     def cancel(self, job_id: Optional[JobId] = None):
-#         """Cancel `job_id` if it is running.
-
-#         Parameters
-#         ----------
-#         job_id : Optional[JobId], optional
-#             Job ID to cancel.  If not provided, cancel all jobs.
-#         """
-#         if job_id is None:
-#             # cancel all jobs
-#             self._queue.clear()
-#             self.terminate()
-#             return
-
-#         for i, args in enumerate(self._queue):
-#             if hash(args) == job_id:
-#                 self.terminate() if i == 0 else self._queue.remove(args)
-#                 return
-#         raise ValueError(f"No job with id {job_id}")  # pragma: no cover
-
-#     def waitForFinished(self, msecs: int = 10000) -> bool:
-#         """Block and wait for all jobs to finish.
-
-#         Parameters
-#         ----------
-#         msecs : int, optional
-#             Time to wait, by default 10000
-#         """
-#         while self.hasJobs():
-#             super().waitForFinished(msecs)
-#         return True
-
-#     def hasJobs(self) -> bool:
-#         """True if there are jobs remaining in the queue."""
-#         return bool(self._queue)
-
-#     # -------------------------- Private methods ------------------------------
-
-#     def _queue_args(self, args) -> JobId:
-#         self._queue.append(args)
-#         self._process_queue()
-#         return hash(args)
-
-#     def _process_queue(self):
-#         if not self._queue:
-#             self.allFinished.emit()
-#             return
-#         self.setArguments(list(self._queue[0]))
-#         logging.debug("Starting %s %s", self.program(), self.arguments())
-#         self.start()
-
-#     def _on_process_finished(
-#         self, exit_code: int, exit_status: QProcess.ExitStatus
-#     ):
-#         with contextlib.suppress(IndexError):
-#             self._queue.popleft()
-#         logging.debug(
-#             "Finished with exit code %s and status %s. Output:\n%s",
-#             exit_code,
-#             exit_status,
-#             "this makes Windows hang?",  # self.readAll().data().decode(),
-#         )
-#         self._process_queue()
+job_id = int
 
 
-# class PipInstaller(AbstractInstaller):
-#     def __init__(
-#         self, parent: Optional[QObject] = None, python_interpreter: str = ''
-#     ) -> None:
-#         super().__init__(parent)
-#         self.setProgram(str(python_interpreter or _get_python_exe()))
+class AbstractInstaller:
+    """Abstract base class for package installers (pip, conda, etc)."""
 
-#     def _modify_env(self, env: QProcessEnvironment):
-#         # patch process path
-#         combined_paths = os.pathsep.join(
-#             [
-#                 user_site_packages(),
-#                 env.systemEnvironment().value("PYTHONPATH"),
-#             ]
-#         )
-#         env.insert("PYTHONPATH", combined_paths)
+    # abstract method
+    def _modify_env(self, env: dict):
+        raise NotImplementedError()
 
-#     def _get_install_args(
-#         self, pkg_list: Sequence[str], prefix: Optional[str] = None
-#     ) -> Tuple[str, ...]:
-#         cmd = ['-m', 'pip', 'install', '--upgrade']
-#         if prefix is not None:
-#             cmd.extend(['--prefix', str(prefix)])
-#         if running_as_bundled_app(False) and sys.platform.startswith('linux'):
-#             cmd.extend(
-#                 ['--no-warn-script-location', '--prefix', user_plugin_dir()]
-#             )
-#         return tuple(cmd + list(pkg_list))
+    # abstract method
+    def _get_install_args(
+        self, pkg_list: Sequence[str], prefix: Optional[str] = None
+    ) -> Tuple[str, ...]:
+        raise NotImplementedError()
 
-#     def _get_uninstall_args(
-#         self, pkg_list: Sequence[str], prefix: Optional[str] = None
-#     ) -> Tuple[str, ...]:
-#         return tuple(['-m', 'pip', 'uninstall', '-y'] + list(pkg_list))
+    # abstract method
+    def _get_uninstall_args(
+        self, pkg_list: Sequence[str], prefix: Optional[str] = None
+    ) -> Tuple[str, ...]:
+        raise NotImplementedError()
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._processes = {}
+        env = os.environ.copy()
+        env = self._modify_env(env)
+        self._env = env
+        self._queue: Deque[Tuple[str, ...]] = Deque()
+        self._messages = []
+        self._exit_codes = {}
+
+    # -------------------------- Public API ------------------------------
+    def install(
+        self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
+    ) -> job_id:
+        """Install packages in `pkg_list` into `prefix`.
+
+        Parameters
+        ----------
+        pkg_list : Sequence[str]
+            List of packages to install.
+        prefix : Optional[str], optional
+            Optional prefix to install packages into.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
+        return self._queue_args(self._get_install_args(pkg_list, prefix))
+
+    def uninstall(
+        self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
+    ) -> job_id:
+        """Uninstall packages in `pkg_list` from `prefix`.
+
+        Parameters
+        ----------
+        pkg_list : Sequence[str]
+            List of packages to uninstall.
+        prefix : Optional[str], optional
+            Optional prefix from which to uninstall packages.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
+        return self._queue_args(self._get_uninstall_args(pkg_list))
+
+    def cancel(self, job_id: Optional[job_id] = None):
+        """Cancel `job_id` if it is running.
+
+        Parameters
+        ----------
+        job_id : Optional[job_id], optional
+            Job ID to cancel.  If not provided, cancel all jobs.
+        """
+        if job_id is None:
+            # cancel all jobs
+            self._queue.clear()
+            for _job_id, process in self._processes:
+                process.kill()
+            return
+
+        for i, args in enumerate(self._queue):
+            if hash(args) == job_id:
+                self._queue.remove(args)
+                return
+
+        raise ValueError(f"No job with id {job_id}")  # pragma: no cover
+
+    # -------------------------- Private methods ------------------------------
+    def _queue_args(self, args) -> job_id:
+        args = (self._bin, ) + args
+        print(' '.join(args))
+        self._queue.append(args)
+        self._process_queue()
+        return hash(args)
+
+    def _process_queue(self):
+        if not self._queue:
+            return
+
+        args = self._queue[0]
+        job_id = hash(args)
+        logging.debug("Starting %s %s", self._bin, args)
+
+        popen = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=self._env)
+        self._processes[job_id] = popen
+
+        for line in popen.stdout:
+            self._on_output(line)
+            # print(line, end='')
+
+        for line in popen.stderr:
+            self._on_output(line)
+            # print(line, end='')
+
+        popen.stdout.close()
+        popen.stderr.close()
+        return_code = popen.wait()
+        self._on_process_finished(job_id, return_code, 0)
+
+    def _on_output(self, line):
+        print(line, end='')
+        self._messages.append(line)
+
+    def _on_process_finished(self, job_id : job_id, exit_code: int, exit_status: int):
+        self._exit_codes[job_id] = exit_code
+        with contextlib.suppress(IndexError):
+            self._queue.popleft()
+
+        logging.debug(
+            "Finished with exit code %s and status %s. Output:\n%s",
+            exit_code,
+            exit_status
+        )
+        self._process_queue()
 
 
-# class CondaInstaller(AbstractInstaller):
-#     def __init__(
-#         self, parent: Optional[QObject] = None, use_mamba: bool = True
-#     ) -> None:
-#         self._bin = 'mamba' if use_mamba and shutil.which('mamba') else 'conda'
-#         super().__init__(parent)
-#         self.setProgram(self._bin)
-#         # TODO: make configurable per install once plugins can request it
-#         self.channels = ('conda-forge',)
-#         self._default_prefix = (
-#             sys.prefix if (Path(sys.prefix) / "conda-meta").is_dir() else None
-#         )
+class CondaInstaller(AbstractInstaller):
+    """Conda installer."""
 
-#     def _modify_env(self, env: QProcessEnvironment):
-#         if self._bin != 'mamba':
-#             return
+    def __init__(self, use_mamba: bool = True, pinned=None) -> None:
+        self._bin = 'mamba' if use_mamba and shutil.which('mamba') else 'conda'
+        self._pinned = pinned
+        super().__init__()
+        self._channels = ('conda-forge',)
+        self._default_prefix = (
+            sys.prefix if (Path(sys.prefix) / "conda-meta").is_dir() else None
+        )
 
-#         from ..._version import version_tuple
+    def _modify_env(self, env: dict):
+        if self._bin != 'mamba':
+            return
 
-#         napari_version = ".".join(str(v) for v in version_tuple[:3])
+        PINNED = 'CONDA_PINNED_PACKAGES'
+        system_pins = f"&{env.value(PINNED)}" if PINNED in env else ""
+        env[PINNED] = f"{self._pinned}{system_pins}"
 
-#         PINNED = 'CONDA_PINNED_PACKAGES'
-#         system_pins = f"&{env.value(PINNED)}" if env.contains(PINNED) else ""
-#         env.insert(PINNED, f"napari={napari_version}{system_pins}")
+        if os.name == "nt":
+            if "TEMP" not in env:
+                temp = gettempdir()
+                env["TMP"] = temp
+                env["TEMP"] = temp
 
-#         if os.name == "nt":
-#             if not env.contains("TEMP"):
-#                 temp = gettempdir()
-#                 env.insert("TMP", temp)
-#                 env.insert("TEMP", temp)
-#             if not env.contains("USERPROFILE"):
-#                 env.insert("HOME", os.path.expanduser("~"))
-#                 env.insert("USERPROFILE", os.path.expanduser("~"))
+            if "USERPROFILE" not in env:
+                env["HOME"] = os.path.expanduser("~")
+                env["USERPROFILE"] = os.path.expanduser("~")
 
-#     def _get_install_args(
-#         self, pkg_list: Sequence[str], prefix: Optional[str] = None
-#     ) -> Tuple[str, ...]:
-#         return self._get_args('install', pkg_list, prefix)
+    def _get_create_args(
+        self, pkg_list: Sequence[str], prefix: Optional[str] = None
+    ) -> Tuple[str, ...]:
+        return self._get_args('create', pkg_list, prefix)
 
-#     def _get_uninstall_args(
-#         self, pkg_list: Sequence[str], prefix: Optional[str] = None
-#     ) -> Tuple[str, ...]:
-#         return self._get_args('remove', pkg_list, prefix)
+    def _get_remove_args(self, prefix: str) -> Tuple[str, ...]:
+        return self._get_args('remove', ['--all'], prefix)
 
-#     def _get_args(self, arg0, pkg_list: Sequence[str], prefix: Optional[str]):
-#         cmd = [arg0, '-yq']
-#         if prefix := str(prefix or self._default_prefix):
-#             cmd.extend(['--prefix', prefix])
-#         for channel in self.channels:
-#             cmd.extend(["-c", channel])
-#         return tuple(cmd + list(pkg_list))
+    def _get_install_args(
+        self, pkg_list: Sequence[str], prefix: Optional[str] = None
+    ) -> Tuple[str, ...]:
+        return self._get_args('install', pkg_list, prefix)
 
+    def _get_uninstall_args(
+        self, pkg_list: Sequence[str], prefix: Optional[str] = None
+    ) -> Tuple[str, ...]:
+        return self._get_args('remove', pkg_list, prefix)
 
-# def _get_python_exe():
-#     # Note: is_bundled_app() returns False even if using a Briefcase bundle...
-#     # Workaround: see if sys.executable is set to something something napari on Mac
-#     if sys.executable.endswith("napari") and sys.platform == 'darwin':
-#         # sys.prefix should be <napari.app>/Contents/Resources/Support/Python/Resources
-#         if (python := Path(sys.prefix) / "bin" / "python3").is_file():
-#             return str(python)
-#     return sys.executable
+    def _get_args(self, arg0, pkg_list: Sequence[str], prefix: Optional[str]):
+        cmd = [arg0, '-yq']
+        if prefix := str(prefix or self._default_prefix):
+            cmd.extend(['--prefix', prefix])
+
+        for channel in self._channels:
+            cmd.extend(["-c", channel])
+
+        return tuple(cmd + list(pkg_list))
+
+    # -------------------------- Public API ----------------------------------
+    def create(
+        self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
+    ) -> job_id:
+        return self._queue_args(self._get_create_args(pkg_list, prefix))
+
+    def install(
+        self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
+    ) -> job_id:
+        """Install packages in `pkg_list` into `prefix`.
+
+        Parameters
+        ----------
+        pkg_list : Sequence[str]
+            List of packages to install.
+        prefix : Optional[str], optional
+            Optional prefix to install packages into.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
+        return self._queue_args(self._get_install_args(pkg_list, prefix=prefix))
+
+    def uninstall(
+        self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
+    ) -> job_id:
+        """Uninstall packages in `pkg_list` from `prefix`.
+
+        Parameters
+        ----------
+        pkg_list : Sequence[str]
+            List of packages to uninstall.
+        prefix : Optional[str], optional
+            Optional prefix from which to uninstall packages.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
+        return self._queue_args(self._get_uninstall_args(pkg_list, prefix=prefix))
+
+    def remove(self, prefix) -> job_id:
+        """"""
+        return self._queue_args(self._get_remove_args(prefix))

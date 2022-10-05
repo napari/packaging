@@ -1,30 +1,42 @@
 """Constructor updater actions."""
 
-import subprocess
+import shutil
 from typing import Dict
 
 from constructor_updater.defaults import DEFAULT_CHANNEL
+from constructor_updater.installer import CondaInstaller
 from constructor_updater.utils.anaconda import conda_package_versions
-from constructor_updater.utils.io import get_installed_versions
+from constructor_updater.utils.conda import get_prefix_by_name
+from constructor_updater.utils.io import get_installed_versions, create_sentinel_file, get_broken_envs, remove_sentinel_file
 from constructor_updater.utils.versions import is_stable_version, parse_version
 
 
-def _create_with_plugins():
+def _create_with_plugins(package_name, package_version, build, plugins):
     """Update the package."""
+    prefix = get_prefix_by_name(f'{package_name}-{package_version}')
+    installer = CondaInstaller(pinned=f"{package_name}={package_version}")
+    spec = f"{package_name}=={package_version}"
+    if build:
+        spec = spec + f"=*{build}*"
+
+    job_id = installer.create([spec] + plugins, prefix=prefix)
+    return installer._exit_codes[job_id]
 
 
-def _create_with_plugins_one_by_one():
+def _create_with_plugins_one_by_one(package_name, package_version, build, plugins):
     """Update the package."""
+    prefix = get_prefix_by_name(f'{package_name}-{package_version}')
+    installer = CondaInstaller(pinned=f"{package_name}={package_version}")
+    spec = f"{package_name}=={package_version}"
+    if build:
+        spec = spec + f"=*{build}*"
 
+    job_id = installer.create([spec], prefix=prefix)
+    for plugin in plugins:
+        installer.install([plugin], prefix=prefix)
 
-def _execute(cmd):
-    popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
-    yield from iter(popen.stdout.readline, "")
-    popen.stdout.close()
-    return_code = popen.wait()
-    if return_code:
-        raise subprocess.CalledProcessError(return_code, cmd)
-
+    return installer._exit_codes[job_id]
+    
 
 def check_updates(
     package_name: str,
@@ -57,10 +69,7 @@ def check_updates(
     latest_version = versions[-1] if versions else None
     installed_versions_builds = get_installed_versions(package_name)
     installed_versions = [vb[0] for vb in installed_versions_builds]
-    update = (
-        parse_version(latest_version) > parse_version(current_version)
-        and latest_version not in installed_versions
-    )
+    update = parse_version(latest_version) > parse_version(current_version)
 
     return {
         "available_versions": versions,
@@ -68,35 +77,57 @@ def check_updates(
         "latest_version": latest_version,
         "found_versions": installed_versions,
         "update": update,
+        "installed": latest_version in installed_versions,
     }
 
 
-def update():
+def update(package_name, package_version, build, plugins):
     """Update the package."""
-    # Try with all plugins
-    # Try with one by one plugins
+    return_code = _create_with_plugins(package_name, package_version, build, plugins)
 
-    # Must print results iteratively
-    # Example
-    for path in _execute(["locate", "a"]):
-        print(path, end="")
+    if bool(return_code):
+        return_code = _create_with_plugins_one_by_one(package_name, package_version, build, plugins)
 
+    if not bool(return_code):
+        create_sentinel_file(package_name, package_version)
 
-def clean_all():
-    """Remove any broken environments."""
+    print("finished!")
 
 
-def clean():
-    """Update the package."""
+def clean_all(package_name):
+    """Clean all environments of a given package.
+
+    Environments will be removed using conda/mamba, or the folders deleted in
+    case conda fails.
+
+    Parameters
+    ----------
+    package_name : str
+        Name of the package.
+    """
+    # Try to remove using conda/mamba
+    installer = CondaInstaller()
+    failed = []
+    for prefix in get_broken_envs(package_name):
+        job_id = installer.remove(prefix)
+        if installer._exit_codes[job_id]:
+            failed.append(prefix)
+
+    # Otherwise remove the folders manually
+    for prefix in failed:
+        print("removing", prefix)
+        # shutil.rmtree(path)
 
 
-package_name = "napari"
-current_version = "0.4.16"
-# data = conda_package_versions(package_name)
-# data = pypi_package_versions(package_name)
+def check_updates_and_clean(package_name, current_version, stable, channel):
+    """Check for updates and clean."""
+    res = check_updates(package_name, current_version, stable, channel)
+    if res["installed"]:
+        remove_sentinel_file(package_name, current_version)
 
-# for item in data:
-#     print(item, _is_stable_version(item))
+    clean_all(package_name)
 
 
-print(check_updates(package_name, current_version, stable=False, channel=package_name))
+# update("napari", "0.4.16", "pyside", ["napari-arboretum"])
+print(check_updates("napari", "0.4.15", stable=True, channel="conda-forge"))
+# clean_all("napari")

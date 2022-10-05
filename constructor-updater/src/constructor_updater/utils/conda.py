@@ -1,31 +1,10 @@
 """Conda utilities."""
 
-import re
 import sys
 from pathlib import Path
+from typing import Optional
 
-from constructor_updater.defaults import (
-    SENTINEL_FILE_PREFIX,
-    SENTINEL_FILE_SUFFIX,
-)
-
-
-def normalized_name(name: str) -> str:
-    """Normalize a package name.
-
-    Replace underscores and dots by dashes and lower case it.
-
-    Parameters
-    ----------
-    name : str
-        The name of the package to normalize.
-
-    Returns
-    -------
-    str
-        The normalized package name.
-    """
-    return re.sub(r"[-_.]+", "-", name).lower()
+from constructor_updater.utils.packages import sentinel_file_name
 
 
 def check_if_constructor_app(package_name, path=None) -> bool:
@@ -36,24 +15,7 @@ def check_if_constructor_app(package_name, path=None) -> bool:
     return (path.parent.parent / sentinel_file_name(package_name)).exists()
 
 
-def sentinel_file_name(package_name):
-    """Return the sentinel file name for a package.
-
-    Parameters
-    ----------
-    package_name : str
-        The name of the package to check for a sentinel file.
-
-    Returns
-    -------
-    str
-        The name of the sentinel file.
-    """
-    package_name = normalized_name(package_name)
-    return SENTINEL_FILE_PREFIX + package_name + SENTINEL_FILE_SUFFIX
-
-
-def check_if_conda_environment(path=None) -> bool:
+def check_if_conda_environment(path : Optional[str] = None) -> bool:
     """Check if path is a conda environment.
 
     Parameters
@@ -70,3 +32,43 @@ def check_if_conda_environment(path=None) -> bool:
         path = Path(sys.prefix)
 
     return (Path(path) / "conda-meta" / "history").exists()
+
+
+def get_base_prefix() -> Path:
+    """Get base conda prefix.
+
+    Returns
+    -------
+    pathlib.Path
+        Base conda prefix.
+    """
+    current = Path(sys.prefix)
+    if (current / "envs").exists() and (current / "envs").is_dir():
+        return current
+
+    if current.parent.name == "envs" and current.parent.is_dir():
+        return current.parent.parent
+
+
+def get_prefix_by_name(name: Optional[str] = None) -> Path:
+    """Get conda prefix by environment name.
+
+    This does not check if the environment exists.
+
+    Parameters
+    ----------
+    name : str, optional
+        Name of the environment. If `None` then return the current prefix.
+
+    Returns
+    -------
+    pathlib.Path
+        Conda prefix for the corresponding ``name``.
+    """
+    base_prefix = get_base_prefix()
+    if name is None:
+        return Path(sys.prefix)
+    elif name == "base":
+        return base_prefix
+    else:
+        return base_prefix / "envs" / name
