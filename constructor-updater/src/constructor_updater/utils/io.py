@@ -6,7 +6,10 @@ from pathlib import Path
 from typing import List
 
 from constructor_updater.utils.conda import get_prefix_by_name
-from constructor_updater.utils.packages import normalized_name, sentinel_file_name
+from constructor_updater.utils.packages import (
+    normalized_name,
+    sentinel_file_name,
+)
 
 
 def get_broken_envs(package_name: str) -> List[str]:
@@ -93,7 +96,8 @@ def check_if_constructor_app(package_name, path=None) -> bool:
 
 def get_sentinel_path(prefix, package_name):
     """"""
-    return prefix / 'conda-meta' / sentinel_file_name(package_name)
+    return prefix / "conda-meta" / sentinel_file_name(package_name)
+
 
 def create_sentinel_file(package_name, version):
     """"""

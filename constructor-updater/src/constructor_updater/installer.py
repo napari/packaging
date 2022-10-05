@@ -1,12 +1,11 @@
 import contextlib
 import logging
 import os
-import sys
 import shutil
-from pathlib import Path
 import subprocess
-from typing import Optional, Sequence, Tuple, Deque
-
+import sys
+from pathlib import Path
+from typing import Deque, Optional, Sequence, Tuple
 
 job_id = int
 
@@ -103,8 +102,8 @@ class AbstractInstaller:
 
     # -------------------------- Private methods ------------------------------
     def _queue_args(self, args) -> job_id:
-        args = (self._bin, ) + args
-        print(' '.join(args))
+        args = (self._bin,) + args
+        print(" ".join(args))
         self._queue.append(args)
         self._process_queue()
         return hash(args)
@@ -117,7 +116,13 @@ class AbstractInstaller:
         job_id = hash(args)
         logging.debug("Starting %s %s", self._bin, args)
 
-        popen = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, env=self._env)
+        popen = subprocess.Popen(
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            env=self._env,
+        )
         self._processes[job_id] = popen
 
         for line in popen.stdout:
@@ -134,10 +139,10 @@ class AbstractInstaller:
         self._on_process_finished(job_id, return_code, 0)
 
     def _on_output(self, line):
-        print(line, end='')
+        print(line, end="")
         self._messages.append(line)
 
-    def _on_process_finished(self, job_id : job_id, exit_code: int, exit_status: int):
+    def _on_process_finished(self, job_id: job_id, exit_code: int, exit_status: int):
         self._exit_codes[job_id] = exit_code
         with contextlib.suppress(IndexError):
             self._queue.popleft()
@@ -145,7 +150,7 @@ class AbstractInstaller:
         logging.debug(
             "Finished with exit code %s and status %s. Output:\n%s",
             exit_code,
-            exit_status
+            exit_status,
         )
         self._process_queue()
 
@@ -154,19 +159,19 @@ class CondaInstaller(AbstractInstaller):
     """Conda installer."""
 
     def __init__(self, use_mamba: bool = True, pinned=None) -> None:
-        self._bin = 'mamba' if use_mamba and shutil.which('mamba') else 'conda'
+        self._bin = "mamba" if use_mamba and shutil.which("mamba") else "conda"
         self._pinned = pinned
         super().__init__()
-        self._channels = ('conda-forge',)
+        self._channels = ("conda-forge",)
         self._default_prefix = (
             sys.prefix if (Path(sys.prefix) / "conda-meta").is_dir() else None
         )
 
     def _modify_env(self, env: dict):
-        if self._bin != 'mamba':
+        if self._bin != "mamba":
             return
 
-        PINNED = 'CONDA_PINNED_PACKAGES'
+        PINNED = "CONDA_PINNED_PACKAGES"
         system_pins = f"&{env.value(PINNED)}" if PINNED in env else ""
         env[PINNED] = f"{self._pinned}{system_pins}"
 
@@ -183,25 +188,25 @@ class CondaInstaller(AbstractInstaller):
     def _get_create_args(
         self, pkg_list: Sequence[str], prefix: Optional[str] = None
     ) -> Tuple[str, ...]:
-        return self._get_args('create', pkg_list, prefix)
+        return self._get_args("create", pkg_list, prefix)
 
     def _get_remove_args(self, prefix: str) -> Tuple[str, ...]:
-        return self._get_args('remove', ['--all'], prefix)
+        return self._get_args("remove", ["--all"], prefix)
 
     def _get_install_args(
         self, pkg_list: Sequence[str], prefix: Optional[str] = None
     ) -> Tuple[str, ...]:
-        return self._get_args('install', pkg_list, prefix)
+        return self._get_args("install", pkg_list, prefix)
 
     def _get_uninstall_args(
         self, pkg_list: Sequence[str], prefix: Optional[str] = None
     ) -> Tuple[str, ...]:
-        return self._get_args('remove', pkg_list, prefix)
+        return self._get_args("remove", pkg_list, prefix)
 
     def _get_args(self, arg0, pkg_list: Sequence[str], prefix: Optional[str]):
-        cmd = [arg0, '-yq']
+        cmd = [arg0, "-yq"]
         if prefix := str(prefix or self._default_prefix):
-            cmd.extend(['--prefix', prefix])
+            cmd.extend(["--prefix", prefix])
 
         for channel in self._channels:
             cmd.extend(["-c", channel])

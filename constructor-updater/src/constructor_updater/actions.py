@@ -1,19 +1,23 @@
 """Constructor updater actions."""
 
-import shutil
 from typing import Dict
 
 from constructor_updater.defaults import DEFAULT_CHANNEL
 from constructor_updater.installer import CondaInstaller
 from constructor_updater.utils.anaconda import conda_package_versions
 from constructor_updater.utils.conda import get_prefix_by_name
-from constructor_updater.utils.io import get_installed_versions, create_sentinel_file, get_broken_envs, remove_sentinel_file
+from constructor_updater.utils.io import (
+    create_sentinel_file,
+    get_broken_envs,
+    get_installed_versions,
+    remove_sentinel_file,
+)
 from constructor_updater.utils.versions import is_stable_version, parse_version
 
 
 def _create_with_plugins(package_name, package_version, build, plugins):
     """Update the package."""
-    prefix = get_prefix_by_name(f'{package_name}-{package_version}')
+    prefix = get_prefix_by_name(f"{package_name}-{package_version}")
     installer = CondaInstaller(pinned=f"{package_name}={package_version}")
     spec = f"{package_name}=={package_version}"
     if build:
@@ -25,7 +29,7 @@ def _create_with_plugins(package_name, package_version, build, plugins):
 
 def _create_with_plugins_one_by_one(package_name, package_version, build, plugins):
     """Update the package."""
-    prefix = get_prefix_by_name(f'{package_name}-{package_version}')
+    prefix = get_prefix_by_name(f"{package_name}-{package_version}")
     installer = CondaInstaller(pinned=f"{package_name}={package_version}")
     spec = f"{package_name}=={package_version}"
     if build:
@@ -36,7 +40,7 @@ def _create_with_plugins_one_by_one(package_name, package_version, build, plugin
         installer.install([plugin], prefix=prefix)
 
     return installer._exit_codes[job_id]
-    
+
 
 def check_updates(
     package_name: str,
@@ -86,7 +90,9 @@ def update(package_name, package_version, build, plugins):
     return_code = _create_with_plugins(package_name, package_version, build, plugins)
 
     if bool(return_code):
-        return_code = _create_with_plugins_one_by_one(package_name, package_version, build, plugins)
+        return_code = _create_with_plugins_one_by_one(
+            package_name, package_version, build, plugins
+        )
 
     if not bool(return_code):
         create_sentinel_file(package_name, package_version)
@@ -119,13 +125,12 @@ def clean_all(package_name):
         # shutil.rmtree(path)
 
 
-def check_updates_and_clean(package_name, current_version, stable, channel):
+def check_updates_clean_and_launch(package_name, current_version, stable, channel):
     """Check for updates and clean."""
     res = check_updates(package_name, current_version, stable, channel)
     if res["installed"]:
         remove_sentinel_file(package_name, current_version)
-
-    clean_all(package_name)
+        clean_all(package_name)
 
 
 # update("napari", "0.4.16", "pyside", ["napari-arboretum"])

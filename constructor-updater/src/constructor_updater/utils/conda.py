@@ -15,7 +15,7 @@ def check_if_constructor_app(package_name, path=None) -> bool:
     return (path.parent.parent / sentinel_file_name(package_name)).exists()
 
 
-def check_if_conda_environment(path : Optional[str] = None) -> bool:
+def check_if_conda_environment(path: Optional[str] = None) -> bool:
     """Check if path is a conda environment.
 
     Parameters
