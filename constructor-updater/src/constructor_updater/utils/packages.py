@@ -1,3 +1,5 @@
+"""Package utilities, name normalization and sentinel files."""
+
 import re
 
 from constructor_updater.defaults import (

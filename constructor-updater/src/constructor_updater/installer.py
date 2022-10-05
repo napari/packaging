@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 from typing import Deque, Optional, Sequence, Tuple
 
+from constructor_updater.defaults import DEFAULT_CHANNEL
+
 job_id = int
 
 
@@ -159,11 +161,11 @@ class AbstractInstaller:
 class CondaInstaller(AbstractInstaller):
     """Conda installer."""
 
-    def __init__(self, use_mamba: bool = True, pinned=None) -> None:
+    def __init__(self, use_mamba: bool = True, pinned=None, channel=DEFAULT_CHANNEL) -> None:
         self._bin = "mamba" if use_mamba and shutil.which("mamba") else "conda"
         self._pinned = pinned
+        self._channels = (channel,)
         super().__init__()
-        self._channels = ("conda-forge",)
         self._default_prefix = (
             sys.prefix if (Path(sys.prefix) / "conda-meta").is_dir() else None
         )
