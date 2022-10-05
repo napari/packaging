@@ -131,6 +131,7 @@ def check_updates_clean_and_launch(package_name, current_version, stable, channe
     if res["installed"]:
         remove_sentinel_file(package_name, current_version)
         clean_all(package_name)
+        # Launch the application
 
 
 # update("napari", "0.4.16", "pyside", ["napari-arboretum"])
