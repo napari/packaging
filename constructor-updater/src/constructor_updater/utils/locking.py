@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
 # Copyright (c) 2005 Divmod, Inc.
 # Copyright (c) 2008-2011 Twisted Matrix Laboratories
@@ -22,21 +21,23 @@ Adapted from src/twisted/python/lockfile.py of the
 `Twisted project <https://github.com/twisted/twisted>`_.
 """
 
-__metaclass__ = type
 
-import errno, os
+import errno
+import os
 from time import time as _uniquefloat
 
 
 def unique():
     return str(int(_uniquefloat() * 1000))
 
+
 from os import rename
-if not os.name == 'nt':
-    from os import kill
-    from os import symlink
-    from os import readlink
+
+if not os.name == "nt":
+    from os import kill, readlink
     from os import remove as rmlink
+    from os import symlink
+
     _windows = False
 else:
     _windows = True
@@ -61,16 +62,15 @@ else:
         # If the process exited recently, a pid may still exist for the
         # handle. So, check if we can get the exit code.
         exit_code = wintypes.DWORD()
-        retval = kernel32.GetExitCodeProcess(handle,
-                                             ctypes.byref(exit_code))
-        is_running = (retval == 0)
+        retval = kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code))
+        is_running = retval == 0
         kernel32.CloseHandle(handle)
 
         # See if we couldn't get the exit code or the exit code indicates
         # that the process is still running.
         return is_running or exit_code.value == STILL_ACTIVE
 
-    def kill(pid, signal):                    # analysis:ignore
+    def kill(pid, signal):
         if not _is_pid_running(pid):
             raise OSError(errno.ESRCH, None)
         else:
@@ -79,12 +79,12 @@ else:
     _open = open
 
     # XXX Implement an atomic thingamajig for win32
-    def symlink(value, filename):    #analysis:ignore
-        newlinkname = filename+"."+unique()+'.newlink'
+    def symlink(value, filename):  # analysis:ignore
+        newlinkname = filename + "." + unique() + ".newlink"
         newvalname = os.path.join(newlinkname, "symlink")
         os.mkdir(newlinkname)
-        f = _open(newvalname, 'wb')
-        f.write(bytes((value, 'utf-8' if encoding is None else encoding)))
+        f = _open(newvalname, "wb")
+        f.write(bytes((value, "utf-8" if encoding is None else encoding)))
         f.flush()
         f.close()
         try:
@@ -96,14 +96,14 @@ else:
             try:
                 os.remove(newvalname)
                 os.rmdir(newlinkname)
-            except (IOError, OSError):
+            except OSError:
                 return
             raise
 
-    def readlink(filename):   #analysis:ignore
+    def readlink(filename):  # analysis:ignore
         try:
-            fObj = _open(os.path.join(filename, 'symlink'), 'rb')
-        except IOError as e:
+            fObj = _open(os.path.join(filename, "symlink"), "rb")
+        except OSError as e:
             if e.errno == errno.ENOENT or e.errno == errno.EIO:
                 raise OSError(e.errno, None)
             raise
@@ -112,10 +112,9 @@ else:
             fObj.close()
             return result
 
-    def rmlink(filename):    #analysis:ignore
-        os.remove(os.path.join(filename, 'symlink'))
+    def rmlink(filename):  # analysis:ignore
+        os.remove(os.path.join(filename, "symlink"))
         os.rmdir(filename)
-
 
 
 class FilesystemLock:
@@ -172,7 +171,7 @@ class FilesystemLock:
                             # next iteration through the loop.
                             continue
                         raise
-                    except IOError as e:
+                    except OSError as e:
                         if _windows and e.errno == errno.EACCES:
                             # The lock is in the middle of being
                             # deleted because we're on Windows where
@@ -220,7 +219,7 @@ class FilesystemLock:
         """
         pid = readlink(self.name)
         if int(pid) != os.getpid():
-            raise ValueError("Lock %r not owned by this process" % (self.name,))
+            raise ValueError(f"Lock {self.name!r} not owned by this process")
         rmlink(self.name)
         self.locked = False
 
@@ -244,4 +243,4 @@ def isLocked(name):
     return not result
 
 
-__all__ = ['FilesystemLock', 'isLocked']
+__all__ = ["FilesystemLock", "isLocked"]

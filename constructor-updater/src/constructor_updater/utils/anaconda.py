@@ -6,6 +6,8 @@ from typing import List
 from constructor_updater.defaults import DEFAULT_CHANNEL
 from constructor_updater.utils.request import get_request
 
+DEFAULT_CHANNEL = "conda-forge"
+
 
 @lru_cache
 def conda_package_data(package_name: str, channel: str = DEFAULT_CHANNEL) -> dict:

@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     import packaging.version
 
 
-def is_stable_version(version: Union[Tuple[str], str]) -> bool:
+def is_stable_version(version: Union[Tuple[str, ...], str]) -> bool:
     """Check if a version string corresponds to a stable release.
 
     Parameters
@@ -28,7 +28,7 @@ def is_stable_version(version: Union[Tuple[str], str]) -> bool:
     Non-stable version examples: ``0.4.15beta``, ``0.4.15rc1``, ``0.4.15dev0``.
     """
     if not isinstance(version, tuple):
-        version = version.split(".")
+        version = tuple(version.split("."))
 
     return not LETTERS_PATTERN.search(version[-1])
 

@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from constructor_updater.utils.packages import sentinel_file_name
 
@@ -15,7 +15,9 @@ def check_if_constructor_app(package_name, path=None) -> bool:
     return (path.parent.parent / sentinel_file_name(package_name)).exists()
 
 
-def check_if_conda_environment(path: Optional[str] = None) -> bool:
+def check_if_conda_environment(
+    path: Union[Optional[Path], Optional[str]] = None
+) -> bool:
     """Check if path is a conda environment.
 
     Parameters
@@ -48,6 +50,8 @@ def get_base_prefix() -> Path:
 
     if current.parent.name == "envs" and current.parent.is_dir():
         return current.parent.parent
+
+    return current
 
 
 def get_prefix_by_name(name: Optional[str] = None) -> Path:

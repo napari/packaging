@@ -3,7 +3,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 from constructor_updater.utils.conda import get_prefix_by_name
 from constructor_updater.utils.packages import (
@@ -12,7 +12,7 @@ from constructor_updater.utils.packages import (
 )
 
 
-def get_broken_envs(package_name: str) -> List[str]:
+def get_broken_envs(package_name: str) -> List[Path]:
     """TODO
 
     Parameters
@@ -22,7 +22,7 @@ def get_broken_envs(package_name: str) -> List[str]:
 
     Returns
     -------
-    list
+    list of Path
         List of installed versions.
     """
     broken = []
@@ -30,9 +30,9 @@ def get_broken_envs(package_name: str) -> List[str]:
 
     # Check environment name is starts with package_name
     env_paths = [
-        env_path
-        for env_path in envs_folder.iterdir()
-        if env_path.stem.rsplit("-")[0] == package_name and "-" in env_path.stem
+        path
+        for path in envs_folder.iterdir()
+        if path.stem.rsplit("-")[0] == package_name and "-" in path.stem
     ]
     for env_path in env_paths:
         conda_meta_folder = envs_folder / env_path / "conda-meta"
@@ -47,7 +47,7 @@ def get_broken_envs(package_name: str) -> List[str]:
     return broken
 
 
-def get_installed_versions(package_name: str) -> List[str]:
+def get_installed_versions(package_name: str) -> List[Tuple[str, ...]]:
     """Check the current conda prefix for installed versions.
 
     Parameters
@@ -57,8 +57,8 @@ def get_installed_versions(package_name: str) -> List[str]:
 
     Returns
     -------
-    list
-        List of installed versions.
+    list of tuples
+        List of tuples of installed versions.
     """
     versions = []
     envs_folder = get_prefix_by_name("base") / "envs"

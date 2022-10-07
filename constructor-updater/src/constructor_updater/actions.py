@@ -76,8 +76,9 @@ def check_updates(
         versions = list(filter(is_stable_version, versions))
 
     update = False
-    latest_version = versions[-1] if versions else None
+    latest_version = versions[-1] if versions else ""
     installed_versions_builds = get_installed_versions(package_name)
+    print(installed_versions_builds)
     installed_versions = [vb[0] for vb in installed_versions_builds]
     update = parse_version(latest_version) > parse_version(current_version)
 

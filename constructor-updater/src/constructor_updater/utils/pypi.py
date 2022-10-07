@@ -41,4 +41,4 @@ def pypi_package_versions(package_name: str) -> List[str]:
     """
     url = f"https://pypi.org/simple/{package_name}"
     html = get_request(url).text
-    return re.findall(f">{package_name}-(.+).tar", html.decode())
+    return re.findall(f">{package_name}-(.+).tar", html)

@@ -4,8 +4,9 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
-from typing import Deque, Optional, Sequence, Tuple
+from typing import Deque, Dict, List, Optional, Sequence, Tuple
 
 from constructor_updater.defaults import DEFAULT_CHANNEL
 
@@ -33,13 +34,14 @@ class AbstractInstaller:
 
     def __init__(self) -> None:
         super().__init__()
-        self._processes = {}
+        self._processes = {}  # type: Dict[job_id, subprocess.Popen]
+        self._bin = None  # type: Optional[str]
         env = os.environ.copy()
         env = self._modify_env(env)
         self._env = env
         self._queue: Deque[Tuple[str, ...]] = Deque()
-        self._messages = []
-        self._exit_codes = {}
+        self._messages = []  # type: List[str]
+        self._exit_codes = {}  # type: Dict[job_id, int]
 
     # -------------------------- Public API ------------------------------
     def install(
@@ -91,7 +93,7 @@ class AbstractInstaller:
         if job_id is None:
             # cancel all jobs
             self._queue.clear()
-            for _job_id, process in self._processes:
+            for _job_id, process in self._processes.items():
                 process.kill()
             return
 
@@ -177,12 +179,12 @@ class CondaInstaller(AbstractInstaller):
             return
 
         PINNED = "CONDA_PINNED_PACKAGES"
-        system_pins = f"&{env.value(PINNED)}" if PINNED in env else ""
+        system_pins = f"&{env[PINNED]}" if PINNED in env else ""
         env[PINNED] = f"{self._pinned}{system_pins}"
 
         if os.name == "nt":
             if "TEMP" not in env:
-                temp = gettempdir()
+                temp = tempfile.gettempdir()
                 env["TMP"] = temp
                 env["TEMP"] = temp
 
