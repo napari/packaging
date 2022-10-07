@@ -161,7 +161,9 @@ class AbstractInstaller:
 class CondaInstaller(AbstractInstaller):
     """Conda installer."""
 
-    def __init__(self, use_mamba: bool = True, pinned=None, channel=DEFAULT_CHANNEL) -> None:
+    def __init__(
+        self, use_mamba: bool = True, pinned=None, channel=DEFAULT_CHANNEL
+    ) -> None:
         self._bin = "mamba" if use_mamba and shutil.which("mamba") else "conda"
         self._pinned = pinned
         self._channels = (channel,)

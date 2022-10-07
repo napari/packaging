@@ -18,7 +18,9 @@ from constructor_updater.utils.versions import is_stable_version, parse_version
 def _create_with_plugins(package_name, package_version, build, plugins, channel):
     """Update the package."""
     prefix = get_prefix_by_name(f"{package_name}-{package_version}")
-    installer = CondaInstaller(pinned=f"{package_name}={package_version}", channel=channel)
+    installer = CondaInstaller(
+        pinned=f"{package_name}={package_version}", channel=channel
+    )
     spec = f"{package_name}=={package_version}"
     if build:
         spec = spec + f"=*{build}*"
@@ -27,10 +29,14 @@ def _create_with_plugins(package_name, package_version, build, plugins, channel)
     return installer._exit_codes[job_id]
 
 
-def _create_with_plugins_one_by_one(package_name, package_version, build, plugins, channel):
+def _create_with_plugins_one_by_one(
+    package_name, package_version, build, plugins, channel
+):
     """Update the package."""
     prefix = get_prefix_by_name(f"{package_name}-{package_version}")
-    installer = CondaInstaller(pinned=f"{package_name}={package_version}", channel=channel)
+    installer = CondaInstaller(
+        pinned=f"{package_name}={package_version}", channel=channel
+    )
     spec = f"{package_name}=={package_version}"
     if build:
         spec = spec + f"=*{build}*"
@@ -85,10 +91,14 @@ def check_updates(
     }
 
 
-def update(package_name, package_version, build="", plugins=(), channel=DEFAULT_CHANNEL):
+def update(
+    package_name, package_version, build="", plugins=(), channel=DEFAULT_CHANNEL
+):
     """Update the package."""
     plugins = list(plugins)
-    return_code = _create_with_plugins(package_name, package_version, build, plugins, channel=channel)
+    return_code = _create_with_plugins(
+        package_name, package_version, build, plugins, channel=channel
+    )
 
     if bool(return_code):
         return_code = _create_with_plugins_one_by_one(

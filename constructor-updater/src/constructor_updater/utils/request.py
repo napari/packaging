@@ -3,6 +3,7 @@ from functools import lru_cache
 import requests
 
 from constructor_updater import __version__
+from constructor_updater.defaults import DEFAULT_TIMEOUT
 
 
 @lru_cache
@@ -32,4 +33,4 @@ def get_request(url: str) -> requests.Response:
     """
     session = requests.Session()
     session.headers.update({"user-agent": _user_agent()})
-    return session.get(url)
+    return session.get(url, timeout=DEFAULT_TIMEOUT)
