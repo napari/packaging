@@ -15,7 +15,13 @@ from constructor_updater.utils.io import (
 from constructor_updater.utils.versions import is_stable_version, parse_version
 
 
-def _create_with_plugins(package_name, package_version, build, plugins, channel):
+def _create_with_plugins(
+    package_name,
+    package_version,
+    build,
+    plugins,
+    channel,
+):
     """Update the package."""
     prefix = get_prefix_by_name(f"{package_name}-{package_version}")
     installer = CondaInstaller(
@@ -63,7 +69,8 @@ def check_updates(
     stable : bool, optional
         If ``True``, check for stable versions. Default is ``True``.
     channel : str, optional
-        Check for available versions on this channel. Default is ``conda-forge``.
+        Check for available versions on this channel. Default is
+        ``conda-forge``.
 
     Returns
     -------
@@ -93,7 +100,11 @@ def check_updates(
 
 
 def update(
-    package_name, package_version, build="", plugins=(), channel=DEFAULT_CHANNEL
+    package_name,
+    package_version,
+    build="",
+    plugins=(),
+    channel=DEFAULT_CHANNEL,
 ):
     """Update the package."""
     plugins = list(plugins)
@@ -138,7 +149,12 @@ def clean_all(package_name):
         # shutil.rmtree(path)
 
 
-def check_updates_clean_and_launch(package_name, current_version, stable, channel):
+def check_updates_clean_and_launch(
+    package_name,
+    current_version,
+    stable,
+    channel,
+):
     """Check for updates and clean."""
     res = check_updates(package_name, current_version, stable, channel)
     found_versions = res["found_versions"]

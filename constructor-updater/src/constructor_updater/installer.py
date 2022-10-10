@@ -147,7 +147,12 @@ class AbstractInstaller:
         print(line, end="")
         self._messages.append(line)
 
-    def _on_process_finished(self, job_id: job_id, exit_code: int, exit_status: int):
+    def _on_process_finished(
+        self,
+        job_id: job_id,
+        exit_code: int,
+        exit_status: int,
+    ):
         self._exit_codes[job_id] = exit_code
         with contextlib.suppress(IndexError):
             self._queue.popleft()
@@ -243,7 +248,7 @@ class CondaInstaller(AbstractInstaller):
         job_id : int
             ID that can be used to cancel the process.
         """
-        return self._queue_args(self._get_install_args(pkg_list, prefix=prefix))
+        return self._queue_args(self._get_install_args(pkg_list, prefix))
 
     def uninstall(
         self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
@@ -262,7 +267,7 @@ class CondaInstaller(AbstractInstaller):
         job_id : int
             ID that can be used to cancel the process.
         """
-        return self._queue_args(self._get_uninstall_args(pkg_list, prefix=prefix))
+        return self._queue_args(self._get_uninstall_args(pkg_list, prefix))
 
     def remove(self, prefix) -> job_id:
         """"""

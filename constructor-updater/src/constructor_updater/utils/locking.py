@@ -24,14 +24,13 @@ Adapted from src/twisted/python/lockfile.py of the
 
 import errno
 import os
+from os import rename
 from time import time as _uniquefloat
 
 
 def unique():
     return str(int(_uniquefloat() * 1000))
 
-
-from os import rename
 
 if not os.name == "nt":
     from os import kill, readlink
@@ -70,7 +69,7 @@ else:
         # that the process is still running.
         return is_running or exit_code.value == STILL_ACTIVE
 
-    def kill(pid, signal):
+    def kill(pid, signal):  # type: ignore
         if not _is_pid_running(pid):
             raise OSError(errno.ESRCH, None)
         else:
@@ -79,17 +78,17 @@ else:
     _open = open
 
     # XXX Implement an atomic thingamajig for win32
-    def symlink(value, filename):  # analysis:ignore
+    def symlink(value, filename):  # type: ignore
         newlinkname = filename + "." + unique() + ".newlink"
         newvalname = os.path.join(newlinkname, "symlink")
         os.mkdir(newlinkname)
         f = _open(newvalname, "wb")
-        f.write(bytes((value, "utf-8" if encoding is None else encoding)))
+        f.write(bytes((value, "utf-8")))
         f.flush()
         f.close()
         try:
             rename(newlinkname, filename)
-        except:
+        except Exception:
             # This is needed to avoid an error when we don't
             # have permissions to write in ~/.spyder
             # See issues 6319 and 9093
@@ -100,7 +99,7 @@ else:
                 return
             raise
 
-    def readlink(filename):  # analysis:ignore
+    def readlink(filename):  # type: ignore
         try:
             fObj = _open(os.path.join(filename, "symlink"), "rb")
         except OSError as e:
@@ -112,7 +111,7 @@ else:
             fObj.close()
             return result
 
-    def rmlink(filename):  # analysis:ignore
+    def rmlink(filename):  # type: ignore
         os.remove(os.path.join(filename, "symlink"))
         os.rmdir(filename)
 
@@ -233,13 +232,13 @@ def isLocked(name):
     @rtype: C{bool}
     @return: True if the lock is held, False otherwise.
     """
-    l = FilesystemLock(name)
+    lock = FilesystemLock(name)
     result = None
     try:
-        result = l.lock()
+        result = lock.lock()
     finally:
         if result:
-            l.unlock()
+            lock.unlock()
     return not result
 
 

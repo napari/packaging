@@ -6,11 +6,12 @@ from typing import List
 from constructor_updater.defaults import DEFAULT_CHANNEL
 from constructor_updater.utils.request import get_request
 
-DEFAULT_CHANNEL = "conda-forge"
-
 
 @lru_cache
-def conda_package_data(package_name: str, channel: str = DEFAULT_CHANNEL) -> dict:
+def conda_package_data(
+    package_name: str,
+    channel: str = DEFAULT_CHANNEL,
+) -> dict:
     """Return information on package from given channel.
 
     Parameters
@@ -48,4 +49,7 @@ def conda_package_versions(
     list of str
         Package versions.
     """
-    return conda_package_data(package_name, channel=channel).get("versions", [])
+    return conda_package_data(
+        package_name,
+        channel=channel,
+    ).get("versions", [])

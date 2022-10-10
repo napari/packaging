@@ -34,11 +34,22 @@ def create_parser(subparser, channel=False, plugins=False, stable=False):
     subparser.add_argument("--current-version", "-cv", type=str, required=True)
 
     if channel:
-        subparser.add_argument("--channel", "-c", type=str, default=DEFAULT_CHANNEL)
+        subparser.add_argument(
+            "--channel",
+            "-c",
+            type=str,
+            default=DEFAULT_CHANNEL,
+        )
 
     if plugins:
         subparser.add_argument(
-            "--plugins", "-p", metavar="N", type=str, nargs="+", help="", default=[]
+            "--plugins",
+            "-p",
+            metavar="N",
+            type=str,
+            nargs="+",
+            help="",
+            default=[],
         )
 
     if stable:
@@ -63,7 +74,9 @@ def main():
     update = subparsers.add_parser("update")
     update = create_parser(update, channel=True, plugins=True, stable=True)
 
-    check_updates_launch_and_clean = subparsers.add_parser("check-launch-clean")
+    check_updates_launch_and_clean = subparsers.add_parser(
+        "check-launch-clean",
+    )
     check_updates_launch_and_clean = create_parser(
         check_updates_launch_and_clean, channel=True, plugins=True, stable=True
     )
@@ -84,7 +97,7 @@ def main():
     # running, which is locking that file
     try:
         lock_created = lock.lock()
-    except:
+    except Exception:
         # If locking fails because of errors in the lockfile
         # module, try to remove a possibly stale lock file.
         try:
@@ -96,7 +109,7 @@ def main():
             else:
                 if os.path.islink(lock_file):
                     os.unlink(lock_file)
-        except:
+        except Exception:
             pass
 
         handle_excecute(args, lock)
