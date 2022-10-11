@@ -28,10 +28,18 @@ jobs:
 
       - name: Install dependencies
         run: |
+<<<<<<< HEAD
+=======
+          cd constructor-updater
+>>>>>>> Testing
           python -m pip install --upgrade pip
           python -m pip install pre-commit
           pip list
 
       - name: Pre-commit
         run: |
+<<<<<<< HEAD
+=======
+          cd constructor-updater
+>>>>>>> Testing
           pre-commit run -a

@@ -29,7 +29,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-<<<<<<< HEAD
       - name: Install dependencies constructor-manager-cli
         run: |
           python -m pip install --upgrade pip
@@ -59,28 +58,9 @@ jobs:
           python -m tox
         env:
           PLATFORM: ${{ matrix.platform }}
-=======
       - name: Install dependencies
         run: |
           cd constructor-updater
           python -m pip install --upgrade pip
-          python -m pip install setuptools tox tox-gh-actions pre-commit mypy
-
-      # this runs the platform-specific tests declared in tox.ini
-      - name: Test with tox
-        run: |
-          cd constructor-updater
-          python -m tox
-        env:
-          PLATFORM: ${{ matrix.platform }}
-
-      - name: Pre-commit
-        run: |
-          cd constructor-updater
-          pre-commit run -a
-
-      - name: Typing
-        run: |
-          cd constructor-updater
-          mypy src
->>>>>>> Add workflow
+          python -m pip install setuptools tox tox-gh-actions
+          pip list
