@@ -223,7 +223,7 @@ class FilesystemLock:
         self.locked = False
 
 
-def isLocked(name):
+def is_locked(name):
     """Determine if the lock of the given name is held or not.
 
     @type name: C{str}
@@ -242,4 +242,4 @@ def isLocked(name):
     return not result
 
 
-__all__ = ["FilesystemLock", "isLocked"]
+__all__ = ["FilesystemLock", "is_locked"]

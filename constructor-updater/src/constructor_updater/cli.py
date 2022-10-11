@@ -84,6 +84,9 @@ def main():
     clean = subparsers.add_parser("clean")
     clean = create_parser(clean)
 
+    clean_lock = subparsers.add_parser("clean-lock")
+    clean_lock = create_parser(clean_lock)
+
     args = parser.parse_args()
     if args.command is None:
         args = parser.parse_args(["-h"])
@@ -137,6 +140,9 @@ def execute(args, lock, lock_created=None):
         )
         print(json.dumps(res))
         return
+
+    if args.command == "clean-lock":
+        pass
 
     # Commands that need to be locked
     if lock_created:

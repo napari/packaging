@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Tuple, Union
 
 LETTERS_PATTERN = re.compile(r"[a-zA-Z]")
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # noqa: TYP001
     import packaging.version
 
 
