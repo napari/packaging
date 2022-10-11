@@ -68,11 +68,9 @@ jobs:
 
       # this runs the platform-specific tests declared in tox.ini
       - name: Test with tox
-        uses: GabrielBB/xvfb-action@v1
-        with:
-          run: |
-            cd constructor-updater
-            python -m tox
+        run: |
+          cd constructor-updater
+          python -m tox
         env:
           PLATFORM: ${{ matrix.platform }}
 
