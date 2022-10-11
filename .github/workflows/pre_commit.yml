@@ -39,7 +39,10 @@ jobs:
       - name: Pre-commit
         run: |
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
           cd constructor-updater
 >>>>>>> Testing
+=======
+>>>>>>> Add more paths
           pre-commit run -a
