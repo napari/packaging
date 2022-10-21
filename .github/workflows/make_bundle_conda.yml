@@ -210,7 +210,7 @@ jobs:
           import json
           print(f"::set-output name=matrix::{json.dumps(matrix)!r}")
       - name: Debug JSON output
-        run: echo "${{ fromJSON(steps.set-matrix.outputs.matrix }}"
+        run: echo "${{ fromJSON(steps.set-matrix.outputs.matrix) }}"
 
   installers:
     name: Bundle ${{ matrix.target-platform }}
