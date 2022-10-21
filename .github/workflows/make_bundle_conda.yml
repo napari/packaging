@@ -177,6 +177,9 @@ jobs:
         id: set-matrix
         shell: python
         run: |
+          import os
+          import json
+
           elements = [
             {
               "os": "ubuntu-18.04",
@@ -207,8 +210,9 @@ jobs:
             if element["target-platform"] in platforms:
               matrix["include"].append(element)
           
-          import json
-          print(f"::set-output name=matrix::{json.dumps(matrix)}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"matrix={json.dumps(matrix)}\n")
+
       - name: Debug JSON output
         run: echo "${{ fromJSON(steps.set-matrix.outputs.matrix) }}"
   
