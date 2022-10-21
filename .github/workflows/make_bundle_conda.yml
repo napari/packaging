@@ -165,27 +165,61 @@ jobs:
             $label_args \
             ${GITHUB_WORKSPACE}${conda_bld_suffix}noarch/*.tar.bz2
 
+  prepare_matrix:
+    # See this SO answer for details on conditional matrices
+    # https://stackoverflow.com/a/65434401/3407590
+    runs-on: ubuntu-latest
+    outputs: 
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/setup-python@v4
+      - name: Prepare matrix
+        id: set-matrix
+        shell: python
+        run: |
+          elements = [
+            {
+              "os": "ubuntu-18.04",
+              "python-version": "3.9",
+              "target-platform": "linux-64",
+            },
+            { 
+              "os": "macos-latest",
+              "python-version": "3.9",
+              "target-platform": "osx-64",
+            },
+            { 
+              "os": "macos-latest",
+              "python-version": "3.9",
+              "target-platform": "osx-arm64",
+            },
+            { 
+              "os": "windows-latest",
+              "python-version": "3.8",
+              "target-platform": "win-64",
+            },
+          ]
+          platforms_str = "${{ inputs.installer_platforms || 'linux-64,win-64,osx-64,osx-arm64' }}"
+          platforms = {p.strip() for p in platforms_str.split(",")}
+          
+          matrix = {"include": []}
+          for element in elements:
+            if element["target-platform"] in platforms:
+              matrix["include"].append(element)
+          
+          import json
+          print(f"::set-output name=matrix::{json.dumps(matrix)!r}")
+      - name: Debug JSON output
+        run: echo "${{ fromJSON(steps.set-matrix.outputs.matrix }}"
+
   installers:
     name: Bundle ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
-    needs: packages
-    if: startsWith(github.repository, 'napari') && contains((inputs.installer_platforms || 'linux-64,win-64,osx-64,osx-arm64'), matrix.target-platform)
+    needs: [packages, prepare_matrix]
+    if: startsWith(github.repository, 'napari')
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-18.04
-            python-version: "3.9"
-            target-platform: "linux-64"
-          - os: macos-latest
-            python-version: "3.9"
-            target-platform: "osx-64"
-          - os: macos-latest
-            python-version: "3.9"
-            target-platform: "osx-arm64"
-          - os: windows-latest
-            python-version: "3.8"
-            target-platform: "win-64"
+      matrix: ${{ fromJSON(needs.prepare_matrix.outputs.matrix) }}
     env:
       GITHUB_TOKEN: ${{ github.token }}
       DISPLAY: ":99.0"
