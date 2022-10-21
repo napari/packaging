@@ -10,6 +10,11 @@ on:
         description: "The original github.event_name object in the caller workflow"
         required: true
         type: string
+      installer_platforms:
+        description: "Comma-separated string of conda-style platforms to build installers for. Defaults to all platforms available."
+        required: false
+        type: string
+        default: "linux-64,win-64,osx-64,osx-arm64"
     secrets:
       ANACONDA_TOKEN:
         description: "The token used to upload conda packages to anaconda.org/napari"
@@ -164,7 +169,7 @@ jobs:
     name: Bundle ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
     needs: packages
-    if: startsWith(github.repository, 'napari')
+    if: startsWith(github.repository, 'napari') && contains((inputs.installer_platforms || 'linux-64,win-64,osx-64,osx-arm64'), matrix.target-platform)
     strategy:
       fail-fast: false
       matrix:
