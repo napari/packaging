@@ -107,7 +107,6 @@ class AbstractInstaller:
     # -------------------------- Private methods ------------------------------
     def _queue_args(self, args) -> job_id:
         args = (self._bin,) + args
-        print(" ".join(args))
         self._queue.append(args)
         self._process_queue()
         return hash(args)
@@ -119,6 +118,7 @@ class AbstractInstaller:
         args = self._queue[0]
         job_id = hash(args)
         logging.debug("Starting %s %s", self._bin, args)
+        print(args)
 
         popen = subprocess.Popen(
             args,
@@ -171,10 +171,10 @@ class CondaInstaller(AbstractInstaller):
     def __init__(
         self, use_mamba: bool = True, pinned=None, channel=DEFAULT_CHANNEL
     ) -> None:
-        self._bin = "mamba" if use_mamba and shutil.which("mamba") else "conda"
         self._pinned = pinned
         self._channels = (channel,)
         super().__init__()
+        self._bin = "mamba" if use_mamba and shutil.which("mamba") else "conda"
         self._default_prefix = (
             sys.prefix if (Path(sys.prefix) / "conda-meta").is_dir() else None
         )
@@ -216,7 +216,7 @@ class CondaInstaller(AbstractInstaller):
         return self._get_args("remove", pkg_list, prefix)
 
     def _get_args(self, arg0, pkg_list: Sequence[str], prefix: Optional[str]):
-        cmd = [arg0, "-yq"]
+        cmd = [arg0, "-y"]
         if prefix := str(prefix or self._default_prefix):
             cmd.extend(["--prefix", prefix])
 
@@ -229,7 +229,36 @@ class CondaInstaller(AbstractInstaller):
     def create(
         self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
     ) -> job_id:
+        """Create a new conda environment with `pkg_list` in `prefix`.
+
+        Parameters
+        ----------
+        pkg_list : Sequence[str]
+            List of packages to install on new environment.
+        prefix : str, optional
+            Optional prefix for new environment.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
         return self._queue_args(self._get_create_args(pkg_list, prefix))
+
+    def remove(self, prefix) -> job_id:
+        """Remove a conda environment in `prefix`.
+
+        Parameters
+        ----------
+        prefix : str, optional
+            Optional prefix for new environment.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
+        return self._queue_args(self._get_remove_args(prefix))
 
     def install(
         self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
@@ -268,7 +297,3 @@ class CondaInstaller(AbstractInstaller):
             ID that can be used to cancel the process.
         """
         return self._queue_args(self._get_uninstall_args(pkg_list, prefix))
-
-    def remove(self, prefix) -> job_id:
-        """"""
-        return self._queue_args(self._get_remove_args(prefix))

@@ -4,14 +4,17 @@ import argparse
 import json
 import os
 import time
+import traceback
 
-from constructor_updater.actions import check_updates
+from constructor_updater.actions import check_updates, restore
 from constructor_updater.defaults import DEFAULT_CHANNEL
 from constructor_updater.utils.conda import get_base_prefix
 from constructor_updater.utils.locking import FilesystemLock
 
 
-def create_parser(subparser, channel=False, plugins=False, stable=False):
+def _create_parser(
+    subparser, current_version=False, channel=False, plugins=False, dev=False
+):
     """Create a subparser for the constructor updater.
 
     Parameters
@@ -22,8 +25,8 @@ def create_parser(subparser, channel=False, plugins=False, stable=False):
         Add channel argument, by default ``False``.
     plugins : bool, optional
         Add plugins argument, by default ``False``.
-    stable : bool, optional
-        Add stable argument, by default ``False``.
+    dev : bool, optional
+        Check for development version, by default ``False``.
 
     Returns
     -------
@@ -31,7 +34,9 @@ def create_parser(subparser, channel=False, plugins=False, stable=False):
         The updated subparser.
     """
     subparser.add_argument("package", type=str)
-    subparser.add_argument("--current-version", "-cv", type=str, required=True)
+
+    if current_version:
+        subparser.add_argument("--current-version", "-cv", type=str, required=True)
 
     if channel:
         subparser.add_argument(
@@ -52,10 +57,77 @@ def create_parser(subparser, channel=False, plugins=False, stable=False):
             default=[],
         )
 
-    if stable:
-        subparser.add_argument("--stable", "-s", action="store_true")
+    if dev:
+        subparser.add_argument("--dev", "-d", action="store_true")
 
     return subparser
+
+
+def _execute(args, lock, lock_created=None):
+    """Execute actions.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        Arguments from the command line.
+    lock: FilesystemLock
+        Lock object.
+    lock_created: bool, optional
+        Whether the lock was created or not, by default ``None``.
+    """
+    # Commands that can run in parallel
+    print(args)
+    if args.command == "check-updates":
+        print("RUNNING")
+        res = check_updates(args.package, args.current_version, args.dev, args.channel)
+        print(json.dumps(res))
+        return
+
+    if args.command == "clean-lock":
+        pass
+
+    # Commands that need to be locked
+    if lock_created:
+        # Then start as usual
+        print("RUNNING")
+        if args.command == "update":
+            res = check_updates(
+                args.package, args.current_version, args.stable, args.channel
+            )
+            print(json.dumps(res))
+        elif args.command == "restore":
+            res = restore(args.package, args.channel)
+        elif args.command == "check-clean":
+            pass
+        elif args.command == "clean":
+            pass
+
+        time.sleep(5)
+        lock.unlock()
+    else:
+        print("ALREADY RUNNING!")
+
+
+def _handle_excecute(args, lock, lock_created=None):
+    """Execute actions and handle exceptions.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        Arguments from the command line.
+    lock: FilesystemLock
+        Lock object.
+    lock_created: bool, optional
+        Whether the lock was created or not, by default ``None``.
+    """
+    try:
+        _execute(args, lock, lock_created)
+    except Exception as e:
+        try:
+            print(traceback.format_exc())
+            print(json.dumps(e))
+        except Exception as e:
+            print(e)
 
 
 def main():
@@ -69,23 +141,26 @@ def main():
     )
 
     check_updates = subparsers.add_parser("check-updates")
-    check_updates = create_parser(check_updates, channel=True, stable=True)
+    check_updates = _create_parser(check_updates, channel=True, dev=True)
 
     update = subparsers.add_parser("update")
-    update = create_parser(update, channel=True, plugins=True, stable=True)
+    update = _create_parser(update, channel=True, plugins=True, dev=True)
 
     check_updates_launch_and_clean = subparsers.add_parser(
         "check-launch-clean",
     )
-    check_updates_launch_and_clean = create_parser(
-        check_updates_launch_and_clean, channel=True, plugins=True, stable=True
+    check_updates_launch_and_clean = _create_parser(
+        check_updates_launch_and_clean, channel=True, plugins=True, dev=True
     )
 
+    restore = subparsers.add_parser("restore")
+    restore = _create_parser(restore, channel=True)
+
     clean = subparsers.add_parser("clean")
-    clean = create_parser(clean)
+    clean = _create_parser(clean)
 
     clean_lock = subparsers.add_parser("clean-lock")
-    clean_lock = create_parser(clean_lock)
+    clean_lock = _create_parser(clean_lock)
 
     args = parser.parse_args()
     if args.command is None:
@@ -115,72 +190,10 @@ def main():
         except Exception:
             pass
 
-        handle_excecute(args, lock)
+        _handle_excecute(args, lock)
         return None
 
-    handle_excecute(args, lock, lock_created)
-
-
-def execute(args, lock, lock_created=None):
-    """Execute actions.
-
-    args : argparse.Namespace
-        Arguments from the command line.
-    lock: FilesystemLock
-        Lock object.
-    lock_created: bool, optional
-        Whether the lock was created or not, by default ``None``.
-    """
-    # Commands that can run in parallel
-    print(args)
-    if args.command == "check-updates":
-        print("RUNNING")
-        res = check_updates(
-            args.package, args.current_version, args.stable, args.channel
-        )
-        print(json.dumps(res))
-        return
-
-    if args.command == "clean-lock":
-        pass
-
-    # Commands that need to be locked
-    if lock_created:
-        # Then start as usual
-        print("RUNNING")
-        if args.command == "update":
-            res = check_updates(
-                args.package, args.current_version, args.stable, args.channel
-            )
-            print(json.dumps(res))
-        elif args.command == "check-clean":
-            pass
-        elif args.command == "clean":
-            pass
-
-        time.sleep(5)
-        lock.unlock()
-    else:
-        print("ALREADY RUNNING!")
-
-
-def handle_excecute(args, lock, lock_created=None):
-    """Execute actions and handle exceptions.
-
-    args : argparse.Namespace
-        Arguments from the command line.
-    lock: FilesystemLock
-        Lock object.
-    lock_created: bool, optional
-        Whether the lock was created or not, by default ``None``.
-    """
-    try:
-        execute(args, lock, lock_created)
-    except Exception as e:
-        try:
-            print(json.dumps(e))
-        except Exception as e:
-            print(e)
+    _handle_excecute(args, lock, lock_created)
 
 
 if __name__ == "__main__":
