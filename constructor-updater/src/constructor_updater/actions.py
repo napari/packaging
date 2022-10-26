@@ -83,7 +83,7 @@ def check_updates(
     update = False
     latest_version = versions[-1] if versions else ""
     installed_versions_builds = get_installed_versions(package_spec.name)
-    print(installed_versions_builds)
+    # print(installed_versions_builds)
     installed_versions = [vb[0] for vb in installed_versions_builds]
     update = parse_version(latest_version) > parse_version(current_version)
 
@@ -116,7 +116,7 @@ def update(
         create_sentinel_file(package_spec.name, package_spec.version)
         # TODO: Create a lock file?
 
-    print("finished!")
+    # print("finished!")
 
 
 def clean_all(package):
@@ -141,7 +141,8 @@ def clean_all(package):
 
     # Otherwise remove the folders manually
     for prefix in failed:
-        print("removing", prefix)
+        pass
+        # print("removing", prefix)
         # shutil.rmtree(path)
 
 
@@ -163,7 +164,7 @@ def check_updates_clean_and_launch(
                 remove_sentinel_file(package_name, package_spec.version)
 
         # Launch the detached application
-        print(f"launching {package_name} version {res['latest_version']}")
+        # print(f"launching {package_name} version {res['latest_version']}")
 
         # Remove any prior installations
         clean_all(package_name)

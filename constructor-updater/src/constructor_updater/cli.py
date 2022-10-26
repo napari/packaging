@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import sys
 import time
 import traceback
 
@@ -76,11 +77,11 @@ def _execute(args, lock, lock_created=None):
         Whether the lock was created or not, by default ``None``.
     """
     # Commands that can run in parallel
-    print(args)
+    # print(args)
     if args.command == "check-updates":
-        print("RUNNING")
-        res = check_updates(args.package, args.current_version, args.dev, args.channel)
-        print(json.dumps(res))
+        # sys.stderr.write("RUNNING")
+        res = check_updates(args.package, args.dev, args.channel)
+        sys.stdout.write(json.dumps(res))
         return
 
     if args.command == "clean-lock":
@@ -124,10 +125,9 @@ def _handle_excecute(args, lock, lock_created=None):
         _execute(args, lock, lock_created)
     except Exception as e:
         try:
-            print(traceback.format_exc())
-            print(json.dumps(e))
+            sys.stderr.write({"data": {}, "error": json.dumps(e)})
         except Exception as e:
-            print(e)
+            sys.stderr.write({"data": {}, "error": e})
 
 
 def main():
