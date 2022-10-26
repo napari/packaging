@@ -1,6 +1,6 @@
 """Constructor updater api."""
 
-from typing import Optional, List
+from typing import List, Optional
 
 from constructor_updater.defaults import DEFAULT_CHANNEL
 from constructor_updater.utils.worker import ConstructorUpdaterWorker

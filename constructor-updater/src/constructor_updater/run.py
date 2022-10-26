@@ -2,8 +2,9 @@
 
 import sys
 
-from constructor_updater.api import check_updates
 from qtpy.QtCore import QCoreApplication, QTimer
+
+from constructor_updater.api import check_updates
 
 
 def _finished(res):

@@ -5,7 +5,6 @@ import shutil
 from typing import Dict, List
 
 from conda.models.match_spec import MatchSpec  # type: ignore
-
 from constructor_updater_cli.defaults import DEFAULT_CHANNEL
 from constructor_updater_cli.installer import CondaInstaller
 from constructor_updater_cli.utils.anaconda import conda_package_versions
@@ -16,7 +15,10 @@ from constructor_updater_cli.utils.io import (
     get_installed_versions,
     remove_sentinel_file,
 )
-from constructor_updater_cli.utils.versions import is_stable_version, parse_version
+from constructor_updater_cli.utils.versions import (
+    is_stable_version,
+    parse_version,
+)
 
 
 def _create_with_plugins(
@@ -86,11 +88,16 @@ def check_updates(
     # print(installed_versions_builds)
     installed_versions = [vb[0] for vb in installed_versions_builds]
     update = parse_version(latest_version) > parse_version(current_version)
+    filtered_version = versions[:]
+    if current_version in filtered_version:
+        index = filtered_version.index(current_version)
+        previous_version = filtered_version[index - 1]
 
     return {
         "available_versions": versions,
         "current_version": current_version,
         "latest_version": latest_version,
+        "previous_version": previous_version,
         "found_versions": installed_versions,
         "update": update,
         "installed": latest_version in installed_versions,

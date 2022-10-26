@@ -15,4 +15,3 @@ Currently main function are found in `actions.py`
 
 A constructor installation will contain this package on the `base` environment plus a nother environment
 with the application package, for example `napari-0.4.15`
-
