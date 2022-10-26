@@ -4,7 +4,9 @@ from constructor_updater_api.defaults import DEFAULT_CHANNEL
 from constructor_updater_api.utils.worker import ContructorUpdaterWorker
 
 
-def check_updates(package_name, current_version, channel: str=DEFAULT_CHANNEL, dev:bool = False) -> ContructorUpdaterWorker:
+def check_updates(
+    package_name, current_version, channel: str = DEFAULT_CHANNEL, dev: bool = False
+) -> ContructorUpdaterWorker:
     """Check for updates.
 
     Parameters
@@ -24,7 +26,7 @@ def check_updates(package_name, current_version, channel: str=DEFAULT_CHANNEL, d
         Worker to check for updates. Includes a finished signal that returns
         a ``dict`` with the result.
     """
-    args = ["check-updates", f'{package_name}={current_version}', "--channel", channel]
+    args = ["check-updates", f"{package_name}={current_version}", "--channel", channel]
     if dev:
         args.extend(["--dev"])
 

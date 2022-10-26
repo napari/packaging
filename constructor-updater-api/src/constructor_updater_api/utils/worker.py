@@ -2,9 +2,8 @@
 
 import json
 
-from qtpy.QtCore import QProcess, QObject, Signal
-
 from constructor_updater_api.utils.conda import get_base_prefix
+from qtpy.QtCore import QObject, QProcess, Signal
 
 
 class ContructorUpdaterWorker(QObject):
@@ -17,12 +16,13 @@ class ContructorUpdaterWorker(QObject):
     detached : bool, optional
         Run the process detached, by default ``False``.
     """
+
     finished = Signal(dict)
 
     def __init__(self, args, detached=False):
         super().__init__()
         self._detached = detached
-        self._program = get_base_prefix() / 'bin' / "constructor-updater"
+        self._program = get_base_prefix() / "bin" / "constructor-updater"
 
         if not self._program.is_file():
             raise FileNotFoundError(f"Could not find {self._program}")

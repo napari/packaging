@@ -5,7 +5,6 @@ import json
 import os
 import sys
 import time
-import traceback
 
 from constructor_updater.actions import check_updates, restore
 from constructor_updater.defaults import DEFAULT_CHANNEL
