@@ -2,7 +2,7 @@
 
 import sys
 
-from qtpy.QtCore import QCoreApplication, QTimer
+from qtpy.QtCore import QCoreApplication, QTimer  # type: ignore
 
 from constructor_manager.api import check_updates
 
