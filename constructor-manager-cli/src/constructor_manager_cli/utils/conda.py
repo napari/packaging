@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from typing import Optional, Union
 
-from constructor_updater_cli.utils.packages import sentinel_file_name
+from constructor_manager_cli.utils.packages import sentinel_file_name
 
 
 def check_if_constructor_app(package_name, path=None) -> bool:

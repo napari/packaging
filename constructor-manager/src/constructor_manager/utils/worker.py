@@ -4,16 +4,16 @@ import json
 
 from qtpy.QtCore import QObject, QProcess, Signal
 
-from constructor_updater.utils.conda import get_base_prefix
+from constructor_manager.utils.conda import get_base_prefix
 
 
-class ConstructorUpdaterWorker(QObject):
+class ConstructorManagerWorker(QObject):
     """TODO:
 
     Parameters
     ----------
     args : list
-        Arguments to pass to the constructor updater.
+        Arguments to pass to the constructor manager.
     detached : bool, optional
         Run the process detached, by default ``False``.
     """
@@ -23,7 +23,7 @@ class ConstructorUpdaterWorker(QObject):
     def __init__(self, args, detached=False):
         super().__init__()
         self._detached = detached
-        self._program = get_base_prefix() / "bin" / "constructor-updater"
+        self._program = get_base_prefix() / "bin" / "constructor-manager"
 
         if not self._program.is_file():
             raise FileNotFoundError(f"Could not find {self._program}")

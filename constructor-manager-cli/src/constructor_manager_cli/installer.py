@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 from typing import Deque, Dict, List, Optional, Sequence, Tuple
 
-from constructor_updater_cli.defaults import DEFAULT_CHANNEL
+from constructor_manager_cli.defaults import DEFAULT_CHANNEL
 
 job_id = int
 

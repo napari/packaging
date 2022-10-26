@@ -1,21 +1,21 @@
-"""Constructor updater actions."""
+"""Constructor manager actions."""
 
 import os
 import shutil
 from typing import Dict, List
 
 from conda.models.match_spec import MatchSpec  # type: ignore
-from constructor_updater_cli.defaults import DEFAULT_CHANNEL
-from constructor_updater_cli.installer import CondaInstaller
-from constructor_updater_cli.utils.anaconda import conda_package_versions
-from constructor_updater_cli.utils.conda import get_prefix_by_name
-from constructor_updater_cli.utils.io import (
+from constructor_manager_cli.defaults import DEFAULT_CHANNEL
+from constructor_manager_cli.installer import CondaInstaller
+from constructor_manager_cli.utils.anaconda import conda_package_versions
+from constructor_manager_cli.utils.conda import get_prefix_by_name
+from constructor_manager_cli.utils.io import (
     create_sentinel_file,
     get_broken_envs,
     get_installed_versions,
     remove_sentinel_file,
 )
-from constructor_updater_cli.utils.versions import (
+from constructor_manager_cli.utils.versions import (
     is_stable_version,
     parse_version,
 )

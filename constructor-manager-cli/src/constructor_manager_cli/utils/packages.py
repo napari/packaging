@@ -2,7 +2,7 @@
 
 import re
 
-from constructor_updater_cli.defaults import (
+from constructor_manager_cli.defaults import (
     SENTINEL_FILE_PREFIX,
     SENTINEL_FILE_SUFFIX,
 )

@@ -1,8 +1,9 @@
 from functools import lru_cache
 
 import requests
-from constructor_updater_cli import __version__
-from constructor_updater_cli.defaults import DEFAULT_TIMEOUT
+
+from constructor_manager_cli import __version__
+from constructor_manager_cli.defaults import DEFAULT_TIMEOUT
 
 
 @lru_cache

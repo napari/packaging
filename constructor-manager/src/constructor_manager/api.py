@@ -1,9 +1,9 @@
-"""Constructor updater api."""
+"""Constructor manager api."""
 
 from typing import List, Optional
 
-from constructor_updater.defaults import DEFAULT_CHANNEL
-from constructor_updater.utils.worker import ConstructorUpdaterWorker
+from constructor_manager.defaults import DEFAULT_CHANNEL
+from constructor_manager.utils.worker import ConstructorManagerWorker
 
 
 def _run_action(
@@ -13,7 +13,7 @@ def _run_action(
     channel: str = DEFAULT_CHANNEL,
     plugins: Optional[List[str]] = None,
     dev: bool = False,
-) -> ConstructorUpdaterWorker:
+) -> ConstructorManagerWorker:
     """Run constructor action.
 
     Parameters
@@ -33,7 +33,7 @@ def _run_action(
 
     Returns
     -------
-    ContructorUpdaterWorker
+    ConstructorManagerWorker
         Worker to check for updates. Includes a finished signal that returns
         a ``dict`` with the result.
     """
@@ -54,12 +54,12 @@ def _run_action(
         args.extend(["--dev"])
 
     detached = cmd != "status"
-    return ConstructorUpdaterWorker(args, detached=detached)
+    return ConstructorManagerWorker(args, detached=detached)
 
 
 def check_updates(
     package_name, current_version, channel: str = DEFAULT_CHANNEL, dev: bool = False
-) -> ConstructorUpdaterWorker:
+) -> ConstructorManagerWorker:
     """Check for updates.
 
     Parameters
@@ -75,7 +75,7 @@ def check_updates(
 
     Returns
     -------
-    ContructorUpdaterWorker
+    ConstructorManagerWorker
         Worker to check for updates. Includes a finished signal that returns
         a ``dict`` with the result.
     """
@@ -89,13 +89,13 @@ def update(
     channel: str = DEFAULT_CHANNEL,
     plugins: Optional[List[str]] = None,
     dev: bool = False,
-) -> ConstructorUpdaterWorker:
+) -> ConstructorManagerWorker:
     """Update the package to given version.
     If version is None update to latest version found.
 
     Returns
     -------
-    ContructorUpdaterWorker
+    ConstructorManagerWorker
         Worker to check for updates. Includes a finished signal that returns
         a ``dict`` with the result.
     """
@@ -110,7 +110,7 @@ def rollback(
     channel: str = DEFAULT_CHANNEL,
     plugins: Optional[List[str]] = None,
     dev: bool = False,
-) -> ConstructorUpdaterWorker:
+) -> ConstructorManagerWorker:
     """Update the package to given version.
     If version is None update to latest version found.
 
@@ -127,7 +127,7 @@ def rollback(
 
     Returns
     -------
-    ContructorUpdaterWorker
+    ConstructorManagerWorker
         Worker to check for updates. Includes a finished signal that returns
         a ``dict`` with the result.
     """
@@ -147,7 +147,7 @@ def restore(
     channel: str = DEFAULT_CHANNEL,
     dev: bool = False,
     plugins: Optional[List[str]] = None,
-) -> ConstructorUpdaterWorker:
+) -> ConstructorManagerWorker:
     """Restore the current version of package.
 
     Parameters
@@ -163,7 +163,7 @@ def restore(
 
     Returns
     -------
-    ContructorUpdaterWorker
+    ConstructorManagerWorker
         Worker to check for updates. Includes a finished signal that returns
         a ``dict`` with the result.
     """

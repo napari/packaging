@@ -3,8 +3,8 @@
 from functools import lru_cache
 from typing import List
 
-from constructor_updater_cli.defaults import DEFAULT_CHANNEL
-from constructor_updater_cli.utils.request import get_request
+from constructor_manager_cli.defaults import DEFAULT_CHANNEL
+from constructor_manager_cli.utils.request import get_request
 
 
 @lru_cache

@@ -4,7 +4,7 @@ import sys
 
 from qtpy.QtCore import QCoreApplication, QTimer
 
-from constructor_updater.api import check_updates
+from constructor_manager.api import check_updates
 
 
 def _finished(res):
@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
     # Process the event loop
     timer = QTimer()
-    timer.timeout.connect(lambda: None)
+    timer.timeout.connect(lambda: None)  # type: ignore
     timer.start(100)
 
     # worker = check_updates("napari", current_version="0.4.15", channel="napari", dev=True)

@@ -1,5 +1,5 @@
 import pytest
-from constructor_updater_cli.utils.versions import is_stable_version
+from constructor_manager_cli.utils.versions import is_stable_version
 
 
 @pytest.mark.parametrize(

@@ -6,10 +6,10 @@ import os
 import sys
 import time
 
-from constructor_updater_cli.actions import check_updates, restore
-from constructor_updater_cli.defaults import DEFAULT_CHANNEL
-from constructor_updater_cli.utils.conda import get_base_prefix
-from constructor_updater_cli.utils.locking import FilesystemLock
+from constructor_manager_cli.actions import check_updates, restore
+from constructor_manager_cli.defaults import DEFAULT_CHANNEL
+from constructor_manager_cli.utils.conda import get_base_prefix
+from constructor_manager_cli.utils.locking import FilesystemLock
 
 
 def _create_subparser(
