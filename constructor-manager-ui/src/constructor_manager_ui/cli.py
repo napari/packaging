@@ -1,8 +1,8 @@
-"""Constuctor updater UI CLI."""
+"""Constuctor manager CLI."""
 
 import argparse
 
-from constructor_updater_ui.main import main
+from constructor_manager_ui.main import main
 
 
 def run():

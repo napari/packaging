@@ -1,4 +1,4 @@
-"""Main interface."""
+"""Constructor manager main interface."""
 
 import sys
 

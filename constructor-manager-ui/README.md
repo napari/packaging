@@ -1,4 +1,4 @@
-# Constructor Updater UI
+# Constructor Manager User Interface
 
 ## Requirements
 
@@ -16,5 +16,5 @@ pip install -e .
 Run the application:
 
 ```bash
-python constructor-updater-ui napari
+constructor-manager-ui napari
 ```
