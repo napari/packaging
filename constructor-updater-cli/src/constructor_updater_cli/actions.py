@@ -6,17 +6,17 @@ from typing import Dict, List
 
 from conda.models.match_spec import MatchSpec  # type: ignore
 
-from constructor_updater.defaults import DEFAULT_CHANNEL
-from constructor_updater.installer import CondaInstaller
-from constructor_updater.utils.anaconda import conda_package_versions
-from constructor_updater.utils.conda import get_prefix_by_name
-from constructor_updater.utils.io import (
+from constructor_updater_cli.defaults import DEFAULT_CHANNEL
+from constructor_updater_cli.installer import CondaInstaller
+from constructor_updater_cli.utils.anaconda import conda_package_versions
+from constructor_updater_cli.utils.conda import get_prefix_by_name
+from constructor_updater_cli.utils.io import (
     create_sentinel_file,
     get_broken_envs,
     get_installed_versions,
     remove_sentinel_file,
 )
-from constructor_updater.utils.versions import is_stable_version, parse_version
+from constructor_updater_cli.utils.versions import is_stable_version, parse_version
 
 
 def _create_with_plugins(

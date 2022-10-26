@@ -2,19 +2,24 @@
 
 ## Requirements
 
-- packaging
-- requests
+- qtpy
+- constructor-updater-backend (on base environment)
 
-`conda install python packaging requests -c conda-forge -y`
+## Usage
 
-## Workflow
+```python
+from constructor_updater.api import check_for_updates
 
-CLI under progress to be called by a companbion package `constructor-updater-cli`
 
-Currently main function are found in `actions.py`
+def finished(result):
+    print(result)
 
-A constructor installation will contain this package on the `base` environment plus a nother environment
-with the application package, for example `napari-0.4.15`
+
+worker = check_for_updates(package_name="napari", current_version="0.4.10", channel="conda-forge")
+worker.finished.connect(finished)
+worker.start()
+```
+
 
 ### Check for updates
 

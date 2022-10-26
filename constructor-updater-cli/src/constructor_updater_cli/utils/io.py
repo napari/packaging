@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
-from constructor_updater.utils.conda import get_prefix_by_name
-from constructor_updater.utils.packages import (
+from constructor_updater_cli.utils.conda import get_prefix_by_name
+from constructor_updater_cli.utils.packages import (
     normalized_name,
     sentinel_file_name,
 )

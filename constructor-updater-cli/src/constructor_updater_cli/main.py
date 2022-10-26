@@ -6,10 +6,10 @@ import os
 import sys
 import time
 
-from constructor_updater.actions import check_updates, restore
-from constructor_updater.defaults import DEFAULT_CHANNEL
-from constructor_updater.utils.conda import get_base_prefix
-from constructor_updater.utils.locking import FilesystemLock
+from constructor_updater_cli.actions import check_updates, restore
+from constructor_updater_cli.defaults import DEFAULT_CHANNEL
+from constructor_updater_cli.utils.conda import get_base_prefix
+from constructor_updater_cli.utils.locking import FilesystemLock
 
 
 def _create_parser(
@@ -145,15 +145,11 @@ def main():
     update = subparsers.add_parser("update")
     update = _create_parser(update, channel=True, plugins=True, dev=True)
 
-    check_updates_launch_and_clean = subparsers.add_parser(
-        "check-launch-clean",
-    )
-    check_updates_launch_and_clean = _create_parser(
-        check_updates_launch_and_clean, channel=True, plugins=True, dev=True
-    )
-
     restore = subparsers.add_parser("restore")
     restore = _create_parser(restore, channel=True)
+
+    rollback = subparsers.add_parser("rollback")
+    rollback = _create_parser(restore, channel=True)
 
     clean = subparsers.add_parser("clean")
     clean = _create_parser(clean)

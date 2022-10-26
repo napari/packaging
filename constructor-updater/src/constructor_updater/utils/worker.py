@@ -2,11 +2,11 @@
 
 import json
 
-from constructor_updater_api.utils.conda import get_base_prefix
+from constructor_updater.utils.conda import get_base_prefix
 from qtpy.QtCore import QObject, QProcess, Signal
 
 
-class ContructorUpdaterWorker(QObject):
+class ConstructorUpdaterWorker(QObject):
     """TODO:
 
     Parameters

@@ -2,7 +2,7 @@
 
 import sys
 
-from constructor_updater_api.api import check_updates
+from constructor_updater.api import check_updates
 from qtpy.QtCore import QCoreApplication, QTimer
 
 
