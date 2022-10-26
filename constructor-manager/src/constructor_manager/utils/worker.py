@@ -2,7 +2,7 @@
 
 import json
 
-from qtpy.QtCore import QObject, QProcess, Signal
+from qtpy.QtCore import QObject, QProcess, Signal  # type: ignore
 
 from constructor_manager.utils.conda import get_base_prefix
 
