@@ -13,7 +13,12 @@ from constructor_manager_cli.utils.locking import FilesystemLock
 
 
 def _create_subparser(
-    subparser, current_version=False, channel=False, plugins=False, dev=False
+    subparser,
+    channel=False,
+    plugins=False,
+    dev=False,
+    launch=False,
+    plugins_url=False,
 ):
     """Create a subparser for the constructor updater.
 
@@ -27,6 +32,11 @@ def _create_subparser(
         Add plugins argument, by default ``False``.
     dev : bool, optional
         Check for development version, by default ``False``.
+    launch : bool, optional
+        Launch the aplication, by default ``False``.
+    plugins_url : bool, optional
+        Add parameter for plugins url providing a json object of plugins
+        for the package. By default ``False``.
 
     Returns
     -------
@@ -34,9 +44,6 @@ def _create_subparser(
         The updated subparser.
     """
     subparser.add_argument("package", type=str)
-
-    if current_version:
-        subparser.add_argument("--current-version", "-cv", type=str, required=True)
 
     if channel:
         subparser.add_argument(
@@ -60,10 +67,21 @@ def _create_subparser(
     if dev:
         subparser.add_argument("--dev", "-d", action="store_true")
 
+    if launch:
+        subparser.add_argument("--launch", "-l", action="store_true")
+
+    if plugins_url:
+        subparser.add_argument(
+            "--plugins-url",
+            "-pu",
+            type=str,
+        )
+
     return subparser
 
 
 def _create_parser():
+    """Create argument parser and options."""
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
         title="subcommands",
@@ -72,26 +90,54 @@ def _create_parser():
         dest="command",
     )
 
+    # Check for updates and any current installs
     check_updates = subparsers.add_parser("check-updates")
-    check_updates = _create_subparser(check_updates, channel=True, dev=True)
+    check_updates = _create_subparser(
+        check_updates,
+        channel=True,
+        dev=True,
+    )
 
+    # Run the update process (does not delete the previous one)
     update = subparsers.add_parser("update")
-    update = _create_subparser(update, channel=True, plugins=True, dev=True)
+    update = _create_subparser(
+        update,
+        channel=True,
+        plugins=True,
+        dev=True,
+        plugins_url=True,
+    )
 
+    # Run the update process after installation, to delete the old envs and
+    # optionally launch the application
     update_clean = subparsers.add_parser("update-clean")
-    update_clean = _create_subparser(update_clean, channel=True, plugins=True, dev=True)
+    update_clean = _create_subparser(
+        update_clean,
+        channel=True,
+        plugins=True,
+        dev=True,
+        launch=True,
+    )
 
+    # Restore a current broken version
     restore = subparsers.add_parser("restore")
     restore = _create_subparser(restore, channel=True)
 
+    # Rollback to a previous version
     rollback = subparsers.add_parser("rollback")
     rollback = _create_subparser(rollback, channel=True)
 
+    # Clean any broken or stale environments
     clean = subparsers.add_parser("clean")
     clean = _create_subparser(clean)
 
     clean_lock = subparsers.add_parser("clean-lock")
     clean_lock = _create_subparser(clean_lock)
+
+    # Get current status of the installer (update in progress?)
+    status = subparsers.add_parser("status")
+    status = _create_subparser(status)
+
     return parser
 
 
@@ -110,7 +156,6 @@ def _execute(args, lock, lock_created=None):
     # Commands that can run in parallel
     # print(args)
     if args.command == "check-updates":
-        # sys.stderr.write("RUNNING")
         res = check_updates(args.package, args.dev, args.channel)
         sys.stdout.write(json.dumps(res))
         return
@@ -124,19 +169,28 @@ def _execute(args, lock, lock_created=None):
         print("RUNNING")
         if args.command == "update":
             res = check_updates(
-                args.package, args.current_version, args.stable, args.channel
+                args.package,
+                args.current_version,
+                args.stable,
+                args.channel,
             )
             print(json.dumps(res))
         elif args.command == "update-clean":
             res = check_updates(
-                args.package, args.current_version, args.stable, args.channel
+                args.package,
+                args.current_version,
+                args.stable,
+                args.channel,
             )
             print(json.dumps(res))
         elif args.command == "restore":
             res = restore(args.package, args.channel)
         elif args.command == "rollback":
             res = check_updates(
-                args.package, args.current_version, args.stable, args.channel
+                args.package,
+                args.current_version,
+                args.stable,
+                args.channel,
             )
             print(json.dumps(res))
         elif args.command == "status":

@@ -2,13 +2,15 @@
 
 import os
 import shutil
-from typing import Dict, List
+from typing import Dict, List, Optional
 
-from conda.models.match_spec import MatchSpec  # type: ignore
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
 from constructor_manager_cli.installer import CondaInstaller
 from constructor_manager_cli.utils.anaconda import conda_package_versions
-from constructor_manager_cli.utils.conda import get_prefix_by_name
+from constructor_manager_cli.utils.conda import (
+    get_prefix_by_name,
+    parse_conda_version_spec,
+)
 from constructor_manager_cli.utils.io import (
     create_sentinel_file,
     get_broken_envs,
@@ -22,27 +24,56 @@ from constructor_manager_cli.utils.versions import (
 
 
 def _create_with_plugins(
-    package,
-    plugins,
-    channel,
+    package: str,
+    plugins: Optional[List[str]],
+    channel: str,
 ):
-    """Update the package."""
-    package_spec = MatchSpec(package)
-    prefix = get_prefix_by_name(f"{package_spec.name}-{package_spec.version}")
-    installer = CondaInstaller(
-        pinned=f"{package_spec.name}={package_spec.version}", channel=channel
-    )
-    job_id = installer.create([package] + plugins, prefix=prefix)
+    """Update the package.
+
+    Parameters
+    ----------
+    package : str
+        The package name and version spec.
+    plugins : list
+        List of plugins to install.
+    channel : str
+        The channel to install the package from.
+
+    Returns
+    -------
+    int
+        The return code of the installer.
+    """
+    package_name, version = parse_conda_version_spec(package)
+    prefix = get_prefix_by_name(f"{package_name}-{version}")
+    installer = CondaInstaller(pinned=f"{package_name}={version}", channel=channel)
+    if plugins is not None:
+        packages = [package] + plugins
+
+    job_id = installer.create(packages, prefix=str(prefix))
     return installer._exit_codes[job_id]
 
 
 def _create_with_plugins_one_by_one(package: str, plugins: List[str], channel: str):
-    """Update the package."""
-    package_spec = MatchSpec(package)
-    prefix = get_prefix_by_name(f"{package_spec.name}-{package_spec.version}")
-    installer = CondaInstaller(
-        pinned=f"{package_spec.name}={package_spec.version}", channel=channel
-    )
+    """Update the package.
+
+    Parameters
+    ----------
+    package : str
+        The package name and version spec.
+    plugins : list
+        List of plugins to install.
+    channel : str
+        The channel to install the package from.
+
+    Returns
+    -------
+    int
+        The return code of the installer.
+    """
+    package_name, version = parse_conda_version_spec(package)
+    prefix = get_prefix_by_name(f"{package_name}-{version}")
+    installer = CondaInstaller(pinned=f"{package_name}={version}", channel=channel)
 
     job_id = installer.create([package], prefix=str(prefix))
     for plugin in plugins:
@@ -62,8 +93,6 @@ def check_updates(
     ----------
     package : str
         The package name to check for new version.
-    current_version : str
-        The current version of the package.
     dev : bool, optional
         If ``True``, check for development versions. Default is ``False``.
     channel : str, optional
@@ -76,16 +105,14 @@ def check_updates(
         Dictionary containing the current and latest versions, found
         installed versions and the installer type used.
     """
-    package_spec = MatchSpec(package)
-    current_version = str(package_spec.version).rstrip(".*")  # ?
-    versions = conda_package_versions(package_spec.name, channel=channel)
+    package_name, current_version = parse_conda_version_spec(package)
+    versions = conda_package_versions(package_name, channel=channel)
     if not dev:
         versions = list(filter(is_stable_version, versions))
 
     update = False
     latest_version = versions[-1] if versions else ""
-    installed_versions_builds = get_installed_versions(package_spec.name)
-    # print(installed_versions_builds)
+    installed_versions_builds = get_installed_versions(package_name)
     installed_versions = [vb[0] for vb in installed_versions_builds]
     update = parse_version(latest_version) > parse_version(current_version)
     filtered_version = versions[:]
@@ -109,18 +136,31 @@ def update(
     plugins=(),
     channel=DEFAULT_CHANNEL,
 ):
-    """Update the package."""
-    package_spec = MatchSpec(package)
+    """Update the package.
+
+    Parameters
+    ----------
+    package : str
+        The package name and version spec.
+    plugins : list
+        List of plugins to install.
+    channel : str
+        The channel to install the package from.
+
+    Returns
+    -------
+    int
+        The return code of the installer.
+    """
+    package_name, version = parse_conda_version_spec(package)
     plugins = list(plugins)
-    return_code = _create_with_plugins(
-        package_spec.name, package_spec.version, plugins, channel=channel
-    )
+    return_code = _create_with_plugins(package_name, version, plugins, channel=channel)
 
     if bool(return_code):
         return_code = _create_with_plugins_one_by_one(package, plugins, channel=channel)
 
     if not bool(return_code):
-        create_sentinel_file(package_spec.name, package_spec.version)
+        create_sentinel_file(package_name, version)
         # TODO: Create a lock file?
 
     # print("finished!")
@@ -137,7 +177,7 @@ def clean_all(package):
     package_name : str
         Name of the package.
     """
-    package_name = MatchSpec(package).name
+    package_name, _ = parse_conda_version_spec(package)
     # Try to remove using conda/mamba
     installer = CondaInstaller()
     failed = []
@@ -159,8 +199,7 @@ def check_updates_clean_and_launch(
     channel=DEFAULT_CHANNEL,
 ):
     """Check for updates and clean."""
-    package_spec = MatchSpec(package)
-    package_name = package_spec.name
+    package_name, version = parse_conda_version_spec(package)
     res = check_updates(package_name, dev, channel)
     found_versions = res["found_versions"]
 
@@ -168,7 +207,7 @@ def check_updates_clean_and_launch(
     if res["installed"]:
         for version in found_versions:
             if version != res["latest_version"]:
-                remove_sentinel_file(package_name, package_spec.version)
+                remove_sentinel_file(package_name, version)
 
         # Launch the detached application
         # print(f"launching {package_name} version {res['latest_version']}")
@@ -190,8 +229,8 @@ def remove(package: str):
     """
     # Try to remove using conda/mamba
     installer = CondaInstaller()
-    package_spec = MatchSpec(package)
-    prefix = get_prefix_by_name(f"{package_spec.name}-{package_spec.version}")
+    package_name, version = parse_conda_version_spec(package)
+    prefix = get_prefix_by_name(f"{package_name}-{version}")
     job_id = installer.remove(prefix)
 
     # Otherwise remove the folder manually
@@ -210,9 +249,7 @@ def restore(package: str, channel: str = DEFAULT_CHANNEL):
     channel : str, optional
         Check for available versions on this channel. Default is ``conda-forge``
     """
-    package_spec = MatchSpec(package)
-    package_name = str(package_spec.name)
-    current_version = str(package_spec.version).rstrip(".*")  # ?
+    package_name, current_version = parse_conda_version_spec(package)
     env_name = f"{package_name}-{current_version}"
     prefix = str(get_prefix_by_name(env_name))
     installer = CondaInstaller(channel=channel)
