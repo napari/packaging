@@ -1,5 +1,6 @@
 """IO utilities."""
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -114,3 +115,49 @@ def remove_sentinel_file(package_name, version):
     env_name = f"{package_name}-{version}"
     prefix = get_prefix_by_name(env_name)
     os.remove(get_sentinel_path(prefix, package_name))
+
+
+def get_config_path() -> Path:
+    return get_prefix_by_name("base") / "constructor-manager"
+
+
+def get_state_path() -> Path:
+    return get_config_path() / "state"
+
+
+def get_lock_path() -> Path:
+    return get_config_path() / "lock"
+
+
+def get_log_path() -> Path:
+    return get_config_path() / "log"
+
+
+def get_status_path() -> Path:
+    return get_config_path() / "status"
+
+
+def save_state_file(application, packages, channel, dev, plugins):
+    """"""
+    base_path = get_state_path()
+    base_path.mkdir(parents=True, exist_ok=True)
+    data = {
+        "application": application,
+        "packages": packages,
+        "channel": channel,
+        "dev": dev,
+        "plugins": plugins,
+    }
+    with open(base_path / f"{application}.json", "w") as f:
+        f.write(json.dumps(data, indent=4))
+
+
+def load_state_file(application):
+    """"""
+    path = get_state_path() / f"{application}.json"
+    data = {}
+    if path.exists():
+        with open(path) as f:
+            data = json.loads(f.read())
+
+    return data

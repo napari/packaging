@@ -1,7 +1,7 @@
 """Version handling utilities."""
 
 import re
-from typing import TYPE_CHECKING, Tuple, Union
+from typing import TYPE_CHECKING, Iterable, List, Tuple, Union
 
 LETTERS_PATTERN = re.compile(r"[a-zA-Z]")
 
@@ -47,3 +47,23 @@ def parse_version(version: str) -> "packaging.version._BaseVersion":
         return packaging.version.Version(version)
     except packaging.version.InvalidVersion:
         return packaging.version.LegacyVersion(version)
+
+
+def sort_versions(versions: Iterable[str], reverse: bool = False) -> List[str]:
+    """Sort a list of version strings.
+
+    Parameters
+    ----------
+    versions : list
+        List of version strings to sort.
+    reverse : bool, optional
+        If ``True``, sort in descending order. Default is ``False``.
+
+    Returns
+    -------
+    list
+        Sorted list of version strings.
+    """
+    from packaging import version
+
+    return list(sorted(versions, key=version.Version, reverse=reverse))

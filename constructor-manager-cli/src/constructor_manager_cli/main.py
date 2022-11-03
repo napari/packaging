@@ -5,8 +5,9 @@ import json
 import os
 import sys
 import time
+import traceback
 
-from constructor_manager_cli.actions import check_updates, restore
+from constructor_manager_cli.actions import check_updates, restore, update
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
 from constructor_manager_cli.utils.conda import get_base_prefix
 from constructor_manager_cli.utils.locking import FilesystemLock
@@ -157,7 +158,7 @@ def _execute(args, lock, lock_created=None):
     # print(args)
     if args.command == "check-updates":
         res = check_updates(args.package, args.dev, args.channel)
-        sys.stdout.write(json.dumps(res))
+        sys.stdout.write(json.dumps(res, indent=4))
         return
 
     if args.command == "clean-lock":
@@ -168,18 +169,18 @@ def _execute(args, lock, lock_created=None):
         # Then start as usual
         print("RUNNING")
         if args.command == "update":
-            res = check_updates(
+            res = update(
                 args.package,
-                args.current_version,
-                args.stable,
+                args.dev,
                 args.channel,
+                args.plugins,
+                args.plugins_url,
             )
             print(json.dumps(res))
         elif args.command == "update-clean":
             res = check_updates(
                 args.package,
-                args.current_version,
-                args.stable,
+                args.dev,
                 args.channel,
             )
             print(json.dumps(res))
@@ -216,13 +217,15 @@ def _handle_excecute(args, lock, lock_created=None):
     lock_created: bool, optional
         Whether the lock was created or not, by default ``None``.
     """
+    _execute(args, lock, lock_created)
+    return
     try:
         _execute(args, lock, lock_created)
     except Exception as e:
         try:
-            sys.stderr.write({"data": {}, "error": json.dumps(e)})
-        except Exception as e:
-            sys.stderr.write({"data": {}, "error": e})
+            sys.stderr.write(str({"data": {}, "error": json.dumps(e)}))
+        except Exception:
+            sys.stderr.write(str({"data": {}, "error": traceback.format_exc()}))
 
 
 def main():
@@ -233,7 +236,10 @@ def main():
         args = parser.parse_args(["-h"])
 
     # Try to create lock file
-    lock_file = get_base_prefix() / "constructor-updater.lock"
+    constructor_manager_dir = get_base_prefix() / "constructor-manager" / "locks"
+    constructor_manager_dir.mkdir(parents=True, exist_ok=True)
+    lock_file = constructor_manager_dir / "constructor-updater.lock"
+
     lock = FilesystemLock(lock_file)
     # Try to lock the lock filelock. If it's *possible* to do it, then
     # there is no previous instance running and we can start a

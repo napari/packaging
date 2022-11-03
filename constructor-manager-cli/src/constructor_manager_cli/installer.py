@@ -1,4 +1,5 @@
 import contextlib
+import json
 import logging
 import os
 import shutil
@@ -105,20 +106,25 @@ class AbstractInstaller:
         raise ValueError(f"No job with id {job_id}")  # pragma: no cover
 
     # -------------------------- Private methods ------------------------------
-    def _queue_args(self, args) -> job_id:
-        args = (self._bin,) + args
+    def _queue_args(self, args, block=False) -> job_id:
+        args = (self._bin,) + args + (block,)
         self._queue.append(args)
-        self._process_queue()
-        return hash(args)
+        res = self._process_queue()
+        if res:
+            return res
+        else:
+            return hash(args[:-1])  # Do not include the last block parameter in hash
 
     def _process_queue(self):
         if not self._queue:
             return
 
-        args = self._queue[0]
+        args = self._queue[0][:-1]
+        block = self._queue[0][-1]
+        # Do not include the last block parameter in hash
         job_id = hash(args)
         logging.debug("Starting %s %s", self._bin, args)
-        print(args)
+        print("ÄRGS", args)
 
         popen = subprocess.Popen(
             args,
@@ -128,19 +134,26 @@ class AbstractInstaller:
             env=self._env,
         )
         self._processes[job_id] = popen
+        if block:
+            stdout, stderr = popen.communicate()
+            # TODO: Write to file for logging and querying status
+            return_code = popen.returncode
+            self._on_process_finished(job_id, return_code, 0)
+            return json.loads(stdout)
+        else:
+            for line in popen.stdout:
+                self._on_output(line)
+                # print(line, end='')
 
-        for line in popen.stdout:
-            self._on_output(line)
-            # print(line, end='')
+            for line in popen.stderr:
+                self._on_output(line)
+                # print(line, end='')
 
-        for line in popen.stderr:
-            self._on_output(line)
-            # print(line, end='')
+            popen.stdout.close()
+            popen.stderr.close()
+            return_code = popen.wait()
 
-        popen.stdout.close()
-        popen.stderr.close()
-        return_code = popen.wait()
-        self._on_process_finished(job_id, return_code, 0)
+            self._on_process_finished(job_id, return_code, 0)
 
     def _on_output(self, line):
         # TODO: Write to file for logging and querying status
@@ -297,3 +310,21 @@ class CondaInstaller(AbstractInstaller):
             ID that can be used to cancel the process.
         """
         return self._queue_args(self._get_uninstall_args(pkg_list, prefix))
+
+    def list(self, prefix: str, block=True) -> job_id:
+        """List packages for `prefix`.
+
+        Parameters
+        ----------
+        prefix : str
+            Prefix from which to list packages.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
+        print("BACLKIE!")
+        return self._queue_args(
+            ("list", "--prefix", str(prefix), "--json"), block=block
+        )

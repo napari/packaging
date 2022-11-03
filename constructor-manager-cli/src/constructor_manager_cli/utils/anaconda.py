@@ -4,6 +4,7 @@ from functools import lru_cache
 from typing import List
 
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
+from constructor_manager_cli.utils.packages import normalized_name
 from constructor_manager_cli.utils.request import get_request
 
 
@@ -53,3 +54,27 @@ def conda_package_versions(
         package_name,
         channel=channel,
     ).get("versions", [])
+
+
+@lru_cache
+def plugin_versions(
+    url: str,
+) -> List[str]:
+    """Return information on package plugins from endpoint in json.
+
+    Parameters
+    ----------
+    url : str
+        Url to json endpoint.
+
+    Returns
+    -------
+    list of str
+        Package versions.
+    """
+    response = get_request(url)
+    plugins = []
+    for key in response.json():
+        plugins.append(normalized_name(key))
+
+    return list(sorted(plugins))

@@ -5,10 +5,11 @@ from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
 from conda.models.match_spec import MatchSpec  # type: ignore
+from constructor_manager_cli.installer import CondaInstaller
 from constructor_manager_cli.utils.packages import sentinel_file_name
 
 
-def parse_conda_version_spec(package: str) -> Tuple[str, str]:
+def parse_conda_version_spec(package: str) -> Tuple[str, str, str]:
     """Parse a conda version spec into a tuple of (name, version).
 
     Parameters
@@ -22,8 +23,22 @@ def parse_conda_version_spec(package: str) -> Tuple[str, str]:
         The package name and version.
     """
     package_spec = MatchSpec(package)
-    version = str(package_spec.version).rstrip(".*")  # ?
-    return package_spec.name, version
+    parts = package_spec.conda_build_form().split(" ")
+    package_name = package_spec.name
+    version = ""
+    build_string = ""
+    if len(parts) == 2:
+        version, build_string = parts[1], ""
+    elif len(parts) == 3:
+        version, build_string = parts[1:]
+
+    if version:
+        version = version.rstrip(".*")  # ?
+        version = version.rstrip("*")  # ?
+    else:
+        version = ""
+
+    return package_name, version, build_string
 
 
 def check_if_constructor_app(package_name, path=None) -> bool:
@@ -97,7 +112,7 @@ def get_prefix_by_name(name: Optional[str] = None) -> Path:
         return base_prefix / "envs" / name
 
 
-def list_packages(prefix: str, plugins: Optional[List] = None):
+def list_packages2(prefix: str, plugins: Optional[List] = None):
     """List packages in a conda environment.
 
     Optionally filter by plugin list.
@@ -126,3 +141,8 @@ def list_packages(prefix: str, plugins: Optional[List] = None):
         packages = [pkg for pkg in packages if pkg[0] in plugins]
 
     return packages
+
+
+def list_packages():
+    installer = CondaInstaller()
+    print("hello", installer.list(sys.prefix))
