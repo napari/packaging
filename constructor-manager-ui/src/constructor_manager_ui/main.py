@@ -1,5 +1,6 @@
 """Constructor manager main interface."""
 
+from pathlib import Path
 import sys
 
 from qtpy.QtCore import QSize, Qt
@@ -19,7 +20,13 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
 )
 
+# To setup image resources for .qss file
+from .style import images
 
+# UI style constant
+QSS_STYLESHEET = Path(__file__).parent / "style" / "base.qss"
+
+# Packages table constants
 PLUGINS = 0
 ALL_PACKAGES = 1
 
@@ -46,10 +53,15 @@ class PackagesTable(QTableWidget):
             self.setItem(package_row, 1, QTableWidgetItem(version))
             self.setItem(package_row, 2, QTableWidgetItem(source))
             self.setItem(package_row, 3, QTableWidgetItem(build))
+
+        # Set headers alignment and config
         self.horizontalHeader().setDefaultAlignment(
             Qt.AlignLeft | Qt.AlignVCenter)
         self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        # Hide table items borders
+        self.setShowGrid(False)
 
     def change_visible_packages(self, toggled_option, checked):
         if checked:
@@ -104,6 +116,7 @@ class InstallationManagerDialog(QDialog):
         last_modified_version_label = QLabel(
             f"Last modified {self.current_version['last_modified']}")
         current_version_open_button = QPushButton("Open")
+        current_version_open_button.setObjectName("open_button")
         current_version_layout.addWidget(current_version_label)
         current_version_layout.addSpacing(10)
         current_version_layout.addWidget(last_modified_version_label)
@@ -132,6 +145,7 @@ class InstallationManagerDialog(QDialog):
             new_version_label = QLabel(self.update_available_version)
             skip_version_button = QPushButton("Skip This Version")
             install_version_button = QPushButton("Install This Version")
+            install_version_button.setObjectName("install_button")
             update_actions_layout.addSpacing(20)
             update_actions_layout.addWidget(new_version_label)
             update_actions_layout.addSpacing(20)
@@ -219,6 +233,7 @@ class InstallationManagerDialog(QDialog):
 
         uninstall_action_layout = QHBoxLayout()
         uninstall_button = QPushButton("Uninstall")
+        uninstall_button.setObjectName("uninstall_button")
         uninstall_label = QLabel(
             "Remove the {self.package_name} Bundled App"
             "and Installation Manager from your computer"
@@ -254,8 +269,6 @@ class InstallationManagerDialog(QDialog):
         # Layout
         self.setLayout(main_layout)
 
-    
-
 
 def main(package_name):
     """Run the main interface.
@@ -266,7 +279,7 @@ def main(package_name):
         Name of the package that the installation manager is handling.
     """
     app = QApplication([])
-
+    app.setStyleSheet(open(QSS_STYLESHEET, "r").read())
     # Mock data for the installation manager dialog
     install_information = {
         "current_version": {
