@@ -13,6 +13,12 @@ Install for development:
 pip install -e .
 ```
 
+Install testing dependencies:
+
+```bash
+pip install -e .[testing]
+```
+
 Run the application:
 
 ```bash

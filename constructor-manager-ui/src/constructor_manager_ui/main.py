@@ -40,9 +40,7 @@ class PackagesTable(QTableWidget):
     def setup(self):
         # Set columns number and headers
         self.setColumnCount(4)
-        self.setHorizontalHeaderLabels(
-            ["Name", "Version", "Source", "Build"]
-        )
+        self.setHorizontalHeaderLabels(["Name", "Version", "Source", "Build"])
         self.verticalHeader().setVisible(False)
 
         # Populate table with data available
@@ -56,7 +54,8 @@ class PackagesTable(QTableWidget):
 
         # Set headers alignment and config
         self.horizontalHeader().setDefaultAlignment(
-            Qt.AlignLeft | Qt.AlignVCenter)
+            Qt.AlignLeft | Qt.AlignVCenter
+        )
         self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
@@ -84,19 +83,18 @@ class PackagesTable(QTableWidget):
 
 
 class InstallationManagerDialog(QDialog):
-
     def __init__(
-            self,
-            package_name,
-            install_information,
-            packages,
-            update_available_version=None,
-            parent=None
+        self,
+        package_name,
+        install_information,
+        packages,
+        update_available_version=None,
+        parent=None,
     ):
         super().__init__(parent=parent)
         self.package_name = package_name
-        self.current_version = install_information['current_version']
-        self.snapshot_version = install_information['snapshot_version']
+        self.current_version = install_information["current_version"]
+        self.snapshot_version = install_information["snapshot_version"]
         self.update_available_version = update_available_version
         self.packages = packages
         self.packages_tablewidget = None
@@ -112,9 +110,11 @@ class InstallationManagerDialog(QDialog):
 
         # Current version labels and button
         current_version_label = QLabel(
-            f"{self.package_name} {self.current_version['version']}")
+            f"{self.package_name} {self.current_version['version']}"
+        )
         last_modified_version_label = QLabel(
-            f"Last modified {self.current_version['last_modified']}")
+            f"Last modified {self.current_version['last_modified']}"
+        )
         current_version_open_button = QPushButton("Open")
         current_version_open_button.setObjectName("open_button")
         current_version_layout.addWidget(current_version_label)
@@ -137,7 +137,8 @@ class InstallationManagerDialog(QDialog):
         if self.update_available_version:
             update_msg_label_layout = QHBoxLayout()
             update_msg_label = QLabel(
-                f"A newer version of {self.package_name} is available!")
+                f"A newer version of {self.package_name} is available!"
+            )
             update_msg_label_layout.addSpacing(15)
             update_msg_label_layout.addWidget(update_msg_label)
 
@@ -157,7 +158,8 @@ class InstallationManagerDialog(QDialog):
             new_version_layout.addLayout(update_actions_layout)
         else:
             update_msg_label = QLabel(
-                f"Your {self.package_name} is up to date.")
+                f"Your {self.package_name} is up to date."
+            )
             new_version_layout.addWidget(update_msg_label)
         install_information_group.setLayout(install_information_layout)
         install_information_layout.addLayout(new_version_layout)
@@ -196,12 +198,15 @@ class InstallationManagerDialog(QDialog):
         packages_group.setLayout(packages_layout)
 
         packages_filter_group.idToggled.connect(
-            packages_tablewidget.change_visible_packages)
+            packages_tablewidget.change_visible_packages
+        )
         show_build_column_checkbox.stateChanged.connect(
-            packages_tablewidget.change_build_column_visibility)
+            packages_tablewidget.change_build_column_visibility
+        )
         packages_tablewidget.change_visible_packages(PLUGINS, True)
         packages_tablewidget.change_build_column_visibility(
-            show_build_column_checkbox.checkState())
+            show_build_column_checkbox.checkState()
+        )
 
         return packages_group
 
@@ -284,20 +289,25 @@ def main(package_name):
     install_information = {
         "current_version": {
             "version": "v0.4.16",
-            "last_modified": "July 27, 2022"
+            "last_modified": "July 27, 2022",
         },
         "snapshot_version": {
             "version": "v0.4.14",
-            "last_modified": "April 5, 2022"
-        }
+            "last_modified": "April 5, 2022",
+        },
     }
     update_available_version = "v0.4.17"
     packages = [
         # Package:
         # Name - Version - Source - Build - Plugin
         ("napari-console", "0.1.6", "pip", None, True),
-        ("napari-live-recording", "0.1.6rc", "conda/conda-forge",
-         "pyhd3eb1b0_0", True),
+        (
+            "napari-live-recording",
+            "0.1.6rc",
+            "conda/conda-forge",
+            "pyhd3eb1b0_0",
+            True,
+        ),
         ("napari-microscope", "0.7", "pip", None, True),
         ("alabaster", "0.7.12", "conda/conda-forge", "pyhd3eb1b0_0", False),
         ("aom", "3.5.0", "conda/conda-forge", "pyhd3eb1b0_0", False),
@@ -310,5 +320,6 @@ def main(package_name):
         package_name,
         install_information,
         packages,
-        update_available_version=update_available_version)
+        update_available_version=update_available_version,
+    )
     sys.exit(app.exec_())
