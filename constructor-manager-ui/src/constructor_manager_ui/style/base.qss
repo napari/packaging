@@ -29,7 +29,6 @@ QWidget[emphasized="true"] > QFrame {
     background-color: rgb(65, 72, 81);
 }
 
-
 /* ------------ QAbstractScrollArea ------------- */
 
 /* QAbstractScrollArea is the superclass */
@@ -93,130 +92,6 @@ QWidget[emphasized="true"] QPushButton:checked {
   background-color: rgb(0, 122, 204);
 }
 
-/* ----------------- QComboBox ------------------ */
-
-QComboBox {
-  border-radius: 2px;
-  background-color: rgb(65, 72, 81);
-  padding: 3px 10px 3px 8px; /* top right bottom left */
-}
-
-QWidget[emphasized="true"]  QComboBox {
-  background-color: rgb(90, 98, 108);
-}
-
-
-QComboBox::drop-down {
-  width: 26px;
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
-}
-
-QComboBox:on {
-  border-radius: 0px;
-}
-
-QListView {
-  /* controls the color of the open dropdown menu */
-  background-color: rgb(65, 72, 81);
-  color: rgb(240, 241, 242);
-  border-radius: 2px;
-}
-
-QListView:item:selected {
-    background-color: rgb(106, 115, 128);
-}
-
-QWidget[emphasized="true"] QComboBox {
-  background-color: rgb(90, 98, 108);
-}
-
-/* ----------------- QLineEdit ------------------ */
-
-QLineEdit {
-  background-color: rgb(32, 34, 40);
-  color: rgb(240, 241, 242);
-  min-height: 20px;
-  padding: 2px;
-  border-radius: 2px;
-}
-
-QWidget[emphasized="true"] QLineEdit {
-  background-color: rgb(38, 41, 48);
-}
-
-/* ----------------- QAbstractSpinBox ------------------ */
-
-QAbstractSpinBox {
-  background-color: rgb(65, 72, 81);
-  border: none;
-  padding: 1px 10px;
-  min-width: 70px;
-  min-height: 18px;
-  border-radius: 2px;
-}
-
-QLabeledSlider > QAbstractSpinBox {
-  min-width: 10px;
-  padding: 0px;
-}
-
-QWidget[emphasized="true"] QAbstractSpinBox {
-  background-color: rgb(90, 98, 108);
-}
-
-QAbstractSpinBox::up-button,
-QAbstractSpinBox::down-button {
-    subcontrol-origin: margin;
-    width: 20px;
-    height: 20px;
-}
-
-QAbstractSpinBox::up-button:hover,
-QAbstractSpinBox::down-button:hover {
-  background-color: rgb(90, 98, 108);
-}
-
-QWidget[emphasized="true"] QAbstractSpinBox::up-button:hover,
-QWidget[emphasized="true"] QAbstractSpinBox::down-button:hover {
-  background-color: rgb(106, 115, 128);
-}
-
-QAbstractSpinBox::up-button:pressed,
-QAbstractSpinBox::down-button:pressed {
-  background-color: rgb(106, 115, 128);
-}
-
-QWidget[emphasized="true"] QAbstractSpinBox::up-button:pressed,
-QWidget[emphasized="true"] QAbstractSpinBox::down-button:pressed {
-  background-color: rgb(128, 136, 147);
-}
-
-QAbstractSpinBox::up-button {
-  subcontrol-position: center right;
-  right: 0px;
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
-}
-
-
-QAbstractSpinBox::down-button {
-  subcontrol-position: center left;
-  left: 0px;
-  border-top-left-radius: 2px;
-  border-bottom-left-radius: 2px;
-}
-
-QAbstractSpinBox::up-arrow,
-QAbstractSpinBox::down-arrow {
-   width: 10px;
-   height: 10px;
-}
-
-QLabeledRangeSlider > QAbstractSpinBox {
-  min-width: 5px;
-}
-
 /* ----------------- QCheckBox ------------------ */
 
 QCheckBox {
@@ -267,111 +142,6 @@ QWidget[emphasized="true"] QCheckBox::indicator:unchecked:hover {
   border-color: rgb(98, 105, 115);
 }
 
-
-/* ----------------- QRadioButton ------------------ */
-
-QRadioButton {
-  background: none;
-}
-
-QRadioButton::indicator{
-  height: 16px;
-  width: 16px;
-  border-radius: 8px;
-}
-
-QRadioButton::indicator::unchecked {
-  background: rgb(65, 72, 81);
-}
-
-QRadioButton::indicator:unchecked:hover {
-  background: rgb(74, 81, 89);
-}
-
-
-QRadioButton::indicator::checked {
-    background: rgb(106, 115, 128);
-}
-
-QWidget[emphasized="true"] > QRadioButton {
-   background: rgb(65, 72, 81);
-}
-
-QWidget[emphasized="true"] > QRadioButton::indicator::unchecked {
-   background-color: rgb(90, 98, 108);
-}
-
-QWidget[emphasized="true"] > QRadioButton:disabled {
-  background-color: rgb(65, 72, 81);
-}
-
-QWidget[emphasized="true"] > QRadioButton::indicator:checked {
-  background-color: rgb(134, 142, 147);
-}
-
-QWidget[emphasized="true"] > QRadioButton::indicator:unchecked:hover {
-  background: rgb(98, 105, 115);
-}
-
-
-/* ----------------- QSlider ------------------ */
-
-
-QSlider {
-   background-color: none;
-}
-
-QSlider::groove:horizontal {
-   border: 0px;
-   background-color: rgb(65, 72, 81);
-   height: 6px;
-   border-radius: 2px;
-}
-
-QSlider::handle:horizontal {
-   background-color: rgb(106, 115, 128);
-   border: 0px;
-   width: 16px;
-   margin-top: -5px;
-   margin-bottom: -5px;
-   border-radius: 8px;
-}
-
-QSlider::handle:hover {
-   background-color: rgb(134, 142, 147);
-}
-
-QSlider::sub-page:horizontal {
-    background: rgb(90, 98, 108);
-    border-radius: 2px;
-}
-
-
-QWidget[emphasized="true"] QSlider::groove:horizontal {
-   background: rgb(90, 98, 108);
-}
-
-QWidget[emphasized="true"] QSlider::handle:horizontal {
-   background: rgb(134, 142, 147);
-
-}
-
-QWidget[emphasized="true"] QSlider::sub-page:horizontal {
-    background: rgb(106, 115, 128);
-}
-
-QWidget[emphasized="true"] QSlider::handle:hover {
-   background-color: rgb(140, 147, 152);
-}
-
-
-QRangeSlider {
-  qproperty-barColor: rgb(90, 98, 108);
-}
-
-QWidget[emphasized="true"] QRangeSlider {
-  qproperty-barColor: rgb(106, 115, 128);
-}
 
 /* ----------------- QScrollBar ------------------ */
 
@@ -506,28 +276,6 @@ QScrollBar::sub-page {
     background: none;
 }
 
-/* ----------------- QProgressBar ------------------ */
-
-QProgressBar {
-    border: 1px solid rgb(65, 72, 81);
-    border-radius: 2px;
-    text-align: center;
-    padding: 0px;
-}
-
-QProgressBar::horizontal {
-  height: 18px;
-}
-
-QProgressBar::vertical {
-  width: 18px;
-}
-
-QProgressBar::chunk {
-    width: 1px;
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(106, 115, 128), stop: 1 rgb(65, 72, 81));
-}
-
 /* ----------------- QToolTip ------------------ */
 
 QToolTip {
@@ -562,43 +310,6 @@ QTableView::item {
      border-style: none;
  }
 
-/* ----------------- QTabWidget ------------------ */
-
-/* The tab widget frame */
-QTabWidget::pane {
-  border: 1px solid rgb(58, 64, 72);
-  border-radius: 2px;
-}
-
-QWidget[emphasized="true"] QTabWidget::pane {
-  border: 1px solid rgb(81, 88, 97);
-}
-
-QTabBar::tab {
-  background-color: rgb(65, 72, 81);
-  border: 1px solid rgb(38, 41, 48);
-  border-bottom: 0px;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  padding: 3px 6px;
-  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(93, 99, 107), stop: 1 rgb(65, 72, 81));
-}
-
-
-QWidget[emphasized="true"] QTabBar::tab {
-  background-color: rgb(90, 98, 108);
-  border: 1px solid rgb(65, 72, 81);
-  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(114, 121, 130), stop: 1 rgb(90, 98, 108));
-}
-
-QTabBar::tab:selected {
-  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(128, 136, 147), stop: 1 rgb(106, 115, 128));
-}
-
-QWidget[emphasized="true"] QTabBar::tab:selected {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(152, 158, 163), stop: 1 rgb(134, 142, 147));
-}
-
 /* ----------------- QLabel ------------------ */
 
 QLabel {
@@ -626,68 +337,51 @@ QHeaderView::section {
 /* ----------------- Buttons -------------------- */
 
 QPushButton#open_button {
-  background-color: rgb(0, 122, 204)
+  background-color: rgb(0, 122, 204);
 }
 
 QPushButton#open_button:hover {
-  background-color: rgb(25, 135, 209)
+  background-color: rgb(25, 135, 209);
 }
 
 QPushButton#open_button:pressed {
-  background-color: rgb(0, 109, 183)
+  background-color: rgb(0, 109, 183);
 }
 
 QPushButton#open_button:disabled {
-  background-color: rgb(51, 148, 214)
+  background-color: rgb(51, 148, 214);
 }
 
 QPushButton#install_button {
-  background-color: rgb(0, 122, 204)
+  background-color: rgb(0, 122, 204);
 }
 
 QPushButton#install_button:hover {
-  background-color: rgb(25, 135, 209)
+  background-color: rgb(25, 135, 209);
 }
 
 QPushButton#install_button:pressed {
-  background-color: rgb(0, 109, 183)
+  background-color: rgb(0, 109, 183);
 }
 
 QPushButton#install_button:disabled {
-  background-color: rgb(51, 148, 214)
+  background-color: rgb(51, 148, 214);
 }
 
 QPushButton#uninstall_button {
-  background-color: rgb(153, 18, 31)
+  background-color: rgb(153, 18, 31);
 }
 
 QPushButton#uninstall_button:hover {
-  background-color: rgb(163, 41, 53)
+  background-color: rgb(163, 41, 53);
 }
 
 QPushButton#uninstall_button:pressed {
-  background-color: rgb(137, 16, 27)
+  background-color: rgb(137, 16, 27);
 }
 
-/* ------------- QMainWindow --------- */
-/* QDockWidgets will use the MainWindow styles
-as long as they are docked (though they use the
-style of QDockWidget when undocked) */
+/* ----------------- Separator -------------------- */
 
-QStatusBar {
-  background: rgb(38, 41, 48);
-  color: rgb(240, 241, 242);
-}
-
-/* ------------- Window separator --------- */
-
-QMainWindow::separator {
-  width: 4px;
-  height: 4px;
-  border: none;
-  background-color: rgb(38, 41, 48);
-}
-
-QMainWindow::separator:hover {
-  background: rgb(65, 72, 81);
+QFrame#separator {
+  background-color: rgb(65, 72, 81)
 }

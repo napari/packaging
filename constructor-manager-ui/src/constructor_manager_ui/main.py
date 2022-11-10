@@ -3,8 +3,8 @@
 from pathlib import Path
 import sys
 
-from fonticon_fa6 import FA6S
 from qtpy.QtCore import QSize, Qt, QTimer, Signal
+from qtpy.QtGui import QMovie
 from qtpy.QtWidgets import (
     QApplication,
     QButtonGroup,
@@ -22,7 +22,6 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from superqt.fonticon import icon, pulse
 
 # To setup image resources for .qss file
 from constructor_manager_ui.style import images
@@ -35,27 +34,35 @@ PLUGINS = 0
 ALL_PACKAGES = 1
 
 
-class SpinnerWidget(QLabel):
-    def __init__(self, icon=None, size=QSize(16, 16), parent=None):
+class SpinnerWidget(QWidget):
+    def __init__(self, text, parent=None):
         super().__init__(parent=parent)
-        self._icon = None
-        self._size = None
-        if size:
-            self.set_icon_size(size)
-        if icon:
-            self.set_icon(icon)
+        # Widgets for text and loading gif
+        self.text_label = QLabel(text)
+        spinner_label = QLabel()
+        self.spinner_movie = QMovie(":/images/loading.gif")
+        self.spinner_movie.setScaledSize(QSize(18, 18))
+        spinner_label.setMovie(self.spinner_movie)
 
-    def set_icon(self, icon):
-        self._icon = icon
-        self.setPixmap(self._icon.pixmap(self._size))
+        # Set layout for text + loading indicator
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.text_label)
+        layout.addWidget(spinner_label)
+        layout.addStretch(1)
+        self.setLayout(layout)
+        self.spinner_movie.start()
 
-    def set_icon_size(self, size):
-        self._size = size
+    def set_text(self, text):
+        self.text_label.setText(text)
 
-    def update(self, *args, **kwargs):
-        if self._icon:
-            self.setPixmap(self._icon.pixmap(self._size))
-        return super().update(*args, **kwargs)
+    def show(self):
+        self.spinner_movie.start()
+        super().show()
+
+    def hide(self):
+        self.spinner_movie.stop()
+        super().hide()
 
 
 class UpdateWidget(QWidget):
@@ -69,8 +76,9 @@ class UpdateWidget(QWidget):
         self.update_available_version = None
 
         # Setup widgets
-        self.checking_update_widget = QWidget(self)
-        self._initialize_checking_update_widget()
+        self.checking_update_widget = SpinnerWidget(
+            "Checking for updates...", parent=self
+        )
         self.up_to_date_widget = QWidget(self)
         self._initialize_up_to_date_widget()
         self.update_available_widget = QWidget(self)
@@ -87,23 +95,6 @@ class UpdateWidget(QWidget):
 
         # Start showing checking updates widget
         self.show_checking_updates_message()
-
-    def _initialize_checking_update_widget(self):
-        checking_updates_layout = QHBoxLayout()
-        updates_label = QLabel("Checking for updates...")
-        updates_spinner_label = SpinnerWidget(parent=self)
-        updates_spinner_label.set_icon(
-            icon(
-                FA6S.spinner,
-                color="white",
-                animation=pulse(updates_spinner_label),
-            )
-        )
-        checking_updates_layout.addWidget(updates_label)
-        checking_updates_layout.addWidget(updates_spinner_label)
-        checking_updates_layout.addStretch(1)
-
-        self.checking_update_widget.setLayout(checking_updates_layout)
 
     def _initialize_up_to_date_widget(self):
         up_to_date_layout = QVBoxLayout()
@@ -261,6 +252,7 @@ class InstallationManagerDialog(QDialog):
 
         # Line to divide current section and update section
         install_version_line = QFrame()
+        install_version_line.setObjectName("separator")
         install_version_line.setFrameShape(QFrame.HLine)
         install_version_line.setFrameShadow(QFrame.Sunken)
         install_version_line.setLineWidth(1)
@@ -271,6 +263,9 @@ class InstallationManagerDialog(QDialog):
         install_information_layout.addWidget(self.updates_widget)
         install_information_group.setLayout(install_information_layout)
 
+        # Signals
+        # Open button signal
+        current_version_open_button.clicked.connect(self.open_installed)
         # Update widget signals
         self.updates_widget.install_version.connect(self.install_version)
         self.updates_widget.skip_version.connect(self.skip_version)
@@ -286,13 +281,8 @@ class InstallationManagerDialog(QDialog):
         packages_filter_group = QButtonGroup(self)
         only_plugins_checkbox = QCheckBox("Plugins")
         all_packages_checkbox = QCheckBox("All packages")
-        self.packages_spinner_label = SpinnerWidget()
-        self.packages_spinner_label.set_icon(
-            icon(
-                FA6S.spinner,
-                color="white",
-                animation=pulse(self.packages_spinner_label),
-            )
+        self.packages_spinner_label = SpinnerWidget(
+            "Loading packages...", parent=self
         )
         packages_filter_group.addButton(only_plugins_checkbox, PLUGINS)
         packages_filter_group.addButton(all_packages_checkbox, ALL_PACKAGES)
@@ -369,6 +359,10 @@ class InstallationManagerDialog(QDialog):
         installation_actions_layout.addLayout(uninstall_action_layout)
         installation_actions_group.setLayout(installation_actions_layout)
 
+        revert_button.clicked.connect(self.revert_installation)
+        reset_button.clicked.connect(self.reset_installation)
+        uninstall_button.clicked.connect(self.uninstall)
+
         return installation_actions_group
 
     def setup_layout(self):
@@ -390,10 +384,10 @@ class InstallationManagerDialog(QDialog):
         self.setLayout(main_layout)
 
     def open_installed(self):
-        # TODO: To be handled with the backend
-        print(self.install_version)
+        # TODO: To be handled with the backend.
+        #       Maybe this needs to be a signal
+        print(self.current_version)
 
-    # Update related logic
     def show_checking_updates_message(self):
         self.updates_widget.show_checking_updates_message()
 
@@ -406,19 +400,36 @@ class InstallationManagerDialog(QDialog):
         )
 
     def install_version(self, update_version):
-        # TODO: To be handled with the backend
+        # TODO: To be handled with the backend.
+        #       Maybe this needs to be a signal
         print(update_version)
 
     def skip_version(self, skip_version):
-        # TODO: To be handled with the backend
+        # TODO: To be handled with the backend.
+        #       Maybe this needs to be a signal
         print(skip_version)
 
     def set_packages(self, packages):
-        self.packages_spinner_label.hide()
+        self.packages_spinner_label.show()
         self.packages = packages
         if self.packages_tablewidget:
             self.packages_tablewidget.set_data(self.packages)
             self.packages_spinner_label.hide()
+
+    def revert_installation(self):
+        # TODO: To be handled with the backend.
+        #       Maybe this needs to be a signal
+        print("Revert installation")
+
+    def reset_installation(self):
+        # TODO: To be handled with the backend.
+        #       Maybe this needs to be a signal
+        print("Reset installation")
+
+    def uninstall(self):
+        # TODO: To be handled with the backend.
+        #       Maybe this needs to be a signal
+        print("Uninstall")
 
 
 def main(package_name):

@@ -8,5 +8,6 @@
     <file>images/minus.svg</file>
     <file>images/right_arrow.svg</file>
     <file>images/up_arrow.svg</file>
+    <file>images/loading.gif</file>
 </qresource>
 </RCC>
