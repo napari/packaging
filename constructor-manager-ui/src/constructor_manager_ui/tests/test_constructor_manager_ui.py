@@ -2,6 +2,7 @@
 
 import pytest
 
+
 from constructor_manager_ui.main import InstallationManagerDialog
 
 
@@ -19,6 +20,15 @@ def installation_manager_dlg(qtbot):
             "last_modified": "April 5, 2022",
         },
     }
+    installation_manager_dlg = InstallationManagerDialog(
+        package_name,
+        install_information,
+    )
+    qtbot.addWidget(installation_manager_dlg)
+    yield installation_manager_dlg
+
+
+def test_installation_manager_dialog(installation_manager_dlg):
     update_available_version = "v0.4.17"
     packages = [
         # Package:
@@ -37,15 +47,8 @@ def installation_manager_dlg(qtbot):
         ("appdirs", "1.4.4", "conda/conda-forge", "pyhd3eb1b0_0", False),
         ("appnope", "0.1.2", "conda/conda-forge", "pyhd3eb1b0_0", False),
     ]
-    installation_manager_dlg = InstallationManagerDialog(
-        package_name,
-        install_information,
-        packages,
-        update_available_version=update_available_version,
-    )
-    qtbot.addWidget(installation_manager_dlg)
-    yield installation_manager_dlg
-
-
-def test_installation_manager_dialog(installation_manager_dlg):
     installation_manager_dlg.show()
+    installation_manager_dlg.set_packages(packages)
+    installation_manager_dlg.show_update_available_message(
+        update_available_version
+    )

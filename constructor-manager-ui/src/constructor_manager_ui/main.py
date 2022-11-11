@@ -345,7 +345,7 @@ class InstallationManagerDialog(QDialog):
         uninstall_button = QPushButton("Uninstall")
         uninstall_button.setObjectName("uninstall_button")
         uninstall_label = QLabel(
-            "Remove the {self.package_name} Bundled App"
+            f"Remove the {self.package_name} Bundled App "
             "and Installation Manager from your computer"
         )
         uninstall_action_layout.addWidget(uninstall_button)
@@ -479,12 +479,14 @@ def main(package_name):
     )
     installation_manager_dlg.show()
 
-    # Mock data initialization loading
+    # Mock data initialization loading.
+    # Change commented lines to check different UI update widget states
     def data_initialization():
         installation_manager_dlg.set_packages(packages)
         installation_manager_dlg.show_update_available_message(
             update_available_version
         )
+        # installation_manager_dlg.show_up_to_date_message()
 
     QTimer.singleShot(5000, data_initialization)
 
