@@ -1,5 +1,5 @@
 {% set name = "napari" %}
-{% set version = "0.4.16" %}
+{% set version = "0.4.17" %}
 {% set build = 0 %}
 
 package:
@@ -38,16 +38,16 @@ outputs:
       run:
         - python >=3.8
 
-        # dependencies matched to pip
+        # dependencies matched to setup.cfg
+        - app-model >=0.0.8,<0.3.0a
         - appdirs >=1.4.4
-        - app-model>=0.0.6,<0.3.0
         - cachey >=0.2.1
         - certifi >=2020.6.20
         - dask >=2.15.0,!=2.28.0
-        - imageio >=2.5.0,!=2.11.0
+        - imageio >=2.5.0,!=2.11.0,!=2.22.1
         - jsonschema >=3.2.0
         - magicgui >=0.3.6
-        - napari-console >=0.0.4
+        - napari-console >=0.0.6
         - napari-plugin-engine >=0.1.9
         - napari-svg >=0.1.6
         - npe2 >=0.5.2
@@ -58,19 +58,20 @@ outputs:
         - pint >=0.17
         - psutil >=5.0
         - psygnal>=0.3.4
-        - pyopengl >=3.1.0
-        - pyyaml >=5.1
         - pydantic >=1.9.0
         - pygments >=2.4.0
-        - qtpy >=1.7.0
-        - scipy >=1.5.4
+        - pyopengl >=3.1.0
+        - pyyaml >=5.1
+        - qtpy >=1.10.0
         - scikit-image >=0.19.1
-        - superqt >=0.2.5
+        - scipy >=1.5.4
+        - sphinx <5
+        - superqt >=0.3.0
         - tifffile >=2020.2.16
-        - typing_extensions
         - toolz >=0.10.0
         - tqdm >=4.56.0
-        - vispy>=0.11.0,<0.12
+        - typing_extensions
+        - vispy >=0.11.0,<0.12.0a
         - wrapt >=1.11.1
 
         # additional dependencies for convenience in conda-forge
@@ -83,14 +84,15 @@ outputs:
         - pyqt >=5.12.3,!=5.15.0  # [qt_bindings == 'pyqt']
 
     test:
-    #  requires:
-        #  - hypothesis
-        #  - pytest
-        #  - pytest-faulthandler
-        #  - pytest-qt
-        #  - xarray
-        #  - pandas
-        #  - pytest-timeout
+      # needed if pytest is uncommented below in 'commands'
+      # requires:
+      #   - hypothesis
+      #   - pytest
+      #   - pytest-faulthandler
+      #   - pytest-qt
+      #   - xarray
+      #   - pandas
+      #   - pytest-timeout
       imports:
         - napari
       commands:
@@ -107,7 +109,7 @@ outputs:
       license_file:
         - LICENSE
         # - napari/_vendor/cpython/LICENSE
-        # - napari/_vendor/darkdetect/LICENSE
+        - napari/_vendor/darkdetect/LICENSE
         - napari/_vendor/experimental/cachetools/LICENSE
         - napari/_vendor/experimental/humanize/LICENCE
         - napari/_vendor/qt_json_builder/LICENSE
