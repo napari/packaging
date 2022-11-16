@@ -10,6 +10,7 @@ from qtpy.QtWidgets import (
     QCheckBox,
     QDialog,
     QFrame,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
@@ -321,48 +322,40 @@ class InstallationManagerDialog(QDialog):
 
     def _create_installation_actions_group(self):
         installation_actions_group = QGroupBox("Installation Actions")
+        installation_actions_layout = QGridLayout()
 
-        revert_action_layout = QHBoxLayout()
+        # Revert action
         revert_button = QPushButton("Revert Installation")
         revert_label = QLabel(
             "Rollback installation to the latest snapshot: "
             f"{self.snapshot_version['version']} "
             f"({self.snapshot_version['last_modified']})"
         )
-        revert_action_layout.addWidget(revert_button)
-        revert_action_layout.addSpacing(10)
-        revert_action_layout.addWidget(revert_label)
-        revert_action_layout.addStretch(1)
+        installation_actions_layout.addWidget(revert_button, 0, 0)
+        installation_actions_layout.addWidget(revert_label, 0, 1)
 
-        reset_action_layout = QHBoxLayout()
+        # Reset action
         reset_button = QPushButton("Reset installation")
         reset_label = QLabel(
             "Reset the installation to clear "
             "preferences, plugins, and other packages"
         )
-        reset_action_layout.addWidget(reset_button)
-        reset_action_layout.addSpacing(10)
-        reset_action_layout.addWidget(reset_label)
-        reset_action_layout.addStretch(1)
+        installation_actions_layout.addWidget(reset_button, 1, 0)
+        installation_actions_layout.addWidget(reset_label, 1, 1)
 
-        uninstall_action_layout = QHBoxLayout()
+        # Uninstall action
         uninstall_button = QPushButton("Uninstall")
         uninstall_button.setObjectName("uninstall_button")
         uninstall_label = QLabel(
             f"Remove the {self.package_name} Bundled App "
             "and Installation Manager from your computer"
         )
-        uninstall_action_layout.addWidget(uninstall_button)
-        uninstall_action_layout.addSpacing(10)
-        uninstall_action_layout.addWidget(uninstall_label)
-        uninstall_action_layout.addStretch(1)
+        installation_actions_layout.addWidget(uninstall_button, 2, 0)
+        installation_actions_layout.addWidget(uninstall_label, 2, 1)
 
-        installation_actions_layout = QVBoxLayout()
-        installation_actions_layout.addLayout(revert_action_layout)
-        installation_actions_layout.addLayout(reset_action_layout)
-        installation_actions_layout.addLayout(uninstall_action_layout)
         installation_actions_group.setLayout(installation_actions_layout)
 
+        # Signals
         revert_button.clicked.connect(self.revert_installation)
         reset_button.clicked.connect(self.reset_installation)
         uninstall_button.clicked.connect(self.uninstall)
