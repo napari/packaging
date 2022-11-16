@@ -303,13 +303,6 @@ QGroupBox::title {
     background-color: @background-color01;
 }
 
-
-/* ----------------- QTableView ------------------ */
-QTableView::item {
-     background-color: black;
-     border-style: none;
- }
-
 /* ----------------- QLabel ------------------ */
 
 QLabel {

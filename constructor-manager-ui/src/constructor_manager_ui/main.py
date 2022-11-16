@@ -3,7 +3,7 @@
 import sys
 
 from qtpy.QtCore import QSize, Qt, QTimer, Signal
-from qtpy.QtGui import QMovie
+from qtpy.QtGui import QBrush, QMovie
 from qtpy.QtWidgets import (
     QApplication,
     QButtonGroup,
@@ -188,10 +188,22 @@ class PackagesTable(QTableWidget):
         for name, version, source, build, plugin in self.packages:
             self.insertRow(self.rowCount())
             package_row = self.rowCount() - 1
-            self.setItem(package_row, 0, QTableWidgetItem(name))
-            self.setItem(package_row, 1, QTableWidgetItem(version))
-            self.setItem(package_row, 2, QTableWidgetItem(source))
-            self.setItem(package_row, 3, QTableWidgetItem(build))
+            name_item = QTableWidgetItem(name)
+            version_item = QTableWidgetItem(version)
+            source_item = QTableWidgetItem(source)
+            build_item = QTableWidgetItem(build)
+            if plugin:
+                background_brush = QBrush(Qt.black)
+            else:
+                background_brush = QBrush(Qt.darkGray)
+            name_item.setBackground(background_brush)
+            version_item.setBackground(background_brush)
+            source_item.setBackground(background_brush)
+            build_item.setBackground(background_brush)
+            self.setItem(package_row, 0, name_item)
+            self.setItem(package_row, 1, version_item)
+            self.setItem(package_row, 2, source_item)
+            self.setItem(package_row, 3, build_item)
             if self.visible_packages == PLUGINS and not plugin:
                 self.hideRow(package_row)
 
