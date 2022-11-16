@@ -25,6 +25,12 @@ from qtpy.QtWidgets import (
 
 # To setup image resources for .qss file
 from constructor_manager_ui.style import images
+# To get mock data
+from constructor_manager_ui.data import (
+    INSTALL_INFORMATION,
+    UPDATE_AVAILABLE_VERSION,
+    PACKAGES
+)
 
 # UI style constant
 QSS_STYLESHEET = Path(__file__).parent / "style" / "base.qss"
@@ -442,49 +448,20 @@ def main(package_name):
     """
     app = QApplication([])
     app.setStyleSheet(open(QSS_STYLESHEET, "r").read())
-    # Mock data for the installation manager dialog
-    install_information = {
-        "current_version": {
-            "version": "v0.4.16",
-            "last_modified": "July 27, 2022",
-        },
-        "snapshot_version": {
-            "version": "v0.4.14",
-            "last_modified": "April 5, 2022",
-        },
-    }
-    update_available_version = "v0.4.17"
-    packages = [
-        # Package:
-        # Name - Version - Source - Build - Plugin
-        ("napari-console", "0.1.6", "pip", None, True),
-        (
-            "napari-live-recording",
-            "0.1.6rc",
-            "conda/conda-forge",
-            "pyhd3eb1b0_0",
-            True,
-        ),
-        ("napari-microscope", "0.7", "pip", None, True),
-        ("alabaster", "0.7.12", "conda/conda-forge", "pyhd3eb1b0_0", False),
-        ("aom", "3.5.0", "conda/conda-forge", "pyhd3eb1b0_0", False),
-        ("appdirs", "1.4.4", "conda/conda-forge", "pyhd3eb1b0_0", False),
-        ("appnope", "0.1.2", "conda/conda-forge", "pyhd3eb1b0_0", False),
-    ]
 
     # Installation manager dialog instance
     installation_manager_dlg = InstallationManagerDialog(
         package_name,
-        install_information,
+        INSTALL_INFORMATION,
     )
     installation_manager_dlg.show()
 
     # Mock data initialization loading.
     # Change commented lines to check different UI update widget states
     def data_initialization():
-        installation_manager_dlg.set_packages(packages)
+        installation_manager_dlg.set_packages(PACKAGES)
         installation_manager_dlg.show_update_available_message(
-            update_available_version
+            UPDATE_AVAILABLE_VERSION
         )
         # installation_manager_dlg.show_up_to_date_message()
 
