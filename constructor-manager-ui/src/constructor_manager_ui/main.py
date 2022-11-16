@@ -1,6 +1,5 @@
 """Constructor manager main interface."""
 
-from pathlib import Path
 import sys
 
 from qtpy.QtCore import QSize, Qt, QTimer, Signal
@@ -25,15 +24,14 @@ from qtpy.QtWidgets import (
 
 # To setup image resources for .qss file
 from constructor_manager_ui.style import images
+from constructor_manager_ui.style.utils import update_styles
+
 # To get mock data
 from constructor_manager_ui.data import (
     INSTALL_INFORMATION,
     UPDATE_AVAILABLE_VERSION,
     PACKAGES
 )
-
-# UI style constant
-QSS_STYLESHEET = Path(__file__).parent / "style" / "base.qss"
 
 # Packages table constants
 PLUGINS = 0
@@ -447,7 +445,7 @@ def main(package_name):
         Name of the package that the installation manager is handling.
     """
     app = QApplication([])
-    app.setStyleSheet(open(QSS_STYLESHEET, "r").read())
+    update_styles(app)
 
     # Installation manager dialog instance
     installation_manager_dlg = InstallationManagerDialog(

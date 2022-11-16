@@ -12,21 +12,21 @@ might be possible to convert px to em by 1px = 0.0625em
 /* ----------------- QWidget ------------------ */
 
 QWidget {
-  background-color: rgb(38, 41, 48);
+  background-color: @background-color01;
   border: 0px;
   padding: 1px;
   margin: 0px;
-  color: rgb(240, 241, 242);
-  selection-background-color: rgb(134, 142, 147);
-  selection-color: rgb(240, 241, 242);
+  color: @color01;
+  selection-background-color: @background-color03;
+  selection-color: @color01;
 }
 
 QWidget[emphasized="true"] {
-    background-color: rgb(65, 72, 81);
+    background-color: @background-color02;
 }
 
 QWidget[emphasized="true"] > QFrame {
-    background-color: rgb(65, 72, 81);
+    background-color: @background-color02;
 }
 
 /* ------------ QAbstractScrollArea ------------- */
@@ -34,83 +34,83 @@ QWidget[emphasized="true"] > QFrame {
 /* QAbstractScrollArea is the superclass */
 
 QTextEdit {
-  background-color: rgb(18, 18, 18);
+  background-color: @background-color04;
   background-clip: padding;
-  color: rgb(240, 241, 242);
-  selection-background-color: rgb(65, 72, 81);
+  color: @color01;
+  selection-background-color: @background-color02;
   padding: 4px 2px 4px 4px;
 }
 
 /* the area behind the scrollbar */
 QTextEdit > QWidget {
-  background-color: rgb(18, 18, 18);
+  background-color: @background-color04;
 }
 
 /* ----------------- QPushButton ------------------ */
 
 QPushButton {
-  background-color: rgb(65, 72, 81);
+  background-color: @background-color02;
   border-radius: 2px;
   padding: 4px;
   border: 0px;
 }
 
 QPushButton:hover {
-  background-color: rgb(90, 98, 108);
+  background-color: @background-color05;
 }
 
 QPushButton:pressed {
-  background-color: rgb(106, 115, 128);
+  background-color: @background-color06;
 }
 
 QPushButton:checked {
-  background-color: rgb(106, 115, 128);
+  background-color: @background-color06;
 }
 
 QPushButton:disabled {
-  background-color: rgb(38, 41, 48);
+  background-color: @background-color01;
 }
 
 QWidget[emphasized="true"] QPushButton {
-   background-color: rgb(90, 98, 108);
+   background-color: @background-color05;
 }
 
 QWidget[emphasized="true"] QPushButton:disabled {
-  background-color: rgb(52, 57, 64);
+  background-color: @background-color07;
 }
 
 QWidget[emphasized="true"] QPushButton:hover {
-    background-color: rgb(106, 115, 128);
+    background-color: @background-color06;
 }
 
 QWidget[emphasized="true"] QPushButton:pressed {
-  background-color: rgb(134, 142, 147);
+  background-color: @background-color03;
 }
 
 
 QWidget[emphasized="true"] QPushButton:checked {
-  background-color: rgb(0, 122, 204);
+  background-color: @background-color08;
 }
 
 /* ----------------- QCheckBox ------------------ */
 
 QCheckBox {
   spacing: 5px;
-  color: rgb(240, 241, 242);
+  color: @color01;
   background-color: none;
 }
 
 QCheckBox::indicator {
   width: 16px;
   height: 16px;
-  background-color: rgb(65, 72, 81);
+  background-color: @background-color02;
   border: 0px;
   padding: 1px;
   border-radius: 2px
 }
 
 QCheckBox::indicator:hover {
-  background-color: rgb(74, 81, 89);
+  background-color: @background-color09;
 }
 
 QCheckBox::indicator:unchecked {
@@ -129,17 +129,17 @@ QCheckBox::indicator:indeterminate {
 }
 
 QWidget[emphasized="true"] QCheckBox::indicator {
-  background-color: rgb(90, 98, 108);
-  border-color: rgb(90, 98, 108);
+  background-color: @background-color05;
+  border-color: @background-color05;
 }
 
 QWidget[emphasized="true"] QCheckBox::indicator:hover {
-  background-color: rgb(98, 105, 115);
+  background-color: @background-color10;
 }
 
 QWidget[emphasized="true"] QCheckBox::indicator:unchecked:hover {
-  background-color: rgb(98, 105, 115);
-  border-color: rgb(98, 105, 115);
+  background-color: @background-color10;
+  border-color: @background-color10;
 }
 
 
@@ -148,11 +148,11 @@ QWidget[emphasized="true"] QCheckBox::indicator:unchecked:hover {
 QScrollBar {
   border: none;
   border-radius: 2px;
-  background: rgb(65, 72, 81);
+  background: @background-color02;
 }
 
 QWidget[emphasized="true"] QScrollBar {
-  background: rgb(90, 98, 108);
+  background: @background-color05;
 }
 
 QScrollBar:horizontal {
@@ -167,12 +167,12 @@ QScrollBar:vertical {
 }
 
 QScrollBar::handle {
-  background: rgb(106, 115, 128);
+  background: @background-color06;
   border-radius: 2px;
 }
 
 QWidget[emphasized="true"] QScrollBar::handle {
-  background: rgb(134, 142, 147);
+  background: @background-color03;
 }
 
 QScrollBar::handle:horizontal {
@@ -186,13 +186,13 @@ QScrollBar::handle:vertical {
 QScrollBar::add-line, QScrollBar::sub-line {
     border: none;
     border-radius: 2px;
-    background: rgb(65, 72, 81);
+    background: @background-color02;
     subcontrol-origin: margin;
 }
 
 QWidget[emphasized="true"] QScrollBar::add-line,
 QWidget[emphasized="true"] QScrollBar::sub-line {
-    background: rgb(90, 98, 108);
+    background: @background-color05;
 }
 
 QScrollBar::add-line:horizontal {
@@ -217,12 +217,12 @@ QScrollBar::sub-line:vertical {
 
 QScrollBar::add-line:horizontal:pressed,
 QScrollBar::sub-line:horizontal:pressed {
-    background: rgb(106, 115, 128);
+    background: @background-color06;
 }
 
 QWidget[emphasized="true"] QScrollBar::add-line:horizontal:pressed,
 QWidget[emphasized="true"] QScrollBar::sub-line:horizontal:pressed {
-    background: rgb(134, 142, 147);
+    background: @background-color03;
 }
 
 QScrollBar:left-arrow:horizontal {
@@ -253,21 +253,21 @@ QScrollBar::down-arrow {
   margin: 0;
   border: 0;
   border-radius: 2px;
-  background: rgb(65, 72, 81);
+  background: @background-color02;
 }
 
 QScrollBar::left-arrow:hover,
 QScrollBar::right-arrow:hover,
 QScrollBar::up-arrow:hover,
 QScrollBar::down-arrow:hover {
-  background-color: rgb(90, 98, 108);
+  background-color: @background-color05;
 }
 
 QScrollBar::left-arrow:pressed,
 QScrollBar::right-arrow:pressed,
 QScrollBar::up-arrow:pressed,
 QScrollBar::down-arrow:pressed {
-  background-color: rgb(106, 115, 128);
+  background-color: @background-color06;
 }
 
 
@@ -279,18 +279,18 @@ QScrollBar::sub-page {
 /* ----------------- QToolTip ------------------ */
 
 QToolTip {
-    border: 1px solid rgb(65, 72, 81);
+    border: 1px solid @background-color02;
     border-radius: 2px;
     padding: 2px;
-    background-color: rgb(38, 41, 48);
-    color: rgb(240, 241, 242);
+    background-color: @background-color01;
+    color: @color01;
 }
 
 /* ----------------- QGroupBox ------------------ */
 
 QGroupBox {
-    background-color: rgb(38, 41, 48);
-    border: 1px solid rgb(65, 72, 81);
+    background-color: @background-color01;
+    border: 1px solid @background-color02;
     border-radius: 5px;
     margin-top: 1ex; /* leave space at the top for the title */
 }
@@ -300,7 +300,7 @@ QGroupBox::title {
     subcontrol-position: top left;
     left: 10px;
     padding: 0 3px;
-    background-color: rgb(38, 41, 48);
+    background-color: @background-color01;
 }
 
 
@@ -319,7 +319,7 @@ QLabel {
 /* ----------------- QMenuBar ------------------ */
 
 QMenuBar::item:selected {
-   background-color: rgb(134, 142, 147);
+   background-color: @background-color03;
 }
 
 /* ----------------- QStatusBar ------------------ */
@@ -330,58 +330,42 @@ QStatusBar::item{
 
 /* ----------------- QHeaderView ----------------- */
 QHeaderView::section {
-  background-color: rgb(38, 41, 48);
+  background-color: @background-color01;
   padding: 2px;
 }
 
 /* ----------------- Buttons -------------------- */
 
-QPushButton#open_button {
-  background-color: rgb(0, 122, 204);
+QPushButton#open_button, QPushButton#install_button {
+  background-color: @background-color08;
 }
 
-QPushButton#open_button:hover {
-  background-color: rgb(25, 135, 209);
+QPushButton#open_button:hover, QPushButton#install_button:hover {
+  background-color: @background-color11;
 }
 
-QPushButton#open_button:pressed {
-  background-color: rgb(0, 109, 183);
+QPushButton#open_button:pressed, QPushButton#install_button:pressed {
+  background-color: @background-color12;
 }
 
-QPushButton#open_button:disabled {
-  background-color: rgb(51, 148, 214);
-}
-
-QPushButton#install_button {
-  background-color: rgb(0, 122, 204);
-}
-
-QPushButton#install_button:hover {
-  background-color: rgb(25, 135, 209);
-}
-
-QPushButton#install_button:pressed {
-  background-color: rgb(0, 109, 183);
-}
-
-QPushButton#install_button:disabled {
-  background-color: rgb(51, 148, 214);
+QPushButton#open_button:disabled, QPushButton#install_button:disabled  {
+  background-color: @background-color13;
 }
 
 QPushButton#uninstall_button {
-  background-color: rgb(153, 18, 31);
+  background-color: @background-color14;
 }
 
 QPushButton#uninstall_button:hover {
-  background-color: rgb(163, 41, 53);
+  background-color: @background-color15;
 }
 
 QPushButton#uninstall_button:pressed {
-  background-color: rgb(137, 16, 27);
+  background-color: @background-color016;
 }
 
 /* ----------------- Separator -------------------- */
 
 QFrame#separator {
-  background-color: rgb(65, 72, 81)
+  background-color: @background-color2
 }
