@@ -411,11 +411,11 @@ jobs:
       #     echo "LICENSES_ARTIFACT_NAME=$(basename ${licenses_zip_path})" >> $GITHUB_ENV
       #     echo "::set-output name=licenses_artifact::$licenses_zip_path"
 
-      - name: Upload License Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          path: ${{ env.LICENSES_ARTIFACT_PATH }}
-          name: ${{ env.LICENSES_ARTIFACT_NAME }}
+      # - name: Upload License Artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     path: ${{ env.LICENSES_ARTIFACT_PATH }}
+      #     name: ${{ env.LICENSES_ARTIFACT_NAME }}
 
       - name: Notarize Bundle (macOS)
         # We only sign pushes to main, nightlies, RCs and final releases
@@ -534,7 +534,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          repository: napari/napari
 
       - name: Get changed files using defaults
         id: changed-files
