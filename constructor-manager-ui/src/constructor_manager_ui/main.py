@@ -347,7 +347,7 @@ class InstallationManagerDialog(QDialog):
         installation_actions_layout.addWidget(revert_label, 0, 1)
 
         # Reset action
-        reset_button = QPushButton("Reset installation")
+        reset_button = QPushButton("Reset Installation")
         reset_label = QLabel(
             "Reset the installation to clear "
             "preferences, plugins, and other packages"
