@@ -14,7 +14,8 @@ INSTALL_INFORMATION = {
 UPDATE_AVAILABLE_VERSION = "v0.4.17"
 PACKAGES = [
     # Package:
-    # Name - Version - Source - Build - Plugin
+    # Name - Version - Source - Build - Related package (plugin or package itself)
+    ("napari", "0.4.16", "pip", None, True),
     ("napari-console", "0.1.6", "pip", None, True),
     (
         "napari-live-recording",

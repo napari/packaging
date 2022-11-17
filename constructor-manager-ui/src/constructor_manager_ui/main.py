@@ -3,10 +3,9 @@
 import sys
 
 from qtpy.QtCore import QSize, Qt, QTimer, Signal
-from qtpy.QtGui import QBrush, QMovie
+from qtpy.QtGui import QBrush, QColor, QMovie
 from qtpy.QtWidgets import (
     QApplication,
-    QButtonGroup,
     QCheckBox,
     QDialog,
     QFrame,
@@ -31,11 +30,11 @@ from constructor_manager_ui.style.utils import update_styles
 from constructor_manager_ui.data import (
     INSTALL_INFORMATION,
     UPDATE_AVAILABLE_VERSION,
-    PACKAGES
+    PACKAGES,
 )
 
 # Packages table constants
-PLUGINS = 0
+RELATED_PACKAGES = 0
 ALL_PACKAGES = 1
 
 
@@ -159,7 +158,9 @@ class UpdateWidget(QWidget):
 
 
 class PackagesTable(QTableWidget):
-    def __init__(self, packages, visible_packages=PLUGINS, parent=None):
+    def __init__(
+        self, packages, visible_packages=RELATED_PACKAGES, parent=None
+    ):
         super().__init__(parent=parent)
         self.packages = packages
         self.visible_packages = visible_packages
@@ -185,17 +186,17 @@ class PackagesTable(QTableWidget):
         self.packages = packages
 
         # Populate table with data available
-        for name, version, source, build, plugin in self.packages:
+        for name, version, source, build, related_package in self.packages:
             self.insertRow(self.rowCount())
             package_row = self.rowCount() - 1
             name_item = QTableWidgetItem(name)
             version_item = QTableWidgetItem(version)
             source_item = QTableWidgetItem(source)
             build_item = QTableWidgetItem(build)
-            if plugin:
+            if related_package:
                 background_brush = QBrush(Qt.black)
             else:
-                background_brush = QBrush(Qt.darkGray)
+                background_brush = QBrush(QColor(65, 72, 81))
             name_item.setBackground(background_brush)
             version_item.setBackground(background_brush)
             source_item.setBackground(background_brush)
@@ -204,28 +205,35 @@ class PackagesTable(QTableWidget):
             self.setItem(package_row, 1, version_item)
             self.setItem(package_row, 2, source_item)
             self.setItem(package_row, 3, build_item)
-            if self.visible_packages == PLUGINS and not plugin:
+            if (
+                self.visible_packages == RELATED_PACKAGES
+                and not related_package
+            ):
                 self.hideRow(package_row)
 
-    def change_visible_packages(self, toggled_option, checked):
-        if checked and self.packages:
+    def change_visible_packages(self, toggled_option):
+        if self.packages:
             self.visible_packages = toggled_option
-            if toggled_option == PLUGINS:
+            if toggled_option == RELATED_PACKAGES:
                 for idx, package in enumerate(self.packages):
-                    name, version, source, build, plugin = package
-                    if not plugin:
+                    name, version, source, build, related_package = package
+                    if not related_package:
                         self.hideRow(idx)
             else:
                 for idx, _ in enumerate(self.packages):
                     self.showRow(idx)
-
-    def change_build_column_visibility(self, state):
-        if state > Qt.Unchecked:
-            self.showColumn(3)
         else:
-            self.setColumnHidden(3, True)
-            self.horizontalHeader().hideSection(3)
+            self.visible_packages = toggled_option
+
+    def change_detailed_info_visibility(self, state):
+        if state > Qt.Unchecked:
+            self.showColumn(2)
+            self.showColumn(3)
+            self.change_visible_packages(ALL_PACKAGES)
+        else:
+            self.hideColumn(2)
             self.hideColumn(3)
+            self.change_visible_packages(RELATED_PACKAGES)
 
 
 class InstallationManagerDialog(QDialog):
@@ -295,22 +303,14 @@ class InstallationManagerDialog(QDialog):
 
         packages_filter_layout = QHBoxLayout()
         packages_filter_label = QLabel("Show:")
-        packages_filter_group = QButtonGroup(self)
-        only_plugins_checkbox = QCheckBox("Plugins")
-        all_packages_checkbox = QCheckBox("All packages")
         self.packages_spinner_label = SpinnerWidget(
             "Loading packages...", parent=self
         )
-        packages_filter_group.addButton(only_plugins_checkbox, PLUGINS)
-        packages_filter_group.addButton(all_packages_checkbox, ALL_PACKAGES)
-        only_plugins_checkbox.setChecked(True)
-        show_build_column_checkbox = QCheckBox("Build")
-        show_build_column_checkbox.setChecked(True)
+        show_detailed_view_checkbox = QCheckBox("Detailed view")
+        show_detailed_view_checkbox.setChecked(False)
 
         packages_filter_layout.addWidget(packages_filter_label)
-        packages_filter_layout.addWidget(only_plugins_checkbox)
-        packages_filter_layout.addWidget(all_packages_checkbox)
-        packages_filter_layout.addWidget(show_build_column_checkbox)
+        packages_filter_layout.addWidget(show_detailed_view_checkbox)
         packages_filter_layout.addStretch(1)
         packages_filter_layout.addWidget(self.packages_spinner_label)
 
@@ -319,15 +319,11 @@ class InstallationManagerDialog(QDialog):
         packages_layout.addWidget(self.packages_tablewidget)
         packages_group.setLayout(packages_layout)
 
-        packages_filter_group.idToggled.connect(
-            self.packages_tablewidget.change_visible_packages
+        show_detailed_view_checkbox.stateChanged.connect(
+            self.packages_tablewidget.change_detailed_info_visibility
         )
-        show_build_column_checkbox.stateChanged.connect(
-            self.packages_tablewidget.change_build_column_visibility
-        )
-        self.packages_tablewidget.change_visible_packages(PLUGINS, True)
-        self.packages_tablewidget.change_build_column_visibility(
-            show_build_column_checkbox.checkState()
+        self.packages_tablewidget.change_detailed_info_visibility(
+            show_detailed_view_checkbox.checkState()
         )
 
         return packages_group
