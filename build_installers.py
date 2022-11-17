@@ -256,12 +256,12 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         "menu_packages": [
             "napari-menu",
         ],
-        "extra_files": {
-            os.path.join(resources, "bundle_readme.md"): "README.txt",
-            empty_file.name: ".napari_is_bundled_constructor",
-            condarc: ".condarc",
-            env_state: os.path.join("envs", napari_env["name"], "conda-meta", "state"),
-        },
+        "extra_files": [
+            {os.path.join(resources, "bundle_readme.md"): "README.txt"},
+            {empty_file.name: ".napari_is_bundled_constructor"},
+            {condarc: ".condarc"},
+            {env_state: os.path.join("envs", napari_env["name"], "conda-meta", "state")},
+        ],
     }
     if _use_local():
         definitions["channels"].insert(0, "local")
