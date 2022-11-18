@@ -248,6 +248,7 @@ jobs:
           fetch-depth: 0
           repository: napari/napari
           path: napari-source
+          ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
