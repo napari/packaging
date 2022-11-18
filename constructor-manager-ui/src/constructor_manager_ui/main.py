@@ -5,6 +5,7 @@ import sys
 from qtpy.QtCore import QSize, Qt, QTimer, Signal
 from qtpy.QtGui import QBrush, QColor, QMovie
 from qtpy.QtWidgets import (
+    QAbstractItemView,
     QApplication,
     QCheckBox,
     QDialog,
@@ -166,13 +167,25 @@ class PackagesTable(QTableWidget):
         self.visible_packages = visible_packages
         self.setup()
 
+    def _create_item(self, text, related_package):
+        item = QTableWidgetItem(text)
+        if related_package:
+            background_brush = QBrush(Qt.black)
+        else:
+            background_brush = QBrush(Qt.darkGray)
+        item.setBackground(background_brush)
+        if not related_package:
+            foreground_brush = QBrush(Qt.black)
+            item.setForeground(foreground_brush)
+        return item
+
     def setup(self):
         # Set columns number and headers
         self.setColumnCount(4)
         self.setHorizontalHeaderLabels(["Name", "Version", "Source", "Build"])
         self.verticalHeader().setVisible(False)
 
-        # Set headers alignment and config
+        # Set horizontal headers alignment and config
         self.horizontalHeader().setDefaultAlignment(
             Qt.AlignLeft | Qt.AlignVCenter
         )
@@ -182,6 +195,9 @@ class PackagesTable(QTableWidget):
         # Hide table items borders
         self.setShowGrid(False)
 
+        # Set table selection to row
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+
     def set_data(self, packages):
         self.packages = packages
 
@@ -189,22 +205,18 @@ class PackagesTable(QTableWidget):
         for name, version, source, build, related_package in self.packages:
             self.insertRow(self.rowCount())
             package_row = self.rowCount() - 1
-            name_item = QTableWidgetItem(name)
-            version_item = QTableWidgetItem(version)
-            source_item = QTableWidgetItem(source)
-            build_item = QTableWidgetItem(build)
-            if related_package:
-                background_brush = QBrush(Qt.black)
-            else:
-                background_brush = QBrush(QColor(65, 72, 81))
-            name_item.setBackground(background_brush)
-            version_item.setBackground(background_brush)
-            source_item.setBackground(background_brush)
-            build_item.setBackground(background_brush)
-            self.setItem(package_row, 0, name_item)
-            self.setItem(package_row, 1, version_item)
-            self.setItem(package_row, 2, source_item)
-            self.setItem(package_row, 3, build_item)
+            self.setItem(
+                package_row, 0, self._create_item(name, related_package)
+            )
+            self.setItem(
+                package_row, 1, self._create_item(version, related_package)
+            )
+            self.setItem(
+                package_row, 2, self._create_item(source, related_package)
+            )
+            self.setItem(
+                package_row, 3, self._create_item(build, related_package)
+            )
             if (
                 self.visible_packages == RELATED_PACKAGES
                 and not related_package
