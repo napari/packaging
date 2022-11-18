@@ -3,7 +3,7 @@
 import sys
 
 from qtpy.QtCore import QSize, Qt, QTimer, Signal
-from qtpy.QtGui import QBrush, QColor, QMovie
+from qtpy.QtGui import QBrush, QMovie
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QApplication,
