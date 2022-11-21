@@ -10,7 +10,7 @@
             "precommand": "unset PYTHONHOME && unset PYTHONPATH",
             "command": [
                 "{{ PYTHON }}",
-                "-Im",
+                "-m",
                 "napari"
             ],
             "activate": true,
@@ -35,7 +35,7 @@
                         "com.apple.security.files.downloads.read-write",
                         "com.apple.security.assets.pictures.read-write",
                         "com.apple.security.assets.music.read-write",
-                        "com.apple.security.assets.movies.read-write",
+                        "com.apple.security.assets.movies.read-write"
                     ]
                 }
             }
