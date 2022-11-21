@@ -1,0 +1,44 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema",
+    "$id": "https://schemas.conda.io/menuinst-1.schema.json",
+    "menu_name": "napari (__PKG_VERSION__)",
+    "menu_items": [
+        {
+            "name": "napari (__PKG_VERSION__)",
+            "description": "a fast n-dimensional image viewer in Python",
+            "icon": "{{ MENU_DIR }}/napari.{{ ICON_EXT }}",
+            "precommand": "unset PYTHONHOME && unset PYTHONPATH",
+            "command": [
+                "{{ PYTHON }}",
+                "-Im",
+                "napari"
+            ],
+            "activate": true,
+            "terminal": false,
+            "platforms": {
+                "win": {
+                    "precommand": "set \"PYTHONHOME=\" & set \"PYTHONPATH=\"",
+                    "desktop": true
+                },
+                "linux": {
+                    "Categories": [ 
+                        "Graphics",
+                        "Science"
+                    ]
+                },
+                "osx": {
+                    "CFBundleName": "napari",
+                    "CFBundleDisplayName": "napari",
+                    "CFBundleVersion": "__PKG_VERSION__",
+                    "entitlements": [
+                        "com.apple.security.files.user-selected.read-write",
+                        "com.apple.security.files.downloads.read-write",
+                        "com.apple.security.assets.pictures.read-write",
+                        "com.apple.security.assets.music.read-write",
+                        "com.apple.security.assets.movies.read-write",
+                    ]
+                }
+            }
+        }
+    ]
+}
