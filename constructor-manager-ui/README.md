@@ -7,10 +7,22 @@
 
 ## Development
 
-Install for development:
+Install for development with PyQt5:
 
 ```bash
-pip install -e .
+pip install -e .[pyqt5]
+```
+
+Install for development with PySide2:
+
+```bash
+pip install -e .[pyside2]
+```
+
+Install testing dependencies:
+
+```bash
+pip install -e .[testing]
 ```
 
 Run the application:
