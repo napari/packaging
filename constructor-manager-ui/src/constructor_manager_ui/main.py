@@ -391,7 +391,7 @@ class InstallationManagerDialog(QDialog):
 
         # Packages
         packages_group = self._create_packages_group()
-        main_layout.addWidget(packages_group)
+        main_layout.addWidget(packages_group, stretch=1)
 
         # Installation Actions
         installation_actions_group = self._create_installation_actions_group()
