@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Deque, Dict, List, Optional, Sequence, Tuple
+from typing import Deque, Dict, Optional, Sequence, Tuple
 
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
 
@@ -18,7 +18,7 @@ class AbstractInstaller:
     """Abstract base class for package installers (pip, conda, etc)."""
 
     # abstract method
-    def _modify_env(self, env: dict):
+    def _modify_env(self, env: Dict):
         raise NotImplementedError()
 
     # abstract method
@@ -41,8 +41,8 @@ class AbstractInstaller:
         env = self._modify_env(env)
         self._env = env
         self._queue: Deque[Tuple[str, ...]] = Deque()
-        self._messages = []  # type: List[str]
-        self._exit_codes = {}  # type: Dict[job_id, int]
+        self._messages = []
+        self._exit_codes = {}
 
     # -------------------------- Public API ------------------------------
     def install(
@@ -328,7 +328,7 @@ class CondaInstaller(AbstractInstaller):
             ("list", "--prefix", str(prefix), "--json"), block=block
         )
 
-    def lock(self, yaml_spec: dict, block : bool =True) -> job_id:
+    def lock(self, yaml_spec: dict, block: bool = True) -> job_id:
         """List packages for `prefix`.
 
         Parameters
