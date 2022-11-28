@@ -183,7 +183,7 @@ def update(
     installer = CondaInstaller(channel=channel)
     packages = installer.list(str(prefix))
 
-    # Save state of current environment
+    # Save state of current environment using conda-lock
     save_state_file(package_name, packages, channel, dev, available_plugins)
 
     filtered_packages: List[str] = []

@@ -324,7 +324,24 @@ class CondaInstaller(AbstractInstaller):
         job_id : int
             ID that can be used to cancel the process.
         """
-        print("BACLKIE!")
         return self._queue_args(
             ("list", "--prefix", str(prefix), "--json"), block=block
         )
+
+    def lock(self, yaml_spec: dict, block : bool =True) -> job_id:
+        """List packages for `prefix`.
+
+        Parameters
+        ----------
+        prefix : str
+            Prefix from which to list packages.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
+        # TODO
+        # return self._queue_args(
+        #     ("list", "--prefix", str(yaml_spec), "--json"), block=block
+        # )
