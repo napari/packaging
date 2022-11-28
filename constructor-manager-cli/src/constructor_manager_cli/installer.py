@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Deque, Dict, Optional, Sequence, Tuple
+from typing import Deque, Dict, List, Optional, Sequence, Tuple
 
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
 
@@ -41,8 +41,8 @@ class AbstractInstaller:
         env = self._modify_env(env)
         self._env = env
         self._queue: Deque[Tuple[str, ...]] = Deque()
-        self._messages = []
-        self._exit_codes = {}
+        self._messages: List[str] = []
+        self._exit_codes: Dict[job_id, int] = {}
 
     # -------------------------- Public API ------------------------------
     def install(
@@ -341,6 +341,7 @@ class CondaInstaller(AbstractInstaller):
         job_id : int
             ID that can be used to cancel the process.
         """
+        return 1
         # TODO
         # return self._queue_args(
         #     ("list", "--prefix", str(yaml_spec), "--json"), block=block

@@ -244,7 +244,7 @@ def check_updates_clean_and_launch(
     channel=DEFAULT_CHANNEL,
 ):
     """Check for updates and clean."""
-    package_name, version = parse_conda_version_spec(package)
+    package_name, version, _ = parse_conda_version_spec(package)
     res = check_updates(package_name, dev, channel)
     found_versions = res["found_versions"]
 
@@ -274,7 +274,7 @@ def remove(package: str):
     """
     # Try to remove using conda/mamba
     installer = CondaInstaller()
-    package_name, version = parse_conda_version_spec(package)
+    package_name, version, _ = parse_conda_version_spec(package)
     prefix = get_prefix_by_name(f"{package_name}-{version}")
     job_id = installer.remove(prefix)
 
@@ -294,7 +294,7 @@ def restore(package: str, channel: str = DEFAULT_CHANNEL):
     channel : str, optional
         Check for available versions on this channel. Default is ``conda-forge``
     """
-    package_name, current_version = parse_conda_version_spec(package)
+    package_name, current_version, _ = parse_conda_version_spec(package)
     env_name = f"{package_name}-{current_version}"
     prefix = str(get_prefix_by_name(env_name))
     installer = CondaInstaller(channel=channel)

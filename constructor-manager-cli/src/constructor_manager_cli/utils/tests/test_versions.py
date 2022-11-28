@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore
 from constructor_manager_cli.utils.versions import is_stable_version
 
 
