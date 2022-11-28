@@ -19,7 +19,12 @@ if __name__ == "__main__":
     timer.timeout.connect(lambda: None)  # type: ignore
     timer.start(100)
 
-    # worker = check_updates("napari", current_version="0.4.15", channel="napari", dev=True)
+    # worker = check_updates(
+    #     "napari",
+    #     current_version="0.4.15",
+    #     channel="napari",
+    #     dev=True,
+    # )
     worker = check_updates("napari", current_version="0.4.15")
     worker.finished.connect(_finished)
     worker.start()
