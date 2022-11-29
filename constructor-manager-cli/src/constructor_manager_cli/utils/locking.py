@@ -44,7 +44,7 @@ else:
     import ctypes
     from ctypes import wintypes
 
-    # https://docs.microsoft.com/en-us/windows/desktop/ProcThread/process-security-and-access-rights
+    # https://docs.microsoft.com/en-us/windows/desktop/ProcThread/process-security-and-access-rights # noqa
     PROCESS_QUERY_INFORMATION = 0x400
 
     # GetExitCodeProcess uses a special exit code to indicate that the
