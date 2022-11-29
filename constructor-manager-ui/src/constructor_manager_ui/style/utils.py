@@ -1,9 +1,9 @@
 """Utility functions to update and load the application style."""
 
 from pathlib import Path
-from typing import Dict, TextIO
+from typing import Dict
 
-from qtpy.QtWidgets import QApplication # type: ignore
+from qtpy.QtWidgets import QApplication  # type: ignore
 
 # UI style constant
 STYLE_VARIABLES = Path(__file__).parent / "style_variables.txt"

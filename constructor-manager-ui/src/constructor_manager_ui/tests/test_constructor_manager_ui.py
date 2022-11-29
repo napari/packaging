@@ -1,6 +1,6 @@
 """Tests for the constructor manager UI."""
 
-import pytest
+import pytest  # type: ignore
 
 from constructor_manager_ui.data import (
     INSTALL_INFORMATION,

@@ -1,8 +1,9 @@
 """Constructor manager main interface."""
 
 import sys
+from typing import Optional
 
-from qtpy.QtCore import QSize, Qt, QObject, QTimer, Signal  # type: ignore
+from qtpy.QtCore import QSize, Qt, QTimer, Signal  # type: ignore
 from qtpy.QtGui import QBrush, QMovie  # type: ignore
 from qtpy.QtWidgets import (  # type: ignore
     QAbstractItemView,
@@ -28,6 +29,7 @@ from constructor_manager_ui.data import (
     PACKAGES,
     UPDATE_AVAILABLE_VERSION,
 )
+from constructor_manager_ui.style import images  # noqa
 from constructor_manager_ui.style.utils import update_styles
 
 # Packages table constants
@@ -36,7 +38,6 @@ ALL_PACKAGES = 1
 
 
 class SpinnerWidget(QWidget):
-
     def __init__(self, text, parent=None):
         super().__init__(parent=parent)
 
@@ -73,7 +74,7 @@ class UpdateWidget(QWidget):
     install_version = Signal(str)
     skip_version = Signal(str)
 
-    def __init__(self, package_name: str, parent: QObject = None):
+    def __init__(self, package_name: str, parent: Optional[QWidget] = None):
         super().__init__(parent=parent)
         self.package_name = package_name
         self.update_available_version = None
