@@ -2,12 +2,17 @@
 
 from pathlib import Path
 from typing import Dict
+from subprocess import check_call
 
 from qtpy.QtWidgets import QApplication  # type: ignore
 
 # UI style constant
-STYLE_VARIABLES = Path(__file__).parent / "style_variables.txt"
-QSS_STYLESHEET = Path(__file__).parent / "base.qss"
+CWD = Path(__file__).parent
+STYLE_VARIABLES = CWD / "style_variables.txt"
+QSS_STYLESHEET = CWD / "base.qss"
+IMAGES = CWD / "images"
+IMAGES_QRC = CWD / "images.qrc"
+IMAGES_PY = CWD / "images.py"
 
 
 def _load_styles(stylesheet_file, style_variables: Dict = {}):
@@ -29,3 +34,30 @@ def update_styles(app: QApplication):
         app.setStyleSheet(
             _load_styles(stylesheet_file, style_variables=style_variables)
         )
+
+
+def generate_resource_file():
+    # Generate QRC file
+    lines = ['<!DOCTYPE RCC>\n<RCC version="1.0">\n<qresource>']
+    template = "    <file>{file}</file>"
+    for file in sorted(IMAGES.iterdir()):
+        lines.append(template.format(file=file.relative_to(CWD)))
+
+    lines.append("</qresource>\n</RCC>\n")
+
+    with open(IMAGES_QRC, "w") as fh:
+        fh.write("\n".join(lines))
+
+    # Generate resources file from QRC file
+    check_call(["pyrcc5", "images.qrc", "-o", "images.py"], cwd=CWD)
+
+    # Replace PyQt5 imports with qtpy
+    with open(IMAGES_PY) as fh:
+        data = fh.read()
+
+    with open(IMAGES_PY, "w") as fh:
+        fh.write(data.replace("from PyQt5 import QtCore", "from qtpy import QtCore"))
+
+
+if __name__ == "__main__":
+    generate_resource_file()

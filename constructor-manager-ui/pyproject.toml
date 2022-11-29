@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 line-length = 79
 
 [tool.mypy]
-files = "constructor_manager_ui"
 ignore_missing_imports = true
 exclude = [
   "tests",

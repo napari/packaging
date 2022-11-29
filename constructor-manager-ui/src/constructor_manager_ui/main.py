@@ -3,9 +3,9 @@
 import sys
 from typing import Optional
 
-from qtpy.QtCore import QSize, Qt, QTimer, Signal  # type: ignore
-from qtpy.QtGui import QBrush, QMovie  # type: ignore
-from qtpy.QtWidgets import (  # type: ignore
+from qtpy.QtCore import QSize, Qt, QTimer, Signal
+from qtpy.QtGui import QBrush, QMovie
+from qtpy.QtWidgets import (
     QAbstractItemView,
     QApplication,
     QCheckBox,
@@ -24,11 +24,14 @@ from qtpy.QtWidgets import (  # type: ignore
     QWidget,
 )
 
+# To get mock data
 from constructor_manager_ui.data import (
     INSTALL_INFORMATION,
     PACKAGES,
     UPDATE_AVAILABLE_VERSION,
 )
+
+# To setup image resources for .qss file
 from constructor_manager_ui.style import images  # noqa
 from constructor_manager_ui.style.utils import update_styles
 
@@ -38,7 +41,7 @@ ALL_PACKAGES = 1
 
 
 class SpinnerWidget(QWidget):
-    def __init__(self, text, parent=None):
+    def __init__(self, text: str, parent: Optional[QWidget] = None):
         super().__init__(parent=parent)
 
         # Widgets for text and loading gif
@@ -160,15 +163,15 @@ class PackagesTable(QTableWidget):
         self.visible_packages = visible_packages
         self.setup()
 
-    def _create_item(self, text, related_package):
+    def _create_item(self, text: str, related_package: bool):
         item = QTableWidgetItem(text)
         if related_package:
-            background_brush = QBrush(Qt.black)
+            background_brush = QBrush(Qt.GlobalColor.black)
         else:
-            background_brush = QBrush(Qt.darkGray)
+            background_brush = QBrush(Qt.GlobalColor.darkGray)
         item.setBackground(background_brush)
         if not related_package:
-            foreground_brush = QBrush(Qt.black)
+            foreground_brush = QBrush(Qt.GlobalColor.black)
             item.setForeground(foreground_brush)
         return item
 
@@ -231,9 +234,9 @@ class PackagesTable(QTableWidget):
 class InstallationManagerDialog(QDialog):
     def __init__(
         self,
-        package_name,
+        package_name: str,
         install_information,
-        parent=None,
+        parent: Optional[QWidget] = None,
     ):
         super().__init__(parent=parent)
         self.package_name = package_name

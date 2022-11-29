@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install mypy typing-extensions types-requests types-urllib3 typing-inspect mypy-extensions types-PyYAML
+          pip install -e ".[typing]"
           pip list
 
       - name: Typing
@@ -41,6 +41,7 @@ jobs:
           cd constructor-manager-ui
           pip install -e ".[testing]"
           pip install -e ".[pyqt5]"
-          mypy src
+          mypy src --always-true=PYQT5 --always-false=PYSIDE2 --always-false=PYQT6 --always-false=PYSIDE6
+          pip uninstall pyqt5
           pip install -e ".[pyside2]"
-          mypy src
+          mypy src --always-false=PYQT5 --always-true=PYSIDE2 --always-false=PYQT6 --always-false=PYSIDE6
