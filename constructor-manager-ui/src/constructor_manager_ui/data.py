@@ -1,7 +1,8 @@
 """Mock data for the installation manager dialog UI."""
+from typing import Dict
 
-PACKAGE_NAME = "napari"
-INSTALL_INFORMATION = {
+PACKAGE_NAME: str = "napari"
+INSTALL_INFORMATION: Dict = {
     "current_version": {
         "version": "v0.4.16",
         "last_modified": "July 27, 2022",
@@ -11,7 +12,7 @@ INSTALL_INFORMATION = {
         "last_modified": "April 5, 2022",
     },
 }
-UPDATE_AVAILABLE_VERSION = "v0.4.17"
+UPDATE_AVAILABLE_VERSION: str = "v0.4.17"
 PACKAGES = [
     # Package:
     # Name - Version - Source - Build - Related package (plugin or package itself)

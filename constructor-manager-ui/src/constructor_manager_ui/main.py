@@ -2,9 +2,9 @@
 
 import sys
 
-from qtpy.QtCore import QSize, Qt, QTimer, Signal
-from qtpy.QtGui import QBrush, QMovie
-from qtpy.QtWidgets import (
+from qtpy.QtCore import QSize, Qt, QObject, QTimer, Signal  # type: ignore
+from qtpy.QtGui import QBrush, QMovie  # type: ignore
+from qtpy.QtWidgets import (  # type: ignore
     QAbstractItemView,
     QApplication,
     QCheckBox,
@@ -36,8 +36,10 @@ ALL_PACKAGES = 1
 
 
 class SpinnerWidget(QWidget):
+
     def __init__(self, text, parent=None):
         super().__init__(parent=parent)
+
         # Widgets for text and loading gif
         self.text_label = QLabel(text)
         spinner_label = QLabel()
@@ -54,7 +56,7 @@ class SpinnerWidget(QWidget):
         self.setLayout(layout)
         self.spinner_movie.start()
 
-    def set_text(self, text):
+    def set_text(self, text: str):
         self.text_label.setText(text)
 
     def show(self):
@@ -71,7 +73,7 @@ class UpdateWidget(QWidget):
     install_version = Signal(str)
     skip_version = Signal(str)
 
-    def __init__(self, package_name, parent=None):
+    def __init__(self, package_name: str, parent: QObject = None):
         super().__init__(parent=parent)
         self.package_name = package_name
         self.update_available_version = None
@@ -422,7 +424,7 @@ class InstallationManagerDialog(QDialog):
         print("Uninstall")
 
 
-def main(package_name):
+def main(package_name: str):
     """Run the main interface.
 
     Parameters
