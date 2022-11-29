@@ -16,14 +16,11 @@ def _load_styles(stylesheet_file, style_variables={}):
 
 def update_styles(app):
     style_variables = {}
-    with open(STYLE_VARIABLES, "r") as style_variables_file:
+    with open(STYLE_VARIABLES) as style_variables_file:
         for line in style_variables_file:
             key, value = line.split("=")
             style_variables[key] = value
-    with open(QSS_STYLESHEET, "r") as stylesheet_file:
+    with open(QSS_STYLESHEET) as stylesheet_file:
         app.setStyleSheet(
-            _load_styles(
-                stylesheet_file,
-                style_variables=style_variables
-            )
+            _load_styles(stylesheet_file, style_variables=style_variables)
         )
