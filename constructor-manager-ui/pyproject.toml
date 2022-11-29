@@ -5,6 +5,13 @@ build-backend = "setuptools.build_meta"
 [tool.black]
 line-length = 79
 
-[tool.isort]
-profile = "black"
-line_length = 79
+[tool.mypy]
+ignore_missing_imports = true
+exclude = [
+  "tests",
+]
+show_error_codes = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+check_untyped_defs = true

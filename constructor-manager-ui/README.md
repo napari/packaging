@@ -25,8 +25,24 @@ Install testing dependencies:
 pip install -e .[testing]
 ```
 
+Install typing dependencies:
+
+```bash
+pip install -e .[typing]
+```
+
 Run the application:
 
 ```bash
 constructor-manager-ui napari
 ```
+
+Generate resources file:
+
+Once installed, run the command below to generate the resource file:
+
+```bash
+constructor-manager-ui-qrc
+```
+
+You need to have pyqt5 installed.
