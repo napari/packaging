@@ -45,9 +45,14 @@ def generate_resource_file():
         lines.append(template.format(file=file.relative_to(CWD)))
 
     lines.append("</qresource>\n</RCC>\n")
+    new_data = "\n".join(lines)
 
-    with open(IMAGES_QRC, "w") as fh:
-        fh.write("\n".join(lines))
+    with open(IMAGES_QRC, "r") as fh:
+        current_data = fh.read()
+
+    if current_data != new_data:
+        with open(IMAGES_QRC, "w") as fh:
+            fh.write()
 
     # Generate resources file from QRC file
     print("Generating resources file from QRC file...")
