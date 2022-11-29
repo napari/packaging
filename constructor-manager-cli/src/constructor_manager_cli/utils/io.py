@@ -2,9 +2,8 @@
 
 import json
 import os
-import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from constructor_manager_cli.utils.conda import get_prefix_by_name
 from constructor_manager_cli.utils.packages import (
@@ -14,12 +13,12 @@ from constructor_manager_cli.utils.packages import (
 
 
 def get_broken_envs(package_name: str) -> List[Path]:
-    """TODO
+    """Find broken conda application environments.
 
     Parameters
     ----------
-        package_name : str
-            Name of the package.
+    package_name : str
+        Name of the package.
 
     Returns
     -------
@@ -49,7 +48,7 @@ def get_broken_envs(package_name: str) -> List[Path]:
 
 
 def get_installed_versions(package_name: str) -> List[Tuple[str, ...]]:
-    """Check the current conda prefix for installed versions.
+    """Check the current conda installation for installed versions in environments.
 
     Parameters
     ----------
@@ -87,30 +86,55 @@ def get_installed_versions(package_name: str) -> List[Tuple[str, ...]]:
     return versions
 
 
-def check_if_constructor_app(package_name, path=None) -> bool:
-    """"""
-    if path is None:
-        path = Path(sys.prefix)
+def get_sentinel_path(prefix: Union[Path, str], package_name: str) -> Path:
+    """Sentinel file path for a given environment.
 
-    return (path.parent.parent / sentinel_file_name(package_name)).exists()
+    Parameters
+    ----------
+    prefix : Path or str
+        Path to the environment.
+    package_name : str
+        Name of the package.
 
-
-def get_sentinel_path(prefix, package_name):
-    """"""
+    Returns
+    -------
+    Path
+        Path to the sentinel file.
+    """
+    prefix = Path(prefix)
     return prefix / "conda-meta" / sentinel_file_name(package_name)
 
 
-def create_sentinel_file(package_name, version):
-    """"""
+def create_sentinel_file(package_name: str, version: str):
+    """Create a sentinel file in the corresponding environment for a given
+    package and version.
+
+    Parameters
+    ----------
+    package_name : str
+        Name of the package.
+    version : str
+        Version of the package.
+    """
     package_name = normalized_name(package_name)
     env_name = f"{package_name}-{version}"
     prefix = get_prefix_by_name(env_name)
+
     with open(get_sentinel_path(prefix, package_name), "w") as f:
         f.write("")
 
 
-def remove_sentinel_file(package_name, version):
-    """"""
+def remove_sentinel_file(package_name: str, version: str):
+    """Remove a sentinel file in the corresponding environment for a given
+    package and version.
+
+    Parameters
+    ----------
+    package_name : str
+        Name of the package.
+    version : str
+        Version of the package.
+    """
     package_name = normalized_name(package_name)
     env_name = f"{package_name}-{version}"
     prefix = get_prefix_by_name(env_name)
@@ -141,14 +165,20 @@ def get_env_path() -> Path:
     return get_config_path() / "env"
 
 
-def save_state_file(application, packages, channel, dev, plugins):
+def save_state_file(
+    application: str,
+    packages: List[str],
+    channels: List[str],
+    dev: bool,
+    plugins: List[str],
+):
     """"""
     base_path = get_state_path()
     base_path.mkdir(parents=True, exist_ok=True)
     data = {
         "application": application,
         "packages": packages,
-        "channel": channel,
+        "channels": channels,
         "dev": dev,
         "plugins": plugins,
     }
@@ -156,7 +186,7 @@ def save_state_file(application, packages, channel, dev, plugins):
         f.write(json.dumps(data, indent=4))
 
 
-def load_state_file(application):
+def load_state_file(application: str):
     """"""
     path = get_state_path() / f"{application}.json"
     data = {}

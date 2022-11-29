@@ -399,3 +399,10 @@ This command will install a specified on a fresh environment, deleting the old e
 ```bash
 constructor-manager restore "napari=0.4.16=*pyside*" -c conda-forge
 ```
+
+### Run tests
+
+```bash
+cd constructor-manager-cli/src
+pytest constructor_manager_cli --cov=constructor_manager_cli --cov-report term-missing
+```

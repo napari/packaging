@@ -347,7 +347,16 @@ def lock_environment(
 ):
     """Lock the environment, using conda lock.
 
-    TODO
+    Parameters
+    ----------
+    package : str
+        Package specification.
+    channels : tuple of str, optional
+        Check for available versions on these channels.
+        Default is ``('conda-forge', )``.
+    platforms : tuple of str, optional
+        Platforms to lock for. If not provided conda is queried for the
+        current platform.
     """
     installer = CondaInstaller(channels=channels)
     yaml_spec = {"dependencies": [package]}
@@ -394,6 +403,3 @@ def lock_environment(
             if str(lockfile) != filepath and fh.read() == data:
                 lockfile.unlink()
                 break
-
-    # return installer._exit_codes[id]
-    return "1"

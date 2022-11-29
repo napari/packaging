@@ -41,27 +41,3 @@ def normalized_name(name: str) -> str:
         The normalized package name.
     """
     return re.sub(r"[-_.]+", "-", name).lower()
-
-
-def get_package_spec(package, version, build):
-    """Return the package spec for a package.
-
-    Parameters
-    ----------
-    package : str
-        The name of the package.
-    version : str
-        The version of the package.
-    build : str
-        The build string of the package.
-
-    Returns
-    -------
-    str
-        The package spec.
-    """
-    spec = f"{package}=={version}"
-    if build:
-        spec = spec + f"=*{build}*"
-
-    return spec

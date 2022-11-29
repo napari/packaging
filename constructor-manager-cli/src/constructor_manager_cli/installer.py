@@ -46,7 +46,11 @@ class AbstractInstaller:
 
     # -------------------------- Public API ------------------------------
     def install(
-        self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
+        self,
+        pkg_list: Sequence[str],
+        *,
+        prefix: Optional[str] = None,
+        block: bool = False,
     ) -> job_id:
         """Install packages in `pkg_list` into `prefix`.
 
@@ -140,6 +144,13 @@ class AbstractInstaller:
         self._processes[job_id] = popen
         if block:
             stdout, stderr = popen.communicate()
+
+            if isinstance(stdout, bytes):
+                stdout = stdout.decode()
+
+            if isinstance(stderr, bytes):
+                stderr = stderr.decode()
+
             # TODO: Write to file for logging and querying status
             return_code = popen.returncode
             self._on_process_finished(job_id, return_code, 0)
@@ -149,17 +160,27 @@ class AbstractInstaller:
                 res = {"stdout": stdout}
             return res
         else:
-            for line in popen.stdout:
-                self._on_output(line)
-                # print(line, end='')
+            # for line in popen.stdout:
+            #     self._on_output(line)
+            #     # print(line, end='')
 
-            for line in popen.stderr:
-                self._on_output(line)
-                # print(line, end='')
+            # for line in popen.stderr:
+            #     self._on_output(line)
+            #     # print(line, end='')
 
-            popen.stdout.close()
-            popen.stderr.close()
-            return_code = popen.wait()
+            # popen.stdout.close()
+            # popen.stderr.close()
+            # return_code = popen.wait()
+            
+            while True:
+                output = popen.stdout.readline()
+                if isinstance(output, bytes):
+                    output = output.decode()
+
+                if output == '' and popen.poll() is not None:
+                    break
+
+                return_code = popen.poll()
 
             self._on_process_finished(job_id, return_code, 0)
 
@@ -244,7 +265,10 @@ class CondaInstaller(AbstractInstaller):
         for channel in self._channels:
             cmd.extend(["-c", channel])
 
-        return tuple(cmd + list(pkg_list))
+        if pkg_list:
+            cmd.extend(pkg_list)
+
+        return tuple(cmd)
 
     # -------------------------- Public API ----------------------------------
     def info(self) -> Dict[Any, Any]:
@@ -253,79 +277,7 @@ class CondaInstaller(AbstractInstaller):
         res = cast(dict, self._queue_args(args, block=True))
         return res
 
-    def create(
-        self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
-    ) -> job_id:
-        """Create a new conda environment with `pkg_list` in `prefix`.
-
-        Parameters
-        ----------
-        pkg_list : Sequence[str]
-            List of packages to install on new environment.
-        prefix : str, optional
-            Optional prefix for new environment.
-
-        Returns
-        -------
-        job_id : int
-            ID that can be used to cancel the process.
-        """
-        return self._queue_args(self._get_create_args(pkg_list, prefix))
-
-    def remove(self, prefix) -> job_id:
-        """Remove a conda environment in `prefix`.
-
-        Parameters
-        ----------
-        prefix : str, optional
-            Optional prefix for new environment.
-
-        Returns
-        -------
-        job_id : int
-            ID that can be used to cancel the process.
-        """
-        return self._queue_args(self._get_remove_args(prefix))
-
-    def install(
-        self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
-    ) -> job_id:
-        """Install packages in `pkg_list` into `prefix`.
-
-        Parameters
-        ----------
-        pkg_list : Sequence[str]
-            List of packages to install.
-        prefix : Optional[str], optional
-            Optional prefix to install packages into.
-
-        Returns
-        -------
-        job_id : int
-            ID that can be used to cancel the process.
-        """
-        return self._queue_args(self._get_install_args(pkg_list, prefix))
-
-    def uninstall(
-        self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
-    ) -> job_id:
-        """Uninstall packages in `pkg_list` from `prefix`.
-
-        Parameters
-        ----------
-        pkg_list : Sequence[str]
-            List of packages to uninstall.
-        prefix : Optional[str], optional
-            Optional prefix from which to uninstall packages.
-
-        Returns
-        -------
-        job_id : int
-            ID that can be used to cancel the process.
-        """
-        return self._queue_args(self._get_uninstall_args(pkg_list, prefix))
-
-    def list(self, prefix: str, block=True) -> job_id:
+    def list(self, prefix: str, block=False) -> job_id:
         """List packages for `prefix`.
 
         Parameters
@@ -370,3 +322,83 @@ class CondaInstaller(AbstractInstaller):
             args.extend(["--lockfile", lockfile])
 
         return self._queue_args(args, bin="conda-lock", block=block)
+
+    def create(
+        self, prefix: str, *, pkg_list: Sequence[str] = (), block: bool = False
+    ) -> job_id:
+        """Create a new conda environment with `pkg_list` in `prefix`.
+
+        Parameters
+        ----------
+        pkg_list : Sequence[str]
+            List of packages to install on new environment.
+        prefix : str, optional
+            Optional prefix for new environment.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
+        return self._queue_args(self._get_create_args(pkg_list, prefix), block=block)
+
+    def remove(self, prefix: str, block: bool = False) -> job_id:
+        """Remove a conda environment in `prefix`.
+
+        Parameters
+        ----------
+        prefix : str, optional
+            Optional prefix for new environment.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
+        return self._queue_args(self._get_remove_args(prefix), block=block)
+
+    def install(
+        self,
+        pkg_list: Sequence[str],
+        *,
+        prefix: Optional[str] = None,
+        block: bool = False,
+    ) -> job_id:
+        """Install packages in `pkg_list` into `prefix`.
+
+        Parameters
+        ----------
+        pkg_list : Sequence[str]
+            List of packages to install.
+        prefix : Optional[str], optional
+            Optional prefix to install packages into.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
+        return self._queue_args(self._get_install_args(pkg_list, prefix), block=block)
+
+    def uninstall(
+        self,
+        pkg_list: Sequence[str],
+        *,
+        prefix: Optional[str] = None,
+        block: bool = False,
+    ) -> job_id:
+        """Uninstall packages in `pkg_list` from `prefix`.
+
+        Parameters
+        ----------
+        pkg_list : Sequence[str]
+            List of packages to uninstall.
+        prefix : Optional[str], optional
+            Optional prefix from which to uninstall packages.
+
+        Returns
+        -------
+        job_id : int
+            ID that can be used to cancel the process.
+        """
+        return self._queue_args(self._get_uninstall_args(pkg_list, prefix), block=block)

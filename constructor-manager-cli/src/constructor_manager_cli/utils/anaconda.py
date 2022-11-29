@@ -2,10 +2,9 @@
 
 import re
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
-from constructor_manager_cli.utils.packages import normalized_name
 from constructor_manager_cli.utils.request import get_request
 from constructor_manager_cli.utils.versions import sort_versions
 
@@ -37,7 +36,7 @@ def conda_package_data(
 @lru_cache
 def conda_package_versions(
     package_name: str,
-    build: str,
+    build: Optional[str] = None,
     channels: List[str] = [DEFAULT_CHANNEL],
     reverse: bool = False,
 ) -> List[str]:
@@ -85,27 +84,3 @@ def conda_package_versions(
             )
 
     return sort_versions(set(versions), reverse=reverse)
-
-
-@lru_cache
-def plugin_versions(
-    url: str,
-) -> List[str]:
-    """Return information on package plugins from endpoint in json.
-
-    Parameters
-    ----------
-    url : str
-        Url to json endpoint.
-
-    Returns
-    -------
-    list of str
-        Package versions.
-    """
-    response = get_request(url)
-    plugins = []
-    for key in response.json():
-        plugins.append(normalized_name(key))
-
-    return list(sorted(plugins))

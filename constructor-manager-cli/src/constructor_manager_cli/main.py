@@ -231,8 +231,6 @@ def _handle_excecute(args, lock, lock_created=None):
     lock_created: bool, optional
         Whether the lock was created or not, by default ``None``.
     """
-    _execute(args, lock, lock_created)
-    return
     try:
         _execute(args, lock, lock_created)
     except Exception as e:

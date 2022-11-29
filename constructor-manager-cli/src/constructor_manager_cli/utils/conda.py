@@ -2,11 +2,9 @@
 
 import sys
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple
 
 from conda.models.match_spec import MatchSpec  # type: ignore
-from constructor_manager_cli.installer import CondaInstaller
-from constructor_manager_cli.utils.packages import sentinel_file_name
 
 
 def parse_conda_version_spec(package: str) -> Tuple[str, str, str]:
@@ -39,35 +37,6 @@ def parse_conda_version_spec(package: str) -> Tuple[str, str, str]:
         version = ""
 
     return package_name, version, build_string
-
-
-def check_if_constructor_app(package_name, path=None) -> bool:
-    """FIXME:"""
-    if path is None:
-        path = Path(sys.prefix)
-
-    return (path.parent.parent / sentinel_file_name(package_name)).exists()
-
-
-def check_if_conda_environment(
-    path: Union[Optional[Path], Optional[str]] = None
-) -> bool:
-    """Check if path is a conda environment.
-
-    Parameters
-    ----------
-    path : str, optional
-        If `None` then check if current process is running in a conda
-        environment.
-
-    Returns
-    -------
-    bool
-    """
-    if path is None:
-        path = Path(sys.prefix)
-
-    return (Path(path) / "conda-meta" / "history").exists()
 
 
 def get_base_prefix() -> Path:
@@ -110,39 +79,3 @@ def get_prefix_by_name(name: Optional[str] = None) -> Path:
         return base_prefix
     else:
         return base_prefix / "envs" / name
-
-
-def list_packages2(prefix: str, plugins: Optional[List] = None):
-    """List packages in a conda environment.
-
-    Optionally filter by plugin list.
-
-    Parameters
-    ----------
-    prefix : str
-        The conda environment prefix.
-    plugins : list, optional
-        List of plugins to filter by.
-
-    Returns
-    -------
-    list
-        List of packages in the environment.
-    """
-    packages = []
-    for path in (Path(prefix) / "conda-meta").iterdir():
-        if path.is_file() and path.name.endswith(".json"):
-            parts = path.name.rsplit("-")
-            b, v, name = parts[-1], parts[-2], "-".join(parts[:-2])
-            b = b.replace(".json", "")
-            packages.append((name, v, b))
-
-    if plugins is not None:
-        packages = [pkg for pkg in packages if pkg[0] in plugins]
-
-    return packages
-
-
-def list_packages():
-    installer = CondaInstaller()
-    print("hello", installer.list(sys.prefix))
