@@ -33,6 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          cd constructor-manager-ui
           pip install -e ".[typing]"
           pip list
 

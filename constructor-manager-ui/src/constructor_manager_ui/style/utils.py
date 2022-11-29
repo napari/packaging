@@ -38,6 +38,7 @@ def update_styles(app: QApplication):
 
 def generate_resource_file():
     # Generate QRC file
+    print("\nCreating QRC file...")
     lines = ['<!DOCTYPE RCC>\n<RCC version="1.0">\n<qresource>']
     template = "    <file>{file}</file>"
     for file in sorted(IMAGES.iterdir()):
@@ -49,15 +50,13 @@ def generate_resource_file():
         fh.write("\n".join(lines))
 
     # Generate resources file from QRC file
+    print("Generating resources file from QRC file...")
     check_call(["pyrcc5", "images.qrc", "-o", "images.py"], cwd=CWD)
 
     # Replace PyQt5 imports with qtpy
+    print("Fxing import on resources file...\n")
     with open(IMAGES_PY) as fh:
         data = fh.read()
 
     with open(IMAGES_PY, "w") as fh:
         fh.write(data.replace("from PyQt5 import QtCore", "from qtpy import QtCore"))
-
-
-if __name__ == "__main__":
-    generate_resource_file()
