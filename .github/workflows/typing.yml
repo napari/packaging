@@ -45,5 +45,7 @@ jobs:
           cd src
           mypy constructor_manager_ui --always-true=PYQT5 --always-false=PYSIDE2 --always-false=PYQT6 --always-false=PYSIDE6
           pip uninstall pyqt5 -y
+          cd ..
+          cd src
           pip install -e ".[pyside2]"
           mypy constructor_manager_ui --always-false=PYQT5 --always-true=PYSIDE2 --always-false=PYQT6 --always-false=PYSIDE6

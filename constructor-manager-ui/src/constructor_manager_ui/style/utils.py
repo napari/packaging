@@ -47,7 +47,7 @@ def generate_resource_file():
     lines.append("</qresource>\n</RCC>\n")
     new_data = "\n".join(lines)
 
-    with open(IMAGES_QRC, "r") as fh:
+    with open(IMAGES_QRC) as fh:
         current_data = fh.read()
 
     if current_data != new_data:
