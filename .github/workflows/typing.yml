@@ -1,0 +1,42 @@
+name: typing
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'constructor-manager/**'
+      - 'constructor-manager-cli/**'
+      - 'constructor-manager-ui/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: ${{ matrix.platform }} py${{ matrix.python-version }}
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+        python-version: ['3.10']
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install mypy typing-extensions types-requests types-urllib3 typing-inspect mypy-extensions types-PyYAML
+          pip list
+
+      - name: Typing
+        run: |
+          cd constructor-manager-ui
+          mypy src
