@@ -15,7 +15,7 @@ IMAGES_QRC = CWD / "images.qrc"
 IMAGES_PY = CWD / "images.py"
 
 
-def _load_styles(stylesheet_file, style_variables: Dict = {}):
+def _load_styles(stylesheet_file, style_variables: Dict):
     style = stylesheet_file.read()
     for key, value in style_variables.items():
         style = style.replace(key, value)
