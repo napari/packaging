@@ -17,7 +17,7 @@ jobs:
     # this will run when you have tagged a commit, starting with "v*"
     # and requires that you have put your twine API key in your
     # github secrets (see readme for details)
-    if: ${{ github.repository == 'pyapp-kit/superqt' && contains(github.ref, 'tags') }}
+    if: ${{ github.repository == 'napari/packaging' && contains(github.ref, 'tags') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
