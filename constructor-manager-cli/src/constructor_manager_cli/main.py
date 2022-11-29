@@ -196,6 +196,7 @@ def _execute(args, lock, lock_created=None):
             print(json.dumps(res))
         elif args.command == "restore":
             res = restore(args.package, args.channel)
+            print(json.dumps(res))
         elif args.command == "rollback":
             res = check_updates(
                 args.package,
@@ -206,6 +207,7 @@ def _execute(args, lock, lock_created=None):
             print(json.dumps(res))
         elif args.command == "lock":
             res = lock_environment(args.package, args.channel)
+            print(json.dumps(res))
         elif args.command == "status":
             pass
         elif args.command == "clean":

@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Deque, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Deque, Dict, List, Optional, Sequence, Tuple, cast
 
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
 
@@ -247,9 +247,11 @@ class CondaInstaller(AbstractInstaller):
         return tuple(cmd + list(pkg_list))
 
     # -------------------------- Public API ----------------------------------
-    def info(self, prefix: Optional[str] = None) -> dict:
+    def info(self) -> Dict[Any, Any]:
         """Get conda info."""
-        return self._queue_args(["info", "--json"], block=True)
+        args = ["info", "--json"]
+        res = cast(dict, self._queue_args(args, block=True))
+        return res
 
     def create(
         self, pkg_list: Sequence[str], *, prefix: Optional[str] = None

@@ -189,7 +189,7 @@ def update(
     prefix = get_prefix_by_name(f"{package_name}-{current_version}")
     installer = CondaInstaller(channels=channels)
     packages = installer.list(str(prefix))
-    info = installer.info(str(prefix))
+    info = installer.info()
     platforms = (info.get("platform", ""),)
 
     # Save state of current environment using conda-lock
@@ -329,6 +329,9 @@ def restore(package: str, channels: Tuple[str] = (DEFAULT_CHANNEL,)):
         print("removing", broken_prefix)
         shutil.rmtree(broken_prefix)
 
+    # Create a lock file for the restored environment
+    lock_environment(f"{package_name}={current_version}", channels=channels)
+    create_sentinel_file(package_name, current_version)
     return installer._exit_codes[job_id_restore]
 
 
@@ -350,13 +353,12 @@ def lock_environment(
     yaml_spec = {"dependencies": [package]}
 
     package_name, current_version, _ = parse_conda_version_spec(package)
-    prefix = get_prefix_by_name(f"{package_name}-{current_version}")
     if not current_version:
         sys.stderr.write("Cannot lock environment without version number!")
         return 1
 
     if platforms is None:
-        info = installer.info(str(prefix))
+        info = installer.info()
         platforms = (info.get("platform", ""),)
 
     if channels:
