@@ -5,6 +5,7 @@ Handle (conda) constructor based bundled applications from the command line.
 ## Requirements
 
 - conda
+- conda-lock
 - mamba
 - packaging
 - requests
@@ -14,7 +15,7 @@ Handle (conda) constructor based bundled applications from the command line.
 This package needs to be installed on the `base` conda environemnt.
 
 ```bash
-conda install mamba packaging requests -c conda-forge -y
+conda install conda-lock mamba packaging requests -c conda-forge -y
 pip install -e .
 ```
 
@@ -25,7 +26,7 @@ pip install -e .
 #### For a given package
 
 ```bash
-constructor-manager check-updates napari=0.4.15 -c conda-forge
+constructor-manager check-updates "napari=0.4.15=*pyside*" -c conda-forge
 ```
 
 This will check for any updates available for the package named `napari`
@@ -353,6 +354,12 @@ mamba create -n napari-0.4.16 -c conda-forge "napari=0.4.16=*pyside*" -y
 
 ```python
 {'base_url': 'https://conda.anaconda.org/conda-forge', 'build_number': 0, 'build_string': 'pyhd8ed1ab_0', 'channel': 'conda-forge', 'dist_name': 'zipp-3.10.0-pyhd8ed1ab_0', 'name': 'zipp', 'platform': 'noarch', 'version': '3.10.0'}, {'base_url': 'https://conda.anaconda.org/conda-forge', 'build_number': 0, 'build_string': 'hac89ed1_0', 'channel': 'conda-forge', 'dist_name': 'zlib-ng-2.0.6-hac89ed1_0', 'name': 'zlib-ng', 'platform': 'osx-64', 'version': '2.0.6'}, {'base_url': 'https://conda.anaconda.org/conda-forge', 'build_number': 4, 'build_string': 'hfa58983_4', 'channel': 'conda-forge', 'dist_name': 'zstd-1.5.2-hfa58983_4', 'name': 'zstd', 'platform': 'osx-64', 'version': '1.5.2'}
+```
+
+### Lock
+
+```bash
+constructor-manager lock "napari=0.4.16=*pyside*" -c conda-forge
 ```
 
 ### Update and clean (and maybe launch?)

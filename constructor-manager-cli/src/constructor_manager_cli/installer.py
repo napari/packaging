@@ -106,8 +106,12 @@ class AbstractInstaller:
         raise ValueError(f"No job with id {job_id}")  # pragma: no cover
 
     # -------------------------- Private methods ------------------------------
-    def _queue_args(self, args, block=False) -> job_id:
-        args = (self._bin,) + args + (block,)
+    def _queue_args(self, args, bin=None, block=False) -> job_id:
+        if bin:
+            args = (bin,) + tuple(args) + (block,)
+        else:
+            args = (self._bin,) + tuple(args) + (block,)
+
         self._queue.append(args)
         res = self._process_queue()
         if res:
@@ -139,7 +143,11 @@ class AbstractInstaller:
             # TODO: Write to file for logging and querying status
             return_code = popen.returncode
             self._on_process_finished(job_id, return_code, 0)
-            return json.loads(stdout)
+            try:
+                res = json.loads(stdout)
+            except json.JSONDecodeError:
+                res = {"stdout": stdout}
+            return res
         else:
             for line in popen.stdout:
                 self._on_output(line)
@@ -182,10 +190,10 @@ class CondaInstaller(AbstractInstaller):
     """Conda installer."""
 
     def __init__(
-        self, use_mamba: bool = True, pinned=None, channel=DEFAULT_CHANNEL
+        self, use_mamba: bool = True, pinned=None, channels=(DEFAULT_CHANNEL,)
     ) -> None:
         self._pinned = pinned
-        self._channels = (channel,)
+        self._channels = channels
         super().__init__()
         self._bin = "mamba" if use_mamba and shutil.which("mamba") else "conda"
         self._default_prefix = (
@@ -239,6 +247,10 @@ class CondaInstaller(AbstractInstaller):
         return tuple(cmd + list(pkg_list))
 
     # -------------------------- Public API ----------------------------------
+    def info(self, prefix: Optional[str] = None) -> dict:
+        """Get conda info."""
+        return self._queue_args(["info", "--json"], block=True)
+
     def create(
         self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
     ) -> job_id:
@@ -328,7 +340,13 @@ class CondaInstaller(AbstractInstaller):
             ("list", "--prefix", str(prefix), "--json"), block=block
         )
 
-    def lock(self, yaml_spec: dict, block: bool = True) -> job_id:
+    def lock(
+        self,
+        env_path: str,
+        platforms: Optional[Tuple[str, ...]] = None,
+        lockfile: Optional[str] = None,
+        block: bool = False,
+    ) -> job_id:
         """List packages for `prefix`.
 
         Parameters
@@ -341,8 +359,12 @@ class CondaInstaller(AbstractInstaller):
         job_id : int
             ID that can be used to cancel the process.
         """
-        return 1
-        # TODO
-        # return self._queue_args(
-        #     ("list", "--prefix", str(yaml_spec), "--json"), block=block
-        # )
+        args = ["-f", env_path]
+        if platforms:
+            for platform in platforms:
+                args.extend(["-p", platform])
+
+        if lockfile:
+            args.extend(["--lockfile", lockfile])
+
+        return self._queue_args(args, bin="conda-lock", block=block)

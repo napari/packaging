@@ -118,7 +118,7 @@ def remove_sentinel_file(package_name, version):
 
 
 def get_config_path() -> Path:
-    return get_prefix_by_name("base") / "constructor-manager"
+    return get_prefix_by_name("base") / "var" / "constructor-manager"
 
 
 def get_state_path() -> Path:
@@ -135,6 +135,10 @@ def get_log_path() -> Path:
 
 def get_status_path() -> Path:
     return get_config_path() / "status"
+
+
+def get_env_path() -> Path:
+    return get_config_path() / "env"
 
 
 def save_state_file(application, packages, channel, dev, plugins):

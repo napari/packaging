@@ -6,10 +6,16 @@ import os
 import sys
 import time
 import traceback
+from typing import Any, Tuple
 
-from constructor_manager_cli.actions import check_updates, restore, update
+from constructor_manager_cli.actions import (
+    check_updates,
+    lock_environment,
+    restore,
+    update,
+)
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
-from constructor_manager_cli.utils.conda import get_base_prefix
+from constructor_manager_cli.utils.io import get_lock_path
 from constructor_manager_cli.utils.locking import FilesystemLock
 
 
@@ -50,8 +56,8 @@ def _create_subparser(
         subparser.add_argument(
             "--channel",
             "-c",
-            type=str,
-            default=DEFAULT_CHANNEL,
+            action="append",
+            default=[DEFAULT_CHANNEL],
         )
 
     if plugins:
@@ -120,6 +126,10 @@ def _create_parser():
         launch=True,
     )
 
+    # Lock the environemnt using conda-lock
+    lock = subparsers.add_parser("lock")
+    lock = _create_subparser(lock, channel=True)
+
     # Restore a current broken version
     restore = subparsers.add_parser("restore")
     restore = _create_subparser(restore, channel=True)
@@ -128,16 +138,16 @@ def _create_parser():
     rollback = subparsers.add_parser("rollback")
     rollback = _create_subparser(rollback, channel=True)
 
+    # Get current status of the installer (update in progress?)
+    status = subparsers.add_parser("status")
+    status = _create_subparser(status)
+
     # Clean any broken or stale environments
     clean = subparsers.add_parser("clean")
     clean = _create_subparser(clean)
 
     clean_lock = subparsers.add_parser("clean-lock")
     clean_lock = _create_subparser(clean_lock)
-
-    # Get current status of the installer (update in progress?)
-    status = subparsers.add_parser("status")
-    status = _create_subparser(status)
 
     return parser
 
@@ -194,6 +204,8 @@ def _execute(args, lock, lock_created=None):
                 args.channel,
             )
             print(json.dumps(res))
+        elif args.command == "lock":
+            res = lock_environment(args.package, args.channel)
         elif args.command == "status":
             pass
         elif args.command == "clean":
@@ -217,6 +229,8 @@ def _handle_excecute(args, lock, lock_created=None):
     lock_created: bool, optional
         Whether the lock was created or not, by default ``None``.
     """
+    _execute(args, lock, lock_created)
+    return
     try:
         _execute(args, lock, lock_created)
     except Exception as e:
@@ -226,6 +240,16 @@ def _handle_excecute(args, lock, lock_created=None):
             sys.stderr.write(str({"data": {}, "error": traceback.format_exc()}))
 
 
+def _dedup(items: Tuple[Any, ...]) -> Tuple[Any, ...]:
+    """Deduplicate an list of items."""
+    new_items: Tuple[Any, ...] = ()
+    for item in items:
+        if item not in new_items:
+            new_items += (item,)
+
+    return new_items
+
+
 def main():
     """Main function."""
     parser = _create_parser()
@@ -233,10 +257,13 @@ def main():
     if args.command is None:
         args = parser.parse_args(["-h"])
 
+    if "channel" in args:
+        args.channel = _dedup(args.channel)
+
     # Try to create lock file
-    constructor_manager_dir = get_base_prefix() / "constructor-manager" / "locks"
+    constructor_manager_dir = get_lock_path()
     constructor_manager_dir.mkdir(parents=True, exist_ok=True)
-    lock_file = constructor_manager_dir / "constructor-updater.lock"
+    lock_file = constructor_manager_dir / "constructor-manager.lock"
 
     lock = FilesystemLock(lock_file)
     # Try to lock the lock filelock. If it's *possible* to do it, then

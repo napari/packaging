@@ -1,9 +1,12 @@
 """Constructor manager actions."""
-
+import datetime
+import glob
 import os
 import shutil
-from typing import Dict, List, Optional
+import sys
+from typing import Dict, List, Optional, Tuple
 
+import yaml
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
 from constructor_manager_cli.installer import CondaInstaller
 from constructor_manager_cli.utils.anaconda import (
@@ -17,14 +20,14 @@ from constructor_manager_cli.utils.conda import (
 from constructor_manager_cli.utils.io import (
     create_sentinel_file,
     get_broken_envs,
+    get_env_path,
     get_installed_versions,
+    get_state_path,
     remove_sentinel_file,
-    save_state_file,
 )
 from constructor_manager_cli.utils.versions import (
     is_stable_version,
     parse_version,
-    sort_versions,
 )
 
 
@@ -33,7 +36,7 @@ def _create_with_plugins(
     version: str,
     build_string: str,
     plugins: List[str] = [],
-    channel: str = DEFAULT_CHANNEL,
+    channels: Tuple[str] = (DEFAULT_CHANNEL,),
 ):
     """Update the package.
 
@@ -43,8 +46,8 @@ def _create_with_plugins(
         The package name and version spec.
     plugins : list
         List of plugins to install.
-    channel : str
-        The channel to install the package from.
+    channels : tuple of  str
+        The channels to install the package from.
 
     Returns
     -------
@@ -54,7 +57,7 @@ def _create_with_plugins(
     # package_name, version = parse_conda_version_spec(package)
     spec = f"{package_name}={version}=*{build_string}*"
     prefix = get_prefix_by_name(f"{package_name}-{version}")
-    installer = CondaInstaller(pinned=spec, channel=channel)
+    installer = CondaInstaller(pinned=spec, channels=channels)
     if plugins is not None:
         packages = [spec] + plugins
 
@@ -67,7 +70,7 @@ def _create_with_plugins_one_by_one(
     version: str,
     build_string: str,
     plugins: List[str] = [],
-    channel: str = DEFAULT_CHANNEL,
+    channels: Tuple[str] = (DEFAULT_CHANNEL,),
 ):
     """Update the package.
 
@@ -77,8 +80,8 @@ def _create_with_plugins_one_by_one(
         The package name and version spec.
     plugins : list
         List of plugins to install.
-    channel : str
-        The channel to install the package from.
+    channels : tuple of str
+        The channels to install the package from.
 
     Returns
     -------
@@ -87,7 +90,7 @@ def _create_with_plugins_one_by_one(
     """
     spec = f"{package_name}={version}=*{build_string}*"
     prefix = get_prefix_by_name(f"{package_name}-{version}")
-    installer = CondaInstaller(pinned=spec, channel=channel)
+    installer = CondaInstaller(pinned=spec, channels=channels)
 
     job_id = installer.create([spec], prefix=str(prefix))
     for plugin in plugins:
@@ -99,7 +102,7 @@ def _create_with_plugins_one_by_one(
 def check_updates(
     package: str,
     dev: bool = False,
-    channel: str = DEFAULT_CHANNEL,
+    channels: Tuple[str] = (DEFAULT_CHANNEL,),
 ) -> Dict:
     """Check for package updates.
 
@@ -109,9 +112,9 @@ def check_updates(
         The package name to check for new version.
     dev : bool, optional
         If ``True``, check for development versions. Default is ``False``.
-    channel : str, optional
-        Check for available versions on this channel. Default is
-        ``conda-forge``.
+    channels : tuple of str, optional
+        Check for available versions on these channels. Default is
+        ``('conda-forge', )``.
 
     Returns
     -------
@@ -119,22 +122,26 @@ def check_updates(
         Dictionary containing the current and latest versions, found
         installed versions and the installer type used.
     """
-    package_name, current_version, _ = parse_conda_version_spec(package)
-    versions = conda_package_versions(package_name, channel=channel)
-    versions = sort_versions(versions)
+    package_name, current_version, build = parse_conda_version_spec(package)
+    versions = conda_package_versions(
+        package_name, build=build, channels=channels, reverse=True
+    )
     if not dev:
         versions = list(filter(is_stable_version, versions))
 
     update = False
-    latest_version = versions[-1] if versions else ""
+    latest_version = versions[0] if versions else ""
     installed_versions_builds = get_installed_versions(package_name)
     installed_versions = [vb[0] for vb in installed_versions_builds]
     update = parse_version(latest_version) > parse_version(current_version)
     filtered_version = versions[:]
-    previous_version = ""
+    previous_version: Optional[str] = None
     if current_version in filtered_version:
         index = filtered_version.index(current_version)
-        previous_version = filtered_version[index - 1]
+        if (index + 1) < len(filtered_version):
+            previous_version = filtered_version[index + 1]
+        else:
+            previous_version = None
 
     return {
         "available_versions": versions,
@@ -151,7 +158,7 @@ def check_updates(
 def update(
     package: str,
     dev: bool = False,
-    channel: str = DEFAULT_CHANNEL,
+    channels: Tuple[str] = (DEFAULT_CHANNEL,),
     plugins: Optional[List[str]] = None,
     plugins_url: Optional[str] = None,
 ):
@@ -163,8 +170,8 @@ def update(
         The package name and version spec.
     plugins : list
         List of plugins to install.
-    channel : str
-        The channel to install the package from.
+    channels : tuple of str
+        The channels to install the package from.
 
     Returns
     -------
@@ -172,7 +179,7 @@ def update(
         The return code of the installer.
     """
     package_name, current_version, build_string = parse_conda_version_spec(package)
-    data = check_updates(package, dev=dev, channel=channel)
+    data = check_updates(package, dev=dev, channels=channels)
     latest_version = data["latest_version"]
 
     available_plugins = []
@@ -180,11 +187,13 @@ def update(
         available_plugins = plugin_versions(plugins_url)
 
     prefix = get_prefix_by_name(f"{package_name}-{current_version}")
-    installer = CondaInstaller(channel=channel)
+    installer = CondaInstaller(channels=channels)
     packages = installer.list(str(prefix))
+    info = installer.info(str(prefix))
+    platforms = (info.get("platform", ""),)
 
     # Save state of current environment using conda-lock
-    save_state_file(package_name, packages, channel, dev, available_plugins)
+    lock_environment(package, channels=channels, platforms=platforms)
 
     filtered_packages: List[str] = []
     for item in packages:  # type: ignore
@@ -194,7 +203,7 @@ def update(
             filtered_packages.append(name)
 
     return_code = _create_with_plugins(
-        package_name, latest_version, build_string, filtered_packages, channel=channel
+        package_name, latest_version, build_string, filtered_packages, channels=channels
     )
 
     if bool(return_code):
@@ -204,10 +213,13 @@ def update(
             latest_version,
             build_string,
             filtered_packages,
-            channel=channel,
+            channels=channels,
         )
 
     if not bool(return_code):
+        lock_environment(
+            f"{package_name}={latest_version}", channels=channels, platforms=platforms
+        )
         create_sentinel_file(package_name, latest_version)
 
 
@@ -222,20 +234,18 @@ def clean_all(package):
     package_name : str
         Name of the package.
     """
-    package_name, _ = parse_conda_version_spec(package)
-    # Try to remove using conda/mamba
+    package_name, _, _ = parse_conda_version_spec(package)
     installer = CondaInstaller()
     failed = []
     for prefix in get_broken_envs(package_name):
+        # Try to remove using conda/mamba
         job_id = installer.remove(prefix)
         if installer._exit_codes[job_id]:
             failed.append(prefix)
 
     # Otherwise remove the folders manually
     for prefix in failed:
-        pass
-        # print("removing", prefix)
-        # shutil.rmtree(path)
+        shutil.rmtree(prefix)
 
 
 def check_updates_clean_and_launch(
@@ -284,20 +294,21 @@ def remove(package: str):
         shutil.rmtree(prefix)
 
 
-def restore(package: str, channel: str = DEFAULT_CHANNEL):
+def restore(package: str, channels: Tuple[str] = (DEFAULT_CHANNEL,)):
     """Restore specific environment of a given package.
 
     Parameters
     ----------
     package : str
         Name of the package.
-    channel : str, optional
-        Check for available versions on this channel. Default is ``conda-forge``
+    channels : tuple of str, optional
+        Check for available versions on these channels.
+        Default is ``('conda-forge', )``.
     """
     package_name, current_version, _ = parse_conda_version_spec(package)
     env_name = f"{package_name}-{current_version}"
     prefix = str(get_prefix_by_name(env_name))
-    installer = CondaInstaller(channel=channel)
+    installer = CondaInstaller(channels=channels)
     job_id_remove = None
     broken_prefix = ""
 
@@ -324,3 +335,63 @@ def restore(package: str, channel: str = DEFAULT_CHANNEL):
 def status():
     """ """
     # TODO
+
+
+def lock_environment(
+    package: str,
+    channels: Tuple[str] = (DEFAULT_CHANNEL,),
+    platforms: Optional[Tuple[str]] = None,
+):
+    """Lock the environment, using conda lock.
+
+    TODO
+    """
+    installer = CondaInstaller(channels=channels)
+    yaml_spec = {"dependencies": [package]}
+
+    package_name, current_version, _ = parse_conda_version_spec(package)
+    prefix = get_prefix_by_name(f"{package_name}-{current_version}")
+    if not current_version:
+        sys.stderr.write("Cannot lock environment without version number!")
+        return 1
+
+    if platforms is None:
+        info = installer.info(str(prefix))
+        platforms = (info.get("platform", ""),)
+
+    if channels:
+        yaml_spec["channels"] = list(channels)
+
+    date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    lockfile = get_state_path() / f"{package_name}-{current_version}-{date}-lock.yaml"
+
+    envs_path = get_env_path()
+    envs_path.mkdir(parents=True, exist_ok=True)
+    env_path = envs_path / f"{package_name}-{current_version}-environment.yaml"
+    with open(env_path, "w") as f:
+        yaml.dump(yaml_spec, f)
+
+    installer.lock(
+        str(env_path), platforms=platforms, lockfile=str(lockfile), block=True
+    )
+
+    with open(lockfile) as fh:
+        lines = fh.read().split("\n")
+
+    lines = [line for line in lines if not line.startswith("#")]
+    with open(lockfile, "w") as fh:
+        data = "\n".join(lines)
+        fh.write(data)
+
+    # Check if a file mathcing the lockfile already exists with same content
+    filepaths = glob.glob(
+        str(get_state_path() / f"{package_name}-{current_version}-*-lock.yaml")
+    )
+    for filepath in sorted(filepaths, reverse=True):
+        with open(filepath) as fh:
+            if str(lockfile) != filepath and fh.read() == data:
+                lockfile.unlink()
+                break
+
+    # return installer._exit_codes[id]
+    return "1"
