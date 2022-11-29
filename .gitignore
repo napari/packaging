@@ -161,4 +161,5 @@ cython_debug/
 
 _work/
 
-.DS_Store
+# OS stuff
+.DS_store
