@@ -39,4 +39,8 @@ jobs:
       - name: Typing
         run: |
           cd constructor-manager-ui
+          pip install -e ".[testing]"
+          pip install -e ".[pyqt5]"
+          mypy src
+          pip install -e ".[pyside2]"
           mypy src
