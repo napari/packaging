@@ -56,6 +56,7 @@ def generate_resource_file():
 
     # Generate resources file from QRC file
     print("Generating resources file from QRC file...")
+    # TODO: ensure it works with the different bindings
     check_call(["pyrcc5", "images.qrc", "-o", "images.py"], cwd=CWD)
 
     # Replace PyQt5 imports with qtpy
