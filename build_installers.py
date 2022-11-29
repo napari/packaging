@@ -47,16 +47,15 @@ import sys
 import zipfile
 from argparse import ArgumentParser
 from distutils.spawn import find_executable
+from functools import lru_cache, partial
 from pathlib import Path
+from subprocess import check_call, check_output
 from tempfile import NamedTemporaryFile
 from textwrap import dedent, indent
-from functools import lru_cache, partial
-from subprocess import check_call, check_output
-
-import requests
-from ruamel.yaml import YAML
 
 import napari
+import requests
+from ruamel.yaml import YAML
 
 yaml = YAML()
 yaml.indent(mapping=2)
@@ -111,7 +110,7 @@ def _version():
         return version
     else:
         # get latest published on conda-forge
-        r = requests.get(f"https://api.anaconda.org/package/conda-forge/napari")
+        r = requests.get("https://api.anaconda.org/package/conda-forge/napari")
         r.raise_for_status()
         return r.json()["latest_version"]
 
@@ -357,7 +356,8 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         raise RuntimeError("Constructor must be installed and in PATH.")
 
     # TODO: temporarily patching password - remove block when the secret has been fixed
-    # (I think it contains an ending newline or something like that, copypaste artifact?)
+    # (I think it contains an ending newline or something like that,
+    # copypaste artifact?)
     pfx_password = os.environ.get("CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD")
     if pfx_password:
         os.environ["CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD"] = pfx_password.strip()

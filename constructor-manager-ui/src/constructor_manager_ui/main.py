@@ -23,16 +23,12 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-# To setup image resources for .qss file
-from constructor_manager_ui.style import images
-from constructor_manager_ui.style.utils import update_styles
-
-# To get mock data
 from constructor_manager_ui.data import (
     INSTALL_INFORMATION,
-    UPDATE_AVAILABLE_VERSION,
     PACKAGES,
+    UPDATE_AVAILABLE_VERSION,
 )
+from constructor_manager_ui.style.utils import update_styles
 
 # Packages table constants
 RELATED_PACKAGES = 0
@@ -136,14 +132,10 @@ class UpdateWidget(QWidget):
 
         # Connect buttons signals to parent class signals
         skip_version_button.clicked.connect(
-            lambda checked: self.skip_version.emit(
-                self.update_available_version
-            )
+            lambda checked: self.skip_version.emit(self.update_available_version)
         )
         install_version_button.clicked.connect(
-            lambda checked: self.install_version.emit(
-                self.update_available_version
-            )
+            lambda checked: self.install_version.emit(self.update_available_version)
         )
 
     def show_checking_updates_message(self):
@@ -159,9 +151,7 @@ class UpdateWidget(QWidget):
 
 
 class PackagesTable(QTableWidget):
-    def __init__(
-        self, packages, visible_packages=RELATED_PACKAGES, parent=None
-    ):
+    def __init__(self, packages, visible_packages=RELATED_PACKAGES, parent=None):
         super().__init__(parent=parent)
         self.packages = packages
         self.visible_packages = visible_packages
@@ -186,9 +176,7 @@ class PackagesTable(QTableWidget):
         self.verticalHeader().setVisible(False)
 
         # Set horizontal headers alignment and config
-        self.horizontalHeader().setDefaultAlignment(
-            Qt.AlignLeft | Qt.AlignVCenter
-        )
+        self.horizontalHeader().setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
@@ -205,22 +193,11 @@ class PackagesTable(QTableWidget):
         for name, version, source, build, related_package in self.packages:
             self.insertRow(self.rowCount())
             package_row = self.rowCount() - 1
-            self.setItem(
-                package_row, 0, self._create_item(name, related_package)
-            )
-            self.setItem(
-                package_row, 1, self._create_item(version, related_package)
-            )
-            self.setItem(
-                package_row, 2, self._create_item(source, related_package)
-            )
-            self.setItem(
-                package_row, 3, self._create_item(build, related_package)
-            )
-            if (
-                self.visible_packages == RELATED_PACKAGES
-                and not related_package
-            ):
+            self.setItem(package_row, 0, self._create_item(name, related_package))
+            self.setItem(package_row, 1, self._create_item(version, related_package))
+            self.setItem(package_row, 2, self._create_item(source, related_package))
+            self.setItem(package_row, 3, self._create_item(build, related_package))
+            if self.visible_packages == RELATED_PACKAGES and not related_package:
                 self.hideRow(package_row)
 
     def change_visible_packages(self, toggled_option):
@@ -315,9 +292,7 @@ class InstallationManagerDialog(QDialog):
 
         packages_filter_layout = QHBoxLayout()
         packages_filter_label = QLabel("Show:")
-        self.packages_spinner_label = SpinnerWidget(
-            "Loading packages...", parent=self
-        )
+        self.packages_spinner_label = SpinnerWidget("Loading packages...", parent=self)
         show_detailed_view_checkbox = QCheckBox("Detailed view")
         show_detailed_view_checkbox.setChecked(False)
 
@@ -412,9 +387,7 @@ class InstallationManagerDialog(QDialog):
         self.updates_widget.show_up_to_date_message()
 
     def show_update_available_message(self, update_available_version):
-        self.updates_widget.show_update_available_message(
-            update_available_version
-        )
+        self.updates_widget.show_update_available_message(update_available_version)
 
     def install_version(self, update_version):
         # TODO: To be handled with the backend.
@@ -471,9 +444,7 @@ def main(package_name):
     # Change commented lines to check different UI update widget states
     def data_initialization():
         installation_manager_dlg.set_packages(PACKAGES)
-        installation_manager_dlg.show_update_available_message(
-            UPDATE_AVAILABLE_VERSION
-        )
+        installation_manager_dlg.show_update_available_message(UPDATE_AVAILABLE_VERSION)
         # installation_manager_dlg.show_up_to_date_message()
 
     QTimer.singleShot(5000, data_initialization)
