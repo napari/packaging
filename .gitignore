@@ -163,3 +163,6 @@ _work/
 
 # OS stuff
 .DS_store
+
+# written by setuptools_scm
+**/_version.py
