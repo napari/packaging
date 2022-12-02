@@ -38,7 +38,7 @@ CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD:
     Password to unlock the PFX certificate. This is not used here but
     it might be needed by constructor.
 """
-
+import atexit
 import importlib.metadata
 import json
 import os
@@ -119,8 +119,6 @@ OUTPUT_FILENAME = f"{APP}-{_version()}-{OS}-{ARCH}.{EXT}"
 INSTALLER_DEFAULT_PATH_STEM = os.environ.get(
     "CONSTRUCTOR_INSTALLER_DEFAULT_PATH_STEM", f"{APP}-{_version()}"
 )
-clean_these_files = []
-
 
 def _generate_background_images(installer_type, outpath="./", napari_repo=HERE):
     """Requires pillow"""
@@ -140,20 +138,20 @@ def _generate_background_images(installer_type, outpath="./", napari_repo=HERE):
         sidebar.paste(logo.resize((101, 101)), (32, 180))
         output = Path(outpath, "napari_164x314.png")
         sidebar.save(output, format="png")
-        clean_these_files.append(output)
+        atexit.register(os.unlink, output)
 
         banner = Image.new("RGBA", (150, 57), (0, 0, 0, 0))
         banner.paste(logo.resize((44, 44)), (8, 6))
         output = Path(outpath, "napari_150x57.png")
         banner.save(output, format="png")
-        clean_these_files.append(output)
+        atexit.register(os.unlink, output)
 
     if installer_type in ("pkg", "all"):
         background = Image.new("RGBA", (1227, 600), (0, 0, 0, 0))
         background.paste(logo.resize((148, 148)), (95, 418))
         output = Path(outpath, "napari_1227x600.png")
         background.save(output, format="png")
-        clean_these_files.append(output)
+        atexit.register(os.unlink, output)
 
 
 def _get_condarc():
@@ -189,6 +187,7 @@ def _get_conda_meta_state():
     }
     with NamedTemporaryFile(delete=False, mode="w+") as f:
         json.dump(data, f)
+    atexit.register(os.unlink, f.name)
     return f.name
 
 
@@ -196,7 +195,7 @@ def _base_env(python_version=PY_VER):
     return {
         "name": "base",
         "channels": [
-            "napari/label/bundle_tools",
+            "napari/label/bundle_tools_2",
             "conda-forge",
         ],
         "specs": [
@@ -255,12 +254,12 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         "menu_packages": [
             "napari-menu",
         ],
-        "extra_files": {
-            os.path.join(resources, "bundle_readme.md"): "README.txt",
-            empty_file.name: ".napari_is_bundled_constructor",
-            condarc: ".condarc",
-            env_state: os.path.join("envs", napari_env["name"], "conda-meta", "state"),
-        },
+        "extra_files": [
+            {os.path.join(resources, "bundle_readme.md"): "README.txt"},
+            {empty_file.name: ".napari_is_bundled_constructor"},
+            {condarc: ".condarc"},
+            {env_state: os.path.join("envs", napari_env["name"], "conda-meta", "state")},
+        ],
     }
     if _use_local():
         definitions["channels"].insert(0, "local")
@@ -280,7 +279,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         definitions["welcome_image"] = os.path.join(resources, "napari_1227x600.png")
         welcome_text_tmpl = (Path(resources) / "osx_pkg_welcome.rtf.tmpl").read_text()
         welcome_file = Path(resources) / "osx_pkg_welcome.rtf"
-        clean_these_files.append(welcome_file)
+        atexit.register(os.unlink, welcome_file)
         welcome_file.write_text(welcome_text_tmpl.replace("__VERSION__", version))
         definitions["welcome_file"] = str(welcome_file)
         definitions["conclusion_text"] = ""
@@ -326,10 +325,10 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             napari_repo=napari_repo,
         )
 
-    clean_these_files.append("construct.yaml")
-    clean_these_files.append(empty_file.name)
-    clean_these_files.append(condarc)
-    clean_these_files.append(env_state)
+    atexit.register(os.unlink, "construct.yaml")
+    atexit.register(os.unlink, empty_file.name)
+    atexit.register(os.unlink, condarc)
+    atexit.register(os.unlink, env_state)
 
     return definitions
 
@@ -427,11 +426,6 @@ def main(extra_specs=None, napari_repo=HERE):
         _constructor(extra_specs=extra_specs, napari_repo=napari_repo)
         assert Path(OUTPUT_FILENAME).exists(), f"{OUTPUT_FILENAME} was not created!"
     finally:
-        for path in clean_these_files:
-            try:
-                os.unlink(path)
-            except OSError:
-                print("!! Could not remove", path, file=sys.stderr)
         os.chdir(cwd)
     return workdir / OUTPUT_FILENAME
 

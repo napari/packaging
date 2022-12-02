@@ -135,13 +135,15 @@ jobs:
         id: artifact-id
         run: |
           name=pkgs-napari-${{ env.NAPARI_VERSION }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
-          echo "::set-output name=name::${name}"
+          echo "name=${name}" >> $GITHUB_OUTPUT
 
       - name: Upload packages as artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.artifact-id.outputs.name }}
-          path: ${{ github.workspace }}${{ env.conda_bld_suffix }}noarch/*.tar.bz2
+          path: |
+            ${{ github.workspace }}${{ env.conda_bld_suffix }}noarch/*.tar.bz2
+            ${{ github.workspace }}${{ env.conda_bld_suffix }}noarch/*.conda
 
       - name: Check token availability
         run: |
@@ -165,7 +167,7 @@ jobs:
             --skip-existing \
             -u napari \
             $label_args \
-            ${GITHUB_WORKSPACE}${conda_bld_suffix}noarch/*.tar.bz2
+            ${GITHUB_WORKSPACE}${conda_bld_suffix}noarch/*.{conda,tar.bz2}
 
   prepare_matrix:
     # See this SO answer for details on conditional matrices
@@ -175,6 +177,8 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
       - name: Prepare matrix
         id: set-matrix
         shell: python
@@ -184,7 +188,7 @@ jobs:
 
           elements = [
             {
-              "os": "ubuntu-18.04",
+              "os": "ubuntu-latest",
               "python-version": "3.9",
               "target-platform": "linux-64",
             },
@@ -248,6 +252,7 @@ jobs:
           fetch-depth: 0
           repository: napari/napari
           path: napari-source
+          ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: install micromamba
         uses: mamba-org/provision-with-micromamba@main
@@ -280,7 +285,7 @@ jobs:
         shell: bash -el {0}
         working-directory: napari-packaging
         run: |
-          pkgs=$(shopt -s nullglob dotglob; echo "${CONDA_BLD_PATH}/noarch/*.tar.bz2")
+          pkgs=$(shopt -s nullglob dotglob; echo "${CONDA_BLD_PATH}/noarch/*.tar.bz2" "${CONDA_BLD_PATH}/noarch/*.conda")
           if (( ${#pkgs} )); then
             conda index "${CONDA_BLD_PATH}"
             conda search -c local --override-channels
@@ -311,9 +316,9 @@ jobs:
 
           host_platform=$(conda info --json | jq -r .platform)
           if [[ "$host_platform" != "$CONSTRUCTOR_TARGET_PLATFORM" ]]; then
-            prefix="${RUNNER_TEMP}/conda-exe"
+            prefix="${RUNNER_TEMP}/conda-exe-${CONSTRUCTOR_TARGET_PLATFORM}"
             CONDA_SUBDIR=$CONSTRUCTOR_TARGET_PLATFORM \
-              conda create -yq -p "${prefix}" -c napari/label/bundle_tools conda-standalone
+              conda create -yq -p "${prefix}" -c napari/label/bundle_tools_2 conda-standalone
             echo "CONSTRUCTOR_CONDA_EXE=${prefix}/standalone_conda/conda.exe" >> $GITHUB_ENV
           fi
 
@@ -403,21 +408,22 @@ jobs:
         working-directory: napari-packaging
         run: python build_installers.py --location=../napari-source
 
-      - name: Collect licenses
-        id: licenses
-        shell: bash -el {0}
-        working-directory: napari-packaging
-        run: |
-          licenses_zip_path=$(python build_installers.py --licenses)
-          echo "LICENSES_ARTIFACT_PATH=$licenses_zip_path" >> $GITHUB_ENV
-          echo "LICENSES_ARTIFACT_NAME=$(basename ${licenses_zip_path})" >> $GITHUB_ENV
-          echo "::set-output name=licenses_artifact::$licenses_zip_path"
+      # - name: Collect licenses
+      #   id: licenses
+      #   shell: bash -el {0}
+      #   working-directory: napari-packaging
+      #   run: |
+      #     licenses_zip_path=$(python build_installers.py --licenses)
+      #     echo "LICENSES_ARTIFACT_PATH=$licenses_zip_path" >> $GITHUB_ENV
+      #     echo "LICENSES_ARTIFACT_NAME=$(basename ${licenses_zip_path})" >> $GITHUB_ENV
+      #     echo "licenses_artifact=${licenses_zip_path}" >> $GITHUB_OUTPUT
 
-      - name: Upload License Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          path: ${{ env.LICENSES_ARTIFACT_PATH }}
-          name: ${{ env.LICENSES_ARTIFACT_NAME }}
+
+      # - name: Upload License Artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     path: ${{ env.LICENSES_ARTIFACT_PATH }}
+      #     name: ${{ env.LICENSES_ARTIFACT_NAME }}
 
       - name: Notarize Bundle (macOS)
         # We only sign pushes to main, nightlies, RCs and final releases
@@ -446,7 +452,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         # CI artifact uploads only on manual runs
-        if: inputs.event_name == 'workflow_dispatch'
+        # if: inputs.event_name == 'workflow_dispatch'
         with:
           name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
@@ -536,7 +542,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          repository: napari/napari
+          ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: Get changed files using defaults
         id: changed-files
