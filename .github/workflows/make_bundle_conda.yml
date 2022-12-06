@@ -4,8 +4,8 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'build_installers.py'
+    # paths:
+    #   - 'build_installers.py'
   workflow_call:
     inputs:
       event_name:
