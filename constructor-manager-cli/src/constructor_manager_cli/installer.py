@@ -171,13 +171,13 @@ class AbstractInstaller:
             # popen.stdout.close()
             # popen.stderr.close()
             # return_code = popen.wait()
-            
+
             while True:
                 output = popen.stdout.readline()
                 if isinstance(output, bytes):
                     output = output.decode()
 
-                if output == '' and popen.poll() is not None:
+                if output == "" and popen.poll() is not None:
                     break
 
                 return_code = popen.poll()
