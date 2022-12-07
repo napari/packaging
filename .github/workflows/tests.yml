@@ -38,27 +38,21 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install setuptools tox tox-gh-actions
           cd constructor-manager-cli
-          pip install -e .
+          pip install -e ".[testing]"
           pip list
 
       - name: Test constructor-manager-cli
         run: |
           cd constructor-manager-cli
           pytest -v --color=yes --cov=constructor_manager_cli
-        env:
-          PLATFORM: ${{ matrix.platform }}
 
       - name: Install dependencies constructor-manager
         run: |
           cd constructor-manager
-          pip install -e .
+          pip install -e ".[testing]"
           pip list
-        env:
-          PLATFORM: ${{ matrix.platform }}
 
       - name: Test constructor-manager
         run: |
           cd constructor-manager
           pytest -v --color=yes --cov=constructor_manager
-        env:
-          PLATFORM: ${{ matrix.platform }}
