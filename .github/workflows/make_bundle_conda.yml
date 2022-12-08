@@ -4,8 +4,9 @@ on:
   pull_request:
     branches:
       - main
-    # paths:
-    #   - 'build_installers.py'
+    paths:
+      - 'build_installers.py'
+      - 'conda-recipe/*'
   workflow_call:
     inputs:
       event_name:
@@ -424,7 +425,6 @@ jobs:
       #     echo "LICENSES_ARTIFACT_NAME=$(basename ${licenses_zip_path})" >> $GITHUB_ENV
       #     echo "licenses_artifact=${licenses_zip_path}" >> $GITHUB_OUTPUT
 
-
       # - name: Upload License Artifact
       #   uses: actions/upload-artifact@v2
       #   with:
@@ -458,7 +458,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         # CI artifact uploads only on manual runs
-        # if: inputs.event_name == 'workflow_dispatch'
+        if: inputs.event_name == 'workflow_dispatch'
         with:
           name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
