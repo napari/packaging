@@ -340,8 +340,8 @@ jobs:
         shell: bash -el {0}
         # We only sign pushes to main, nightlies, RCs and final releases
         if: >
-          runner.os == 'macOS' 
-          && env.SIGNING_SECRETS_AVAILABLE 
+          runner.os == 'macOS'
+          && env.SIGNING_SECRETS_AVAILABLE
           && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         run: |
           # create variables
@@ -380,8 +380,8 @@ jobs:
       - name: Load signing certificate (Windows)
         # We only sign pushes to main, nightlies, RCs and final releases
         if: >
-          runner.os == 'Windows' 
-          && env.SIGNING_SECRETS_AVAILABLE 
+          runner.os == 'Windows'
+          && env.SIGNING_SECRETS_AVAILABLE
           && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         # We are signing with Apple's certificate to provide _something_
         # This is not trusted by Windows so the warnings are still there, but curious users
@@ -434,7 +434,7 @@ jobs:
       - name: Notarize Bundle (macOS)
         # We only sign pushes to main, nightlies, RCs and final releases
         if: >
-          runner.os == 'macOS' 
+          runner.os == 'macOS'
           && env.SIGNING_SECRETS_AVAILABLE
           && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
         uses: devbotsxyz/xcode-notarize@v1
