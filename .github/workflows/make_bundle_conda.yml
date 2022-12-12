@@ -431,29 +431,29 @@ jobs:
       #     path: ${{ env.LICENSES_ARTIFACT_PATH }}
       #     name: ${{ env.LICENSES_ARTIFACT_NAME }}
 
-      - name: Notarize Bundle (macOS)
+      - name: Notarize & staple PKG Installer (macOS)
         # We only sign pushes to main, nightlies, RCs and final releases
         if: >
           runner.os == 'macOS'
           && env.SIGNING_SECRETS_AVAILABLE
-          && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
-        uses: devbotsxyz/xcode-notarize@v1
-        with:
-          product-path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
-          appstore-connect-username: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
-          appstore-connect-password: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
-          primary-bundle-id: org.napari.pkg
-          verbose: true
+          && (inputs.event_name == 'schedule' || inputs.event_name == 'push')      
+        env:
+          INSTALLER_PATH: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          APPLE_NOTARIZATION_USERNAME: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
+          # This needs to be an application-specific password
+          APPLE_NOTARIZATION_PASSWORD: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
+        run: |
+          # Check signatures. If this fails, there's no point.
+          pkgutil --check-signature "$INSTALLER_PATH"
 
-      - name: Staple Bundle (macOS)
-        # We only sign pushes to main, nightlies, RCs and final releases
-        if: >
-          runner.os == 'macOS'
-          && env.SIGNING_SECRETS_AVAILABLE
-          && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
-        uses: devbotsxyz/xcode-staple@v1
-        with:
-          product-path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          # Submit for notarization to Apple servers
+          xcrun notarytool submit "$INSTALLER_PATH" \
+              -u "$APPLE_NOTARIZATION_USERNAME" \
+              -p "$APPLE_NOTARIZATION_PASSWORD" \
+              --wait
+
+          # Staple
+          xcrun stapler staple --verbose "$INSTALLER_PATH"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
