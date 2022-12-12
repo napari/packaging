@@ -468,6 +468,9 @@ jobs:
           # Staple
           xcrun stapler staple --verbose "$INSTALLER_PATH"
 
+          # Check notarization status
+          spctl --assess -vv --type install "$INSTALLER_PATH" 2>&1 | tee /dev/stderr | grep accepted
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         # CI artifact uploads only on manual runs
