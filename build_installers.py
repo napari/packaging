@@ -120,6 +120,7 @@ INSTALLER_DEFAULT_PATH_STEM = os.environ.get(
     "CONSTRUCTOR_INSTALLER_DEFAULT_PATH_STEM", f"{APP}-{_version()}"
 )
 
+
 def _generate_background_images(installer_type, outpath="./", napari_repo=HERE):
     """Requires pillow"""
     if installer_type == "sh":
@@ -235,6 +236,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
     empty_file = NamedTemporaryFile(delete=False)
     condarc = _get_condarc()
     env_state = _get_conda_meta_state()
+    env_state_path = os.path.join("envs", napari_env["name"], "conda-meta", "state")
     definitions = {
         "name": APP,
         "company": "Napari",
@@ -258,7 +260,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             {os.path.join(resources, "bundle_readme.md"): "README.txt"},
             {empty_file.name: ".napari_is_bundled_constructor"},
             {condarc: ".condarc"},
-            {env_state: os.path.join("envs", napari_env["name"], "conda-meta", "state")},
+            {env_state: env_state_path},
         ],
     }
     if _use_local():
