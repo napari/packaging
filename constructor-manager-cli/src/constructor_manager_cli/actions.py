@@ -7,12 +7,11 @@ import sys
 from typing import Dict, List, Optional, Tuple
 
 import yaml
+
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
 from constructor_manager_cli.installer import CondaInstaller
-from constructor_manager_cli.utils.anaconda import (
-    conda_package_versions,
-    plugin_versions,
-)
+from constructor_manager_cli.utils.request import plugin_versions
+from constructor_manager_cli.utils.anaconda import conda_package_versions
 from constructor_manager_cli.utils.conda import (
     get_prefix_by_name,
     parse_conda_version_spec,

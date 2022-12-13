@@ -13,7 +13,7 @@ def test_conda_installer_info():
 
 
 def test_conda_installer_list():
-    pkgs = CondaInstaller().list(get_base_prefix())
+    pkgs = CondaInstaller().list(get_base_prefix(), block=True)
     pkg_names = [pkg["name"] for pkg in pkgs]
     assert pkgs
     assert "conda" in pkg_names
@@ -50,14 +50,14 @@ def test_conda_installer_install_uninstall(use_mamba):
     # Install
     _ = installer.install([pkg], prefix=prefix, block=True)
 
-    pkgs = installer.list(prefix=prefix)
+    pkgs = installer.list(prefix=prefix, block=True)
     print("HELLO", pkgs)
     pkg_names = [pkg["name"] for pkg in pkgs]
     assert pkg in pkg_names
 
     # Uninstall
     _ = installer.uninstall([pkg], prefix=prefix, block=True)
-    pkgs = installer.list(prefix=prefix)
+    pkgs = installer.list(prefix=prefix, block=True)
     print("HELLO 2", pkgs)
     pkg_names = [pkg["name"] for pkg in pkgs]
     assert pkg not in pkg_names
