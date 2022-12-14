@@ -162,13 +162,15 @@ jobs:
           if [[ $NAPARI_VERSION == *rc* || $NAPARI_VERSION == *dev* ]]; then
             label_args="-l nightly"
           fi
+          noarch_dir="${GITHUB_WORKSPACE}${conda_bld_suffix}noarch/"
+          packages="$(find "$noarch_dir" -maxdepth 1 -type -f \( -name '*.conda' -o -name '*.tar.bz2' \))"
           anaconda \
             -t ${{ secrets.ANACONDA_TOKEN }} \
             upload \
             --skip-existing \
             -u napari \
             $label_args \
-            ${GITHUB_WORKSPACE}${conda_bld_suffix}noarch/*.{conda,tar.bz2}
+            $packages
 
   prepare_matrix:
     # See this SO answer for details on conditional matrices
