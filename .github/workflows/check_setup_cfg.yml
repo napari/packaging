@@ -27,6 +27,9 @@ jobs:
             echo "SINCE=$(date -d yesterday -u "+%F")" >> $GITHUB_ENV
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "SINCE=${{ inputs.since }}" >> $GITHUB_ENV
+          else
+            echo "SINCE=null" >> $GITHUB_ENV
+          fi
 
       - name: Get changed files using defaults
         id: changed-files
