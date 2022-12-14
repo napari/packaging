@@ -166,9 +166,10 @@ jobs:
           # if [[ $NAPARI_VERSION == *rc* || $NAPARI_VERSION == *dev* ]]; then
           #   label_args="-l nightly"
           # fi
+          set -x
           label_args="-l debug-only"
-          noarch_dir="${GITHUB_WORKSPACE}${conda_bld_suffix}noarch/"
-          packages="$(find "$noarch_dir" -maxdepth 1 -type -f \( -name '*.conda' -o -name '*.tar.bz2' \))"
+          noarch_dir="${GITHUB_WORKSPACE}${conda_bld_suffix}noarch"
+          packages="$(find "$noarch_dir" -maxdepth 1 -type f \( -name '*.conda' -o -name '*.tar.bz2' \))"
           anaconda \
             -t ${{ secrets.ANACONDA_TOKEN }} \
             upload \
