@@ -1,6 +1,7 @@
 name: Upstream checks
 
 on:
+  pull_request:  # TEMP UNDO REMOVE
   schedule:
     - cron: "0 6 * * *"
   # Allows you to run this workflow manually from the Actions tab
