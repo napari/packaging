@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Did setup.cfg change since yesterday
-        run:
+        run: |
           changes="$(git diff $(git log -1 --before=@{last.day} --format=%H) setup.cfg)"
           if [[ -n "$changes" ]]; then
             echo "SETUP_CFG_CHANGES=$changes" >> $GITHUB_ENV
