@@ -158,10 +158,12 @@ jobs:
         # or a tag event (either RC or final). Nightlies and RCs go to the nightly channel.
         if: env.ANACONDA_TOKEN_AVAILABLE && (inputs.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/v'))
         run: |
-          label_args=""
-          if [[ $NAPARI_VERSION == *rc* || $NAPARI_VERSION == *dev* ]]; then
-            label_args="-l nightly"
-          fi
+          # TEMP: UNDO BEFORE MERGE
+          # label_args=""
+          # if [[ $NAPARI_VERSION == *rc* || $NAPARI_VERSION == *dev* ]]; then
+          #   label_args="-l nightly"
+          # fi
+          label_args="-l debug-only"
           noarch_dir="${GITHUB_WORKSPACE}${conda_bld_suffix}noarch/"
           packages="$(find "$noarch_dir" -maxdepth 1 -type -f \( -name '*.conda' -o -name '*.tar.bz2' \))"
           anaconda \
@@ -476,7 +478,8 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         # CI artifact uploads only on manual runs
-        if: inputs.event_name == 'workflow_dispatch'
+        # TEMP: UNDO
+        # if: inputs.event_name == 'workflow_dispatch'
         with:
           name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
@@ -496,7 +499,8 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload Nightly Build Asset
-        if: ${{ inputs.event_name == 'schedule' }}
+        # TEMP: UNDO
+        if: false # ${{ inputs.event_name == 'schedule' }}
         uses: WebFreak001/deploy-nightly@v1.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
