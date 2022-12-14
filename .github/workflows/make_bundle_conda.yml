@@ -1,12 +1,13 @@
 name: Conda
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'build_installers.py'
-      - 'conda-recipe/*'
+  # UNDO
+  # pull_request:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'build_installers.py'
+  #     - 'conda-recipe/*'
   workflow_call:
     inputs:
       event_name:
