@@ -22,7 +22,9 @@ jobs:
           changes="$(git diff $(git log -1 --before=@{last.day} --format=%H) setup.cfg)"
           echo "$changes"
           if [[ -n "$changes" ]]; then
-            echo "SETUP_CFG_CHANGES=$changes" >> $GITHUB_ENV
+            echo 'SETUP_CFG_CHANGES<<EOF${{ github.run_id }}' >> $GITHUB_ENV
+            echo "$changes" >> $GITHUB_ENV
+            echo 'EOF${{ github.run_id }}' >> $GITHUB_ENV
           fi
 
       - name: Checkout packaging code
