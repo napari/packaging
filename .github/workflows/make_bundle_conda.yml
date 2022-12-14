@@ -53,14 +53,16 @@ jobs:
 
     steps:
       - name: Checkout packaging code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           repository: napari/packaging
           path: napari-packaging
+          ref: update-conda-recipe  # TEMP UNDO HARDCODED
+          # ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: Checkout napari source
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           repository: napari/napari
