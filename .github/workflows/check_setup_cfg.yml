@@ -1,0 +1,49 @@
+name: Upstream checks
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "Check commits done after this date"
+        required: true
+
+jobs:
+  check_setup_cfg:
+    name: Report setup.cfg changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: napari/napari
+          fetch-depth: 0
+
+      - name: Calculate timestamp
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "SINCE=$(date -d yesterday -u "+%F")" >> $GITHUB_ENV
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "SINCE=${{ inputs.since }}" >> $GITHUB_ENV
+        
+      - name: Get changed files using defaults
+        id: changed-files
+        uses: tj-actions/changed-files@v34
+        with:
+          since: ${{ env.SINCE }}
+
+      - name: Checkout packaging code
+        if: contains(steps.changed-files.outputs.modified_files, 'setup.cfg')
+        uses: actions/checkout@v2
+        with:
+          repository: napari/packaging
+
+      - name: Create issue
+        if: contains(steps.changed-files.outputs.modified_files, 'setup.cfg')
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/SETUP_CFG_UPDATED_TEMPLATE.md
+          update_existing: true
