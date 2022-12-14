@@ -1,7 +1,7 @@
 name: Upstream checks
 
 on:
-  pull_request:  # TEMP UNDO REMOVE
+  pull_request:
   schedule:
     - cron: "0 6 * * *"
   # Allows you to run this workflow manually from the Actions tab
@@ -28,13 +28,13 @@ jobs:
           fi
 
       - name: Checkout packaging code
-        if: ${{ env.SETUP_CFG_CHANGES }}
+        if: env.SETUP_CFG_CHANGES && github.event_name == 'schedule'
         uses: actions/checkout@v2
         with:
           repository: napari/packaging
 
       - name: Create issue
-        if: ${{ env.SETUP_CFG_CHANGES }}
+        if: env.SETUP_CFG_CHANGES && github.event_name == 'schedule'
         uses: JasonEtco/create-an-issue@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
