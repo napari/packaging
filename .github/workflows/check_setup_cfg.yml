@@ -1,0 +1,43 @@
+name: Upstream checks
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * *"
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  check_setup_cfg:
+    name: Report setup.cfg changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: napari/napari
+          fetch-depth: 0
+
+      - name: Did setup.cfg change since yesterday
+        run: |
+          changes="$(git diff $(git log -1 --before=@{last.day} --format=%H) setup.cfg)"
+          echo "$changes"
+          if [[ -n "$changes" ]]; then
+            echo 'SETUP_CFG_CHANGES<<EOF${{ github.run_id }}' >> $GITHUB_ENV
+            echo "$changes" >> $GITHUB_ENV
+            echo 'EOF${{ github.run_id }}' >> $GITHUB_ENV
+          fi
+
+      - name: Checkout packaging code
+        if: env.SETUP_CFG_CHANGES && github.event_name == 'schedule'
+        uses: actions/checkout@v2
+        with:
+          repository: napari/packaging
+
+      - name: Create issue
+        if: env.SETUP_CFG_CHANGES && github.event_name == 'schedule'
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/SETUP_CFG_UPDATED_TEMPLATE.md
+          update_existing: true
