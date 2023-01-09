@@ -7,6 +7,7 @@ on:
     paths:
       - 'build_installers.py'
       - 'conda-recipe/*'
+      - '.github/workflows/make_bundle_conda.yml'  # this file
   workflow_call:
     inputs:
       event_name:
@@ -72,7 +73,7 @@ jobs:
           ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: Checkout conda-forge feedstock
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           repository: conda-forge/napari-feedstock
@@ -143,7 +144,7 @@ jobs:
           echo "name=${name}" >> $GITHUB_OUTPUT
 
       - name: Upload packages as artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.artifact-id.outputs.name }}
           path: |
@@ -248,14 +249,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           repository: napari/packaging
           path: napari-packaging
 
       - name: Checkout napari/napari
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           repository: napari/napari
@@ -433,7 +434,7 @@ jobs:
       #     echo "licenses_artifact=${licenses_zip_path}" >> $GITHUB_OUTPUT
 
       # - name: Upload License Artifact
-      #   uses: actions/upload-artifact@v2
+      #   uses: actions/upload-artifact@v3
       #   with:
       #     path: ${{ env.LICENSES_ARTIFACT_PATH }}
       #     name: ${{ env.LICENSES_ARTIFACT_NAME }}
@@ -487,7 +488,7 @@ jobs:
           spctl --assess -vv --type install "$INSTALLER_PATH" 2>&1 | tee /dev/stderr | grep accepted
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         # CI artifact uploads only on manual runs
         if: inputs.event_name == 'workflow_dispatch'
         with:
@@ -510,7 +511,7 @@ jobs:
 
       - name: Upload Nightly Build Asset
         if: ${{ inputs.event_name == 'schedule' }}
-        uses: WebFreak001/deploy-nightly@v1.1.0
+        uses: WebFreak001/deploy-nightly@v2.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
