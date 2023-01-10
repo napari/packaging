@@ -263,8 +263,8 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             {env_state: env_state_path},
         ],
         "build_outputs": [
-            {"pkgs_list": [napari_env["name"]]},
-            "licenses",
+            {"pkgs_list": {"env": napari_env["name"]}},
+            {"licenses": {"include_text": True}},
         ]
     }
     if _use_local():
@@ -399,27 +399,16 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
 
 
 def licenses():
-    info_path = Path("_work") / "info.json"
-    try:
-        with open(info_path) as f:
-            info = json.load(f)
-    except FileNotFoundError:
-        print(
-            "!! Use `constructor --debug` to write info.json and get licenses",
-            file=sys.stderr,
+    info_path = Path("_work") / "licenses.json"
+    if not info_path.is_file():
+        sys.exit(
+            "!! licenses.json not found."
+            "Ensure 'construct.yaml' has a 'build_outputs' key configured with 'licenses'.",
         )
-        raise
 
     zipname = Path("_work") / f"licenses.{OS}-{ARCH}.zip"
-    output_zip = zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED)
-    output_zip.write(info_path)
-    for package_id, license_info in info["_licenses"].items():
-        package_name = package_id.split("::", 1)[1]
-        for license_type, license_files in license_info.items():
-            for i, license_file in enumerate(license_files, 1):
-                arcname = f"{package_name}.{license_type.replace(' ', '_')}.{i}.txt"
-                output_zip.write(license_file, arcname=arcname)
-    output_zip.close()
+    with zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED) as ozip:
+        ozip.write(info_path)
     return zipname.resolve()
 
 
