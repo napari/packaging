@@ -262,6 +262,10 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             {condarc: ".condarc"},
             {env_state: env_state_path},
         ],
+        "build_outputs": [
+            {"pkgs_list": [napari_env["name"]]},
+            "licenses",
+        ]
     }
     if _use_local():
         definitions["channels"].insert(0, "local")
