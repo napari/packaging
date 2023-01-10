@@ -450,7 +450,7 @@ jobs:
           echo "PKGS_LIST_ARTIFACT_NAME=$(basename ${pkgs_list_zip_path})" >> $GITHUB_ENV
           echo "pkgs_list_artifact=${pkgs_list_zip_path}" >> $GITHUB_OUTPUT
 
-      - name: Upload License Artifact
+      - name: Upload list of packages artifact
         uses: actions/upload-artifact@v3
         with:
           path: ${{ env.PKGS_LIST_ARTIFACT_PATH }}
