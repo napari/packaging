@@ -265,7 +265,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         "build_outputs": [
             {"pkgs_list": {"env": napari_env["name"]}},
             {"licenses": {"include_text": True, "text_errors": "replace"}},
-        ]
+        ],
     }
     if _use_local():
         definitions["channels"].insert(0, "local")
@@ -403,7 +403,8 @@ def licenses():
     if not info_path.is_file():
         sys.exit(
             "!! licenses.json not found."
-            "Ensure 'construct.yaml' has a 'build_outputs' key configured with 'licenses'.",
+            "Ensure 'construct.yaml' has a 'build_outputs' "
+            "key configured with 'licenses'.",
         )
 
     zipname = Path("_work") / f"licenses.{OS}-{ARCH}.zip"
@@ -417,13 +418,14 @@ def packages_list():
     if not txtfile or not txtfile.is_file():
         sys.exit(
             "!! pkg-list.napari-*.txt not found."
-            "Ensure 'construct.yaml' has a 'build_outputs' key configured with 'pkgs_list'.",
+            "Ensure 'construct.yaml' has a 'build_outputs' "
+            "key configured with 'pkgs_list'.",
         )
     zipname = Path("_work") / f"pkg-list.{OS}-{ARCH}.zip"
     with zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED) as ozip:
         ozip.write(txtfile)
     return zipname.resolve()
-    
+
 
 def main(extra_specs=None, napari_repo=HERE):
     try:
