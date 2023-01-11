@@ -264,7 +264,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         ],
         "build_outputs": [
             {"pkgs_list": {"env": napari_env["name"]}},
-            {"licenses": {"include_text": True}},
+            {"licenses": {"include_text": True, "text_errors": "replace"}},
         ]
     }
     if _use_local():
@@ -371,7 +371,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         version=version, extra_specs=extra_specs, napari_repo=napari_repo
     )
 
-    args = [constructor, "-v", "--debug", "."]
+    args = [constructor, "-v", "."]
     conda_exe = os.environ.get("CONSTRUCTOR_CONDA_EXE")
     if TARGET_PLATFORM and conda_exe:
         args += ["--platform", TARGET_PLATFORM, "--conda-exe", conda_exe]
