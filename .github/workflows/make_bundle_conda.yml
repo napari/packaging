@@ -246,6 +246,7 @@ jobs:
 
     outputs:
       licenses-artifact: ${{ steps.licenses.outputs.licenses_artifact }}
+      pkgs-list-artifact: ${{ steps.pkgs-list.outputs.pkgs_list_artifact }}
 
     steps:
       - name: Checkout code
@@ -423,21 +424,37 @@ jobs:
         working-directory: napari-packaging
         run: python build_installers.py --location=../napari-source
 
-      # - name: Collect licenses
-      #   id: licenses
-      #   shell: bash -el {0}
-      #   working-directory: napari-packaging
-      #   run: |
-      #     licenses_zip_path=$(python build_installers.py --licenses)
-      #     echo "LICENSES_ARTIFACT_PATH=$licenses_zip_path" >> $GITHUB_ENV
-      #     echo "LICENSES_ARTIFACT_NAME=$(basename ${licenses_zip_path})" >> $GITHUB_ENV
-      #     echo "licenses_artifact=${licenses_zip_path}" >> $GITHUB_OUTPUT
+      - name: Collect licenses
+        id: licenses
+        shell: bash -el {0}
+        working-directory: napari-packaging
+        run: |
+          licenses_zip_path=$(python build_installers.py --licenses)
+          echo "LICENSES_ARTIFACT_PATH=$licenses_zip_path" >> $GITHUB_ENV
+          echo "LICENSES_ARTIFACT_NAME=$(basename ${licenses_zip_path})" >> $GITHUB_ENV
+          echo "licenses_artifact=${licenses_zip_path}" >> $GITHUB_OUTPUT
 
-      # - name: Upload License Artifact
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     path: ${{ env.LICENSES_ARTIFACT_PATH }}
-      #     name: ${{ env.LICENSES_ARTIFACT_NAME }}
+      - name: Upload License Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ env.LICENSES_ARTIFACT_PATH }}
+          name: ${{ env.LICENSES_ARTIFACT_NAME }}
+
+      - name: Collect list of packages
+        id: pkgs-list
+        shell: bash -el {0}
+        working-directory: napari-packaging
+        run: |
+          pkgs_list_zip_path=$(python build_installers.py --pkgs-list)
+          echo "PKGS_LIST_ARTIFACT_PATH=$pkgs_list_zip_path" >> $GITHUB_ENV
+          echo "PKGS_LIST_ARTIFACT_NAME=$(basename ${pkgs_list_zip_path})" >> $GITHUB_ENV
+          echo "pkgs_list_artifact=${pkgs_list_zip_path}" >> $GITHUB_OUTPUT
+
+      - name: Upload list of packages artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ env.PKGS_LIST_ARTIFACT_PATH }}
+          name: ${{ env.PKGS_LIST_ARTIFACT_NAME }}
 
       - name: Notarize & staple PKG Installer (macOS)
         # We only sign pushes to main, nightlies, RCs and final releases

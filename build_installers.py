@@ -262,6 +262,10 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             {condarc: ".condarc"},
             {env_state: env_state_path},
         ],
+        "build_outputs": [
+            {"pkgs_list": {"env": napari_env["name"]}},
+            {"licenses": {"include_text": True, "text_errors": "replace"}},
+        ],
     }
     if _use_local():
         definitions["channels"].insert(0, "local")
@@ -367,7 +371,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
         version=version, extra_specs=extra_specs, napari_repo=napari_repo
     )
 
-    args = [constructor, "-v", "--debug", "."]
+    args = [constructor, "-v", "."]
     conda_exe = os.environ.get("CONSTRUCTOR_CONDA_EXE")
     if TARGET_PLATFORM and conda_exe:
         args += ["--platform", TARGET_PLATFORM, "--conda-exe", conda_exe]
@@ -395,27 +399,31 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
 
 
 def licenses():
-    info_path = Path("_work") / "info.json"
-    try:
-        with open(info_path) as f:
-            info = json.load(f)
-    except FileNotFoundError:
-        print(
-            "!! Use `constructor --debug` to write info.json and get licenses",
-            file=sys.stderr,
+    info_path = Path("_work") / "licenses.json"
+    if not info_path.is_file():
+        sys.exit(
+            "!! licenses.json not found."
+            "Ensure 'construct.yaml' has a 'build_outputs' "
+            "key configured with 'licenses'.",
         )
-        raise
 
     zipname = Path("_work") / f"licenses.{OS}-{ARCH}.zip"
-    output_zip = zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED)
-    output_zip.write(info_path)
-    for package_id, license_info in info["_licenses"].items():
-        package_name = package_id.split("::", 1)[1]
-        for license_type, license_files in license_info.items():
-            for i, license_file in enumerate(license_files, 1):
-                arcname = f"{package_name}.{license_type.replace(' ', '_')}.{i}.txt"
-                output_zip.write(license_file, arcname=arcname)
-    output_zip.close()
+    with zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED) as ozip:
+        ozip.write(info_path)
+    return zipname.resolve()
+
+
+def packages_list():
+    txtfile = next(Path("_work").glob("pkg-list.napari-*.txt"), None)
+    if not txtfile or not txtfile.is_file():
+        sys.exit(
+            "!! pkg-list.napari-*.txt not found."
+            "Ensure 'construct.yaml' has a 'build_outputs' "
+            "key configured with 'pkgs_list'.",
+        )
+    zipname = Path("_work") / f"pkg-list.{OS}-{ARCH}.zip"
+    with zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED) as ozip:
+        ozip.write(txtfile)
     return zipname.resolve()
 
 
@@ -471,6 +479,12 @@ def cli(argv=None):
         "This must be run as a separate step.",
     )
     p.add_argument(
+        "--pkgs-list",
+        action="store_true",
+        help="Generate the list of packages used to build the napari environment."
+        "This must be run as a separate step.",
+    )
+    p.add_argument(
         "--images",
         action="store_true",
         help="Generate background images from the logo (test only)",
@@ -503,6 +517,9 @@ if __name__ == "__main__":
         sys.exit()
     if args.licenses:
         print(licenses())
+        sys.exit()
+    if args.pkgs_list:
+        print(packages_list())
         sys.exit()
     if args.images:
         _generate_background_images(napari_repo=args.location)
