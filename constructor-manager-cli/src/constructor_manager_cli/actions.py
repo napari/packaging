@@ -119,7 +119,7 @@ def check_updates(
     -------
     dict
         Dictionary containing the current and latest versions, found
-        installed versions and the installer type used.
+        installed versions.
     """
     package_name, current_version, build = parse_conda_version_spec(package)
     versions = conda_package_versions(
@@ -147,10 +147,14 @@ def check_updates(
         "current_version": current_version,
         "latest_version": latest_version,
         "previous_version": previous_version,
-        "found_versions": installed_versions,
+        "installed_versions": installed_versions,
         "update": update,
         "installed": latest_version in installed_versions,
-        "status": {},
+        "status": {
+            "data": "",
+            "stdout": "",
+            "stderr": "",
+        },
     }
 
 
@@ -270,7 +274,7 @@ def check_updates_clean_and_launch(
         clean_all(package_name)
 
 
-def remove(package: str):
+def remove(package: str, use_mamba: bool = False):
     """Remove specific environment of a given package.
 
     Environment will be removed using conda/mamba, or the folders deleted in
@@ -282,14 +286,13 @@ def remove(package: str):
         Package specification.
     """
     # Try to remove using conda/mamba
-    installer = CondaInstaller()
+    installer = CondaInstaller(use_mamba=use_mamba)
     package_name, version, _ = parse_conda_version_spec(package)
     prefix = get_prefix_by_name(f"{package_name}-{version}")
-    job_id = installer.remove(prefix)
+    job_id = installer.remove(str(prefix))
 
     # Otherwise remove the folder manually
     if job_id:
-        print("removing", prefix)
         shutil.rmtree(prefix)
 
 
@@ -362,6 +365,7 @@ def lock_environment(
 
     package_name, current_version, _ = parse_conda_version_spec(package)
     if not current_version:
+        # TODO:
         sys.stderr.write("Cannot lock environment without version number!")
         return 1
 
@@ -388,6 +392,7 @@ def lock_environment(
     with open(lockfile) as fh:
         lines = fh.read().split("\n")
 
+    # Remove comments on lock file
     lines = [line for line in lines if not line.startswith("#")]
     with open(lockfile, "w") as fh:
         data = "\n".join(lines)

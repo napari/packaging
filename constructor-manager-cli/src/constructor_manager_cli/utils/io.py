@@ -79,7 +79,7 @@ def get_installed_versions(package_name: str) -> List[Tuple[str, ...]]:
         ):
             for p in conda_meta_folder.iterdir():
                 if p.suffix == ".json":
-                    # Check environment contains a napari package
+                    # Check environment contains the package
                     parts = p.stem.rsplit("-")
                     if len(parts) == 3 and parts[-3] == package_name:
                         versions.append(tuple(parts[1:]))
