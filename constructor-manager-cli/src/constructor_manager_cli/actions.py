@@ -1,6 +1,7 @@
 """Constructor manager actions."""
 import datetime
 import glob
+import json
 import os
 import shutil
 import sys
@@ -30,200 +31,299 @@ from constructor_manager_cli.utils.versions import (
 )
 
 
-def _create_with_plugins(
-    package_name: str,
-    version: str,
-    build_string: str,
-    plugins: List[str] = [],
-    channels: Tuple[str] = (DEFAULT_CHANNEL,),
-):
-    """Update the package.
+class ActionManager:
+    """Manage constructor based installer actions.
 
-    Parameters
-    ----------
-    package : str
-        The package name and version spec.
-    plugins : list
-        List of plugins to install.
-    channels : tuple of  str
-        The channels to install the package from.
-
-    Returns
-    -------
-    int
-        The return code of the installer.
+    Package specification, channels and the use of mamba are set once on
+    instantiation, and prepares conda info for use in the actions.
     """
-    # package_name, version = parse_conda_version_spec(package)
-    spec = f"{package_name}={version}=*{build_string}*"
-    prefix = get_prefix_by_name(f"{package_name}-{version}")
-    installer = CondaInstaller(pinned=spec, channels=channels)
-    if plugins is not None:
-        packages = [spec] + plugins
 
-    job_id = installer.create(packages, prefix=str(prefix))
-    return installer._exit_codes[job_id]
+    def __init__(self, package, channels: Tuple[str] = (DEFAULT_CHANNEL,), use_mamba: bool = False):
+        self._channels = channels
+        pn, cv, bs = parse_conda_version_spec(package)
+        self._package_name, self._current_version, self._build_string = pn, cv, bs
+        self._installer = CondaInstaller(channels=channels, pinned=pn)
+        self._info = self._installer.info()
+        self._platform = self._info["platform"]
 
+    def _get_installed_packages(self, prefix, plugins_url: Optional[str] = None):
+        """Return a list of installed packages for the given prefix.
 
-def _create_with_plugins_one_by_one(
-    package_name: str,
-    version: str,
-    build_string: str,
-    plugins: List[str] = [],
-    channels: Tuple[str] = (DEFAULT_CHANNEL,),
-):
-    """Update the package.
+        Sumamrizes information to be used by constructor updater UI.
 
-    Parameters
-    ----------
-    package : str
-        The package name and version spec.
-    plugins : list
-        List of plugins to install.
-    channels : tuple of str
-        The channels to install the package from.
+        Parameters
+        ----------
+        prefix : str
+            The prefix to check for plugins.
+        plugins_url : str
+            The URL to the plugins JSON file.
+        with_version : bool, optional
+            If True, return the plugin name and version.
 
-    Returns
-    -------
-    int
-        The return code of the installer.
-    """
-    spec = f"{package_name}={version}=*{build_string}*"
-    prefix = get_prefix_by_name(f"{package_name}-{version}")
-    installer = CondaInstaller(pinned=spec, channels=channels)
+        Returns
+        -------
+        list of str
+            The list of installed plugins.
+        """
+        packages = []
+        if plugins_url:
+            available_plugins = plugin_versions(plugins_url)
+            all_packages = self._installer.list(str(prefix), block=True)
+            for pkg in all_packages:
+                source = "pip" if pkg["platform"] == "pypi" else "conda"
+                package = {
+                    "name": pkg["name"],
+                    "version": pkg["version"],
+                    "build_string": pkg["build_string"],
+                    "source": source,
+                    "is_plugin": pkg["name"] in available_plugins,
+                    # "data": pkg
+                }
+                packages.append(package)
 
-    job_id = installer.create([spec], prefix=str(prefix))
-    for plugin in plugins:
-        installer.install([plugin], prefix=str(prefix))
+        return packages
 
-    return installer._exit_codes[job_id]
-
-
-def check_updates(
-    package: str,
-    dev: bool = False,
-    channels: Tuple[str] = (DEFAULT_CHANNEL,),
-) -> Dict:
-    """Check for package updates.
-
-    Parameters
-    ----------
-    package : str
-        The package name to check for new version.
-    dev : bool, optional
-        If ``True``, check for development versions. Default is ``False``.
-    channels : tuple of str, optional
-        Check for available versions on these channels. Default is
-        ``('conda-forge', )``.
-
-    Returns
-    -------
-    dict
-        Dictionary containing the current and latest versions, found
-        installed versions.
-    """
-    package_name, current_version, build = parse_conda_version_spec(package)
-    versions = conda_package_versions(
-        package_name, build=build, channels=channels, reverse=True
-    )
-    if not dev:
-        versions = list(filter(is_stable_version, versions))
-
-    update = False
-    latest_version = versions[0] if versions else ""
-    installed_versions_builds = get_installed_versions(package_name)
-    installed_versions = [vb[0] for vb in installed_versions_builds]
-    update = parse_version(latest_version) > parse_version(current_version)
-    filtered_version = versions[:]
-    previous_version: Optional[str] = None
-    if current_version in filtered_version:
-        index = filtered_version.index(current_version)
-        if (index + 1) < len(filtered_version):
-            previous_version = filtered_version[index + 1]
+    def _get_installed_plugins(self, prefix, plugins_url, with_version=False):
+        """"""
+        packages = self._get_installed_packages(prefix, plugins_url)
+        if with_version:
+            plugins = [f"{p['name']}={p['version']}" for p in packages if p["is_plugin"]]
         else:
-            previous_version = None
+            plugins = [p['name'] for p in packages if p["is_plugin"]]
 
-    return {
-        "available_versions": versions,
-        "current_version": current_version,
-        "latest_version": latest_version,
-        "previous_version": previous_version,
-        "installed_versions": installed_versions,
-        "update": update,
-        "installed": latest_version in installed_versions,
-        "status": {
-            "data": "",
-            "stdout": "",
-            "stderr": "",
-        },
-    }
+        return plugins
 
+    def _lock_environment(self, version, packages):
+        """
+        Lock the environment, using conda lock.
+        """
+        dependencies = [f"{p['name']}= {p['version']}" for p in packages]
+        yaml_spec = {"dependencies": dependencies}
+        yaml_spec["channels"] = list(self._channels)
+        platforms = (self._platform,)
 
-def update(
-    package: str,
-    dev: bool = False,
-    channels: Tuple[str] = (DEFAULT_CHANNEL,),
-    plugins: Optional[List[str]] = None,
-    plugins_url: Optional[str] = None,
-):
-    """Update the package.
+        date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        lockfile = get_state_path() / f"{self._package_name}-{version}-{date}-lock.yaml"
 
-    Parameters
-    ----------
-    package : str
-        The package name and version spec.
-    plugins : list
-        List of plugins to install.
-    channels : tuple of str
-        The channels to install the package from.
+        envs_path = get_env_path()
+        envs_path.mkdir(parents=True, exist_ok=True)
+        env_path = envs_path / f"{self._package_name}-{version}-environment.yaml"
+        with open(env_path, "w") as f:
+            yaml.dump(yaml_spec, f)
 
-    Returns
-    -------
-    int
-        The return code of the installer.
-    """
-    package_name, current_version, build_string = parse_conda_version_spec(package)
-    data = check_updates(package, dev=dev, channels=channels)
-    latest_version = data["latest_version"]
-
-    available_plugins = []
-    if plugins_url:
-        available_plugins = plugin_versions(plugins_url)
-
-    prefix = get_prefix_by_name(f"{package_name}-{current_version}")
-    installer = CondaInstaller(channels=channels)
-    packages = installer.list(str(prefix))
-    info = installer.info()
-    platforms = (info.get("platform", ""),)
-
-    # Save state of current environment using conda-lock
-    lock_environment(package, channels=channels, platforms=platforms)
-
-    filtered_packages: List[str] = []
-    for item in packages:  # type: ignore
-        # TODO: Use full spec <name>=<version> ??
-        name = item["name"]
-        if item["name"] in available_plugins:
-            filtered_packages.append(name)
-
-    return_code = _create_with_plugins(
-        package_name, latest_version, build_string, filtered_packages, channels=channels
-    )
-
-    if bool(return_code):
-        # TODO: Erase any folder if it remained?
-        return_code = _create_with_plugins_one_by_one(
-            package_name,
-            latest_version,
-            build_string,
-            filtered_packages,
-            channels=channels,
+        self._installer.lock(
+            str(env_path), platforms=platforms, lockfile=str(lockfile), block=True
         )
 
-    if not bool(return_code):
-        lock_environment(
-            f"{package_name}={latest_version}", channels=channels, platforms=platforms
+        with open(lockfile) as fh:
+            lines = fh.read().split("\n")
+
+        # Remove comments on lock file
+        lines = [line for line in lines if not line.startswith("#")]
+        with open(lockfile, "w") as fh:
+            data = "\n".join(lines)
+            fh.write(data)
+
+        # Check if a file mathcing the lockfile already exists with same content
+        # filepaths = glob.glob(
+        #     str(get_state_path() / f"{self._package_name}-{current_version}-*-lock.yaml")
+        # )
+        # for filepath in sorted(filepaths, reverse=True):
+        #     with open(filepath) as fh:
+        #         if str(lockfile) != filepath and fh.read() == data:
+        #             lockfile.unlink()
+        #             break
+
+    def _create_shortcuts(self):
+        pass
+
+    def _remove_shortcuts(self):
+        pass
+
+    def _create_with_plugins(
+        self,
+        version: str,
+        plugins: List[str] = [],
+    ):
+        """Update the package.
+
+        Parameters
+        ----------
+        version : str
+            The package name and version spec.
+        plugins : list
+            List of plugins to install.
+
+        Returns
+        -------
+        int
+            The return code of the installer.
+        """
+        # package_name, version = parse_conda_version_spec(package)
+        spec = f"{self._package_name}={version}=*{self._build_string}*"
+        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+        packages = [spec] + plugins
+        job_id = self._installer.create(str(prefix), pkg_list=packages)
+        return self._installer._exit_codes[job_id]
+
+    def _create_with_plugins_one_by_one(
+        self,
+        version: str,
+        plugins: List[str] = [],
+    ):
+        """Update the package.
+
+        Parameters
+        ----------
+        version : str
+            Version to install.
+        plugins : list
+            List of plugins to install.
+
+        Returns
+        -------
+        int
+            The return code of the installer.
+        """
+        spec = f"{self._package_name}={version}=*{self._build_string}*"
+        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+
+        job_id = self._installer.create(str(prefix), pkg_list=[spec])
+        for plugin in plugins:
+            self._installer.install(str(prefix), pkg_list=[plugin])
+
+        return self._installer._exit_codes[job_id]
+
+    def check_updates(self, plugins_url: Optional[str] = None, dev: bool = False) -> Dict:
+        """Check for package updates.
+
+        Parameters
+        ----------
+        plugins_url : str, optional
+            URL with list of plugins avaliable for package. Default is ``None``.
+        dev : bool, optional
+            If ``True``, check for development versions. Default is ``False``.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the current and latest versions, found
+            installed versions.
+        """
+        packages = []
+        if plugins_url:
+            prefix = get_prefix_by_name(f"{self._package_name}-{self._current_version}")
+            packages = self._get_installed_packages(prefix, plugins_url)
+
+        versions = conda_package_versions(
+            self._package_name,
+            build=self._build_string,
+            channels=self._channels,
+            reverse=True,
         )
-        create_sentinel_file(package_name, latest_version)
+
+        if not dev:
+            versions = list(filter(is_stable_version, versions))
+
+        update = False
+        latest_version = versions[0] if versions else ""
+        installed_versions_builds = get_installed_versions(self._package_name)
+        installed_versions = [vb[0] for vb in installed_versions_builds]
+        update = parse_version(latest_version) > parse_version(self._current_version)
+        filtered_version = versions[:]
+        previous_version: Optional[str] = None
+        if self._current_version in filtered_version:
+            index = filtered_version.index(self._current_version)
+            if (index + 1) < len(filtered_version):
+                previous_version = filtered_version[index + 1]
+            else:
+                previous_version = None
+
+        return {
+            "available_versions": versions,
+            "current_version": self._current_version,
+            "latest_version": latest_version,
+            "previous_version": previous_version,
+            "installed_versions": installed_versions,
+            "status": {
+                "data": "",
+                "stdout": "",
+                "stderr": "",
+            },
+            # Referes to the latest version that is newer than the current
+            "update": update,
+            "installed": latest_version in installed_versions,
+            "packages": packages
+        }
+
+    def check_status(self):
+        """Get status of any running action."""
+
+    def update(
+        self,
+        plugins_url: Optional[str] = None,
+        dev: bool = False,
+    ):
+        """Update the package.
+
+        Parameters
+        ----------
+        plugins_url : str
+            URL with list of plugins avaliable for package. Default is ``None``.
+        dev : bool, optional
+            If ``True``, check for development versions. Default is ``False``.
+
+        Returns
+        -------
+        int
+            The return code of the installer.
+        """
+        data = self.check_updates(plugins_url, dev=dev)
+        latest_version = data["latest_version"]
+
+        # This does not check for existence of prefix
+        prefix = get_prefix_by_name(f"{self._package_name}-{self._current_version}")
+        available_plugins = []
+        if plugins_url:
+            available_plugins = self._get_installed_plugins(prefix, plugins_url)
+
+        # First try to install everything at once
+        return_code = self._create_with_plugins(
+            latest_version, available_plugins
+        )
+
+        # Then try to install plugin by plugin
+        if bool(return_code):
+            # TODO: Erase any folder if it remained?
+            return_code = self._create_with_plugins_one_by_one(
+                latest_version,
+                available_plugins,
+            )
+
+        # Now lock environment
+        new_prefix = get_prefix_by_name(f"{self._package_name}-{latest_version}")
+        available_plugins = []
+        if plugins_url:
+            available_plugins = self._get_installed_plugins(new_prefix, plugins_url, with_version=True)
+
+        available_packages = self._get_installed_packages(new_prefix, plugins_url)
+
+        if not bool(return_code):
+            self._lock_environment(latest_version, available_packages)
+
+        # Then delete the sentinel file in the old environment
+        remove_sentinel_file(self._package_name, self._current_version)
+
+        # TODO: This part could also be deferred when calling the update
+        # process directly from the application
+        # Remove the shortcuts from the old environment
+        # self._remove_shortcuts(self._package_name, self._current_version)
+
+        # Create shortcuts for the new environment
+        # self._create_shortcuts(self._package_name, latest_version)
+
+        # Then create a sentinel file in the the new environment
+        create_sentinel_file(self._package_name, latest_version)
 
 
 def clean_all(package):
@@ -337,73 +437,7 @@ def restore(package: str, channels: Tuple[str] = (DEFAULT_CHANNEL,)):
     return installer._exit_codes[job_id_restore]
 
 
-def status():
-    """ """
-    # TODO
-
-
-def lock_environment(
-    package: str,
-    channels: Tuple[str] = (DEFAULT_CHANNEL,),
-    platforms: Optional[Tuple[str]] = None,
-):
-    """Lock the environment, using conda lock.
-
-    Parameters
-    ----------
-    package : str
-        Package specification.
-    channels : tuple of str, optional
-        Check for available versions on these channels.
-        Default is ``('conda-forge', )``.
-    platforms : tuple of str, optional
-        Platforms to lock for. If not provided conda is queried for the
-        current platform.
-    """
-    installer = CondaInstaller(channels=channels)
-    yaml_spec = {"dependencies": [package]}
-
-    package_name, current_version, _ = parse_conda_version_spec(package)
-    if not current_version:
-        # TODO:
-        sys.stderr.write("Cannot lock environment without version number!")
-        return 1
-
-    if platforms is None:
-        info = installer.info()
-        platforms = (info.get("platform", ""),)
-
-    if channels:
-        yaml_spec["channels"] = list(channels)
-
-    date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    lockfile = get_state_path() / f"{package_name}-{current_version}-{date}-lock.yaml"
-
-    envs_path = get_env_path()
-    envs_path.mkdir(parents=True, exist_ok=True)
-    env_path = envs_path / f"{package_name}-{current_version}-environment.yaml"
-    with open(env_path, "w") as f:
-        yaml.dump(yaml_spec, f)
-
-    installer.lock(
-        str(env_path), platforms=platforms, lockfile=str(lockfile), block=True
-    )
-
-    with open(lockfile) as fh:
-        lines = fh.read().split("\n")
-
-    # Remove comments on lock file
-    lines = [line for line in lines if not line.startswith("#")]
-    with open(lockfile, "w") as fh:
-        data = "\n".join(lines)
-        fh.write(data)
-
-    # Check if a file mathcing the lockfile already exists with same content
-    filepaths = glob.glob(
-        str(get_state_path() / f"{package_name}-{current_version}-*-lock.yaml")
-    )
-    for filepath in sorted(filepaths, reverse=True):
-        with open(filepath) as fh:
-            if str(lockfile) != filepath and fh.read() == data:
-                lockfile.unlink()
-                break
+# if __name__ == "__main__":
+#     package = "napari=0.4.15=*pyside*"
+#     manager = ActionManager(package, ('conda-forge', ))
+#     print(manager.check_updates())

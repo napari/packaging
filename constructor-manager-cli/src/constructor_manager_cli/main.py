@@ -8,12 +8,7 @@ import time
 import traceback
 from typing import Any, Tuple
 
-from constructor_manager_cli.actions import (
-    check_updates,
-    lock_environment,
-    restore,
-    update,
-)
+from constructor_manager_cli.actions import ActionManager
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
 from constructor_manager_cli.utils.io import get_lock_path
 from constructor_manager_cli.utils.locking import FilesystemLock
@@ -22,10 +17,9 @@ from constructor_manager_cli.utils.locking import FilesystemLock
 def _create_subparser(
     subparser,
     channel=False,
-    plugins=False,
+    plugins_url=False,
     dev=False,
     launch=False,
-    plugins_url=False,
 ):
     """Create a subparser for the constructor updater.
 
@@ -35,15 +29,13 @@ def _create_subparser(
         Subparser to add arguments to.
     channel : bool, optional
         Add channel argument, by default ``False``.
-    plugins : bool, optional
-        Add plugins argument, by default ``False``.
+    plugins_url : bool, optional
+        Add parameter for plugins url providing a json object of plugins
+        for the package. By default ``False``.
     dev : bool, optional
         Check for development version, by default ``False``.
     launch : bool, optional
         Launch the aplication, by default ``False``.
-    plugins_url : bool, optional
-        Add parameter for plugins url providing a json object of plugins
-        for the package. By default ``False``.
 
     Returns
     -------
@@ -60,15 +52,11 @@ def _create_subparser(
             default=[DEFAULT_CHANNEL],
         )
 
-    if plugins:
+    if plugins_url:
         subparser.add_argument(
-            "--plugins",
-            "-p",
-            metavar="N",
+            "--plugins-url",
+            "-pu",
             type=str,
-            nargs="+",
-            help="",
-            default=[],
         )
 
     if dev:
@@ -76,13 +64,6 @@ def _create_subparser(
 
     if launch:
         subparser.add_argument("--launch", "-l", action="store_true")
-
-    if plugins_url:
-        subparser.add_argument(
-            "--plugins-url",
-            "-pu",
-            type=str,
-        )
 
     return subparser
 
@@ -103,6 +84,7 @@ def _create_parser():
         check_updates,
         channel=True,
         dev=True,
+        plugins_url=True,
     )
 
     # Run the update process (does not delete the previous one)
@@ -110,7 +92,6 @@ def _create_parser():
     update = _create_subparser(
         update,
         channel=True,
-        plugins=True,
         dev=True,
         plugins_url=True,
     )
@@ -121,22 +102,25 @@ def _create_parser():
     update_clean = _create_subparser(
         update_clean,
         channel=True,
-        plugins=True,
         dev=True,
         launch=True,
     )
 
-    # Lock the environemnt using conda-lock
+    # Lock the environment using conda-lock
     lock = subparsers.add_parser("lock")
     lock = _create_subparser(lock, channel=True)
 
-    # Restore a current broken version
+    # Restore to a previous restore point of a current version
     restore = subparsers.add_parser("restore")
     restore = _create_subparser(restore, channel=True)
 
-    # Rollback to a previous version
-    rollback = subparsers.add_parser("rollback")
-    rollback = _create_subparser(rollback, channel=True)
+    # Reset a current broken version to a clean napari install
+    reset = subparsers.add_parser("reset")
+    reset = _create_subparser(reset, channel=True)
+
+    # Revert to a previous version restore point of a previous version
+    revert = subparsers.add_parser("revert")
+    revert = _create_subparser(revert, channel=True)
 
     # Get current status of the installer (update in progress?)
     status = subparsers.add_parser("status")
@@ -152,6 +136,8 @@ def _create_parser():
     return parser
 
 
+# TODO: Move execute and handle execute to a separate file
+# and unify the lock behavior
 def _execute(args, lock, lock_created=None):
     """Execute actions.
 
@@ -165,49 +151,41 @@ def _execute(args, lock, lock_created=None):
         Whether the lock was created or not, by default ``None``.
     """
     # Commands that can run in parallel
-    # print(args)
+    manager = ActionManager(args.package, args.channel)
     if args.command == "check-updates":
-        res = check_updates(args.package, args.dev, args.channel)
+        res = manager.check_updates(args.plugins_url, args.dev)
         sys.stdout.write(json.dumps(res, indent=4))
         return
 
-    if args.command == "clean-lock":
-        pass
-
     # Commands that need to be locked
     if lock_created:
-        # Then start as usual
-        print("RUNNING")
         if args.command == "update":
-            res = update(
-                args.package,
-                args.dev,
-                args.channel,
-                args.plugins,
-                args.plugins_url,
-            )
-            print(json.dumps(res))
+            res = manager.update(args.dev, args.plugins_url)
         elif args.command == "update-clean":
-            res = check_updates(
-                args.package,
-                args.dev,
-                args.channel,
-            )
-            print(json.dumps(res))
+            pass
+            # res = check_updates(
+            #     args.package,
+            #     args.dev,
+            #     args.channel,
+            # )
+            # print(json.dumps(res))
         elif args.command == "restore":
-            res = restore(args.package, args.channel)
-            print(json.dumps(res))
+            pass
+            # res = restore(args.package, args.channel)
+            # print(json.dumps(res))
         elif args.command == "rollback":
-            res = check_updates(
-                args.package,
-                args.current_version,
-                args.stable,
-                args.channel,
-            )
-            print(json.dumps(res))
+            pass
+            # res = check_updates(
+            #     args.package,
+            #     args.current_version,
+            #     args.stable,
+            #     args.channel,
+            # )
+            # print(json.dumps(res))
         elif args.command == "lock":
-            res = lock_environment(args.package, args.channel)
-            print(json.dumps(res))
+            pass
+            # res = lock_environment(args.package, args.channel)
+            # print(json.dumps(res))
         elif args.command == "status":
             pass
         elif args.command == "clean":
@@ -216,7 +194,7 @@ def _execute(args, lock, lock_created=None):
         time.sleep(5)
         lock.unlock()
     else:
-        print("ALREADY RUNNING!")
+        sys.stdout.write("Another instance is running")
 
 
 def _handle_excecute(args, lock, lock_created=None):
@@ -231,13 +209,14 @@ def _handle_excecute(args, lock, lock_created=None):
     lock_created: bool, optional
         Whether the lock was created or not, by default ``None``.
     """
-    try:
-        _execute(args, lock, lock_created)
-    except Exception as e:
-        try:
-            sys.stderr.write(str({"data": {}, "error": json.dumps(e)}))
-        except Exception:
-            sys.stderr.write(str({"data": {}, "error": traceback.format_exc()}))
+    _execute(args, lock, lock_created)
+    # try:
+    #     _execute(args, lock, lock_created)
+    # except Exception as e:
+    #     try:
+    #         sys.stderr.write(str({"data": {}, "error": json.dumps(e)}))
+    #     except Exception:
+    #         sys.stderr.write(str({"data": {}, "error": traceback.format_exc()}))
 
 
 def _dedup(items: Tuple[Any, ...]) -> Tuple[Any, ...]:

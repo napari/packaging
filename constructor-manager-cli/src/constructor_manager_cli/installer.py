@@ -359,9 +359,9 @@ class CondaInstaller(AbstractInstaller):
 
     def install(
         self,
+        prefix: Optional[str],
         pkg_list: Sequence[str],
-        *,
-        prefix: Optional[str] = None,
+        shortcuts: bool = False,
         block: bool = False,
     ) -> job_id:
         """Install packages in `pkg_list` into `prefix`.

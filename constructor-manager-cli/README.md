@@ -27,7 +27,7 @@ pip install -e .
 #### For a given package
 
 ```bash
-constructor-manager check-updates "napari=0.4.15=*pyside*" -c conda-forge
+constructor-manager check-updates "napari=0.4.16=*pyside*" -c conda-forge --plugins-url https://api.napari-hub.org/plugins
 ```
 
 This will check for any updates available for the package named `napari`

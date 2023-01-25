@@ -55,8 +55,13 @@ def plugin_versions(
         Package versions.
     """
     response = get_request(url)
+
+    data = response.json()
+    if isinstance(data, dict):
+        data = data.keys()
+
     plugins = []
-    for key in response.json():
-        plugins.append(normalized_name(key))
+    for item in data:
+        plugins.append(item.lower())
 
     return list(sorted(plugins))
