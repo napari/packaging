@@ -1,10 +1,6 @@
 """Constructor manager actions."""
 import datetime
-import glob
-import json
-import os
 import shutil
-import sys
 from typing import Dict, List, Optional, Tuple
 
 import yaml
@@ -28,6 +24,7 @@ from constructor_manager_cli.utils.io import (
 from constructor_manager_cli.utils.versions import (
     is_stable_version,
     parse_version,
+    sort_versions,
 )
 
 
@@ -38,11 +35,34 @@ class ActionManager:
     instantiation, and prepares conda info for use in the actions.
     """
 
-    def __init__(self, package, channels: Tuple[str] = (DEFAULT_CHANNEL,), use_mamba: bool = False):
+    def __init__(
+        self,
+        package,
+        channels: Tuple[str] = (DEFAULT_CHANNEL,),
+        use_mamba: bool = False,
+    ):
         self._channels = channels
+        self._info = None
+        self._platfonm = None
         pn, cv, bs = parse_conda_version_spec(package)
+
+        # If current version not provided, find the latest installed version
+        if cv == "":
+            installed_versions_builds = get_installed_versions(pn)
+            installed_versions = [vb[0] for vb in installed_versions_builds]
+            installed_versions = sort_versions(installed_versions, reverse=True)
+            if installed_versions:
+                cv = installed_versions[0]
+            else:
+                # FIXME: What to do if no version is installed? Raise an error?
+                cv = ""
+
         self._package_name, self._current_version, self._build_string = pn, cv, bs
-        self._installer = CondaInstaller(channels=channels, pinned=pn)
+        self._installer = CondaInstaller(
+            channels=channels, pinned=pn, use_mamba=use_mamba
+        )
+
+    def get_info(self):
         self._info = self._installer.info()
         self._platform = self._info["platform"]
 
@@ -66,20 +86,22 @@ class ActionManager:
             The list of installed plugins.
         """
         packages = []
+        available_plugins = []
         if plugins_url:
             available_plugins = plugin_versions(plugins_url)
-            all_packages = self._installer.list(str(prefix), block=True)
-            for pkg in all_packages:
-                source = "pip" if pkg["platform"] == "pypi" else "conda"
-                package = {
-                    "name": pkg["name"],
-                    "version": pkg["version"],
-                    "build_string": pkg["build_string"],
-                    "source": source,
-                    "is_plugin": pkg["name"] in available_plugins,
-                    # "data": pkg
-                }
-                packages.append(package)
+
+        all_packages = self._installer.list(str(prefix), block=True)
+        for pkg in all_packages:  # type: ignore
+            source = "pip" if pkg["platform"] == "pypi" else "conda"
+            package = {
+                "name": pkg["name"],
+                "version": pkg["version"],
+                "build_string": pkg["build_string"],
+                "source": source,
+                "is_plugin": pkg["name"] in available_plugins,
+                # "data": pkg  # FIXME: Add this for debugging?
+            }
+            packages.append(package)
 
         return packages
 
@@ -87,9 +109,11 @@ class ActionManager:
         """"""
         packages = self._get_installed_packages(prefix, plugins_url)
         if with_version:
-            plugins = [f"{p['name']}={p['version']}" for p in packages if p["is_plugin"]]
+            plugins = [
+                f"{p['name']}={p['version']}" for p in packages if p["is_plugin"]
+            ]
         else:
-            plugins = [p['name'] for p in packages if p["is_plugin"]]
+            plugins = [p["name"] for p in packages if p["is_plugin"]]
 
         return plugins
 
@@ -126,7 +150,8 @@ class ActionManager:
 
         # Check if a file mathcing the lockfile already exists with same content
         # filepaths = glob.glob(
-        #     str(get_state_path() / f"{self._package_name}-{current_version}-*-lock.yaml")
+        #     str(get_state_path() /
+        #     f"{self._package_name}-{current_version}-*-lock.yaml")
         # )
         # for filepath in sorted(filepaths, reverse=True):
         #     with open(filepath) as fh:
@@ -194,13 +219,11 @@ class ActionManager:
 
         return self._installer._exit_codes[job_id]
 
-    def check_updates(self, plugins_url: Optional[str] = None, dev: bool = False) -> Dict:
+    def check_updates(self, dev: bool = False) -> Dict:
         """Check for package updates.
 
         Parameters
         ----------
-        plugins_url : str, optional
-            URL with list of plugins avaliable for package. Default is ``None``.
         dev : bool, optional
             If ``True``, check for development versions. Default is ``False``.
 
@@ -210,11 +233,6 @@ class ActionManager:
             Dictionary containing the current and latest versions, found
             installed versions.
         """
-        packages = []
-        if plugins_url:
-            prefix = get_prefix_by_name(f"{self._package_name}-{self._current_version}")
-            packages = self._get_installed_packages(prefix, plugins_url)
-
         versions = conda_package_versions(
             self._package_name,
             build=self._build_string,
@@ -253,8 +271,27 @@ class ActionManager:
             # Referes to the latest version that is newer than the current
             "update": update,
             "installed": latest_version in installed_versions,
-            "packages": packages
         }
+
+    def check_version(self):
+        """Return the currently installed version."""
+        # TODO: Add modified date?
+        return {"version": self._current_version}
+
+    def check_packages(self, plugins_url: Optional[str] = None):
+        """Check for installed packages.
+
+        Parameters
+        ----------
+        plugins_url : str, optional
+            URL with list of plugins avaliable for package. Default is ``None``.
+
+        Returns
+        -------
+        list
+        """
+        prefix = get_prefix_by_name(f"{self._package_name}-{self._current_version}")
+        return {"packages": self._get_installed_packages(prefix, plugins_url)}
 
     def check_status(self):
         """Get status of any running action."""
@@ -278,7 +315,7 @@ class ActionManager:
         int
             The return code of the installer.
         """
-        data = self.check_updates(plugins_url, dev=dev)
+        data = self.check_updates(dev=dev)
         latest_version = data["latest_version"]
 
         # This does not check for existence of prefix
@@ -288,28 +325,31 @@ class ActionManager:
             available_plugins = self._get_installed_plugins(prefix, plugins_url)
 
         # First try to install everything at once
-        return_code = self._create_with_plugins(
-            latest_version, available_plugins
-        )
+        return_code = self._create_with_plugins(latest_version, available_plugins)
 
-        # Then try to install plugin by plugin
+        # Then try to install plugin by plugin if it failed
         if bool(return_code):
-            # TODO: Erase any folder if it remained?
+            # TODO: Erase any folder?
             return_code = self._create_with_plugins_one_by_one(
                 latest_version,
                 available_plugins,
             )
 
-        # Now lock environment
+        # Now run an environment lock if it succeeded
+        # TODO: Use all packages found in the environment?
         new_prefix = get_prefix_by_name(f"{self._package_name}-{latest_version}")
         available_plugins = []
         if plugins_url:
-            available_plugins = self._get_installed_plugins(new_prefix, plugins_url, with_version=True)
+            available_plugins = self._get_installed_plugins(
+                new_prefix, plugins_url, with_version=True
+            )
 
         available_packages = self._get_installed_packages(new_prefix, plugins_url)
-
         if not bool(return_code):
             self._lock_environment(latest_version, available_packages)
+        else:
+            pass
+            # FIXME: Raise exception??
 
         # Then delete the sentinel file in the old environment
         remove_sentinel_file(self._package_name, self._current_version)
@@ -351,27 +391,27 @@ def clean_all(package):
         shutil.rmtree(prefix)
 
 
-def check_updates_clean_and_launch(
-    package: str,
-    dev: bool = False,
-    channel=DEFAULT_CHANNEL,
-):
-    """Check for updates and clean."""
-    package_name, version, _ = parse_conda_version_spec(package)
-    res = check_updates(package_name, dev, channel)
-    found_versions = res["found_versions"]
+# def check_updates_clean_and_launch(
+#     package: str,
+#     dev: bool = False,
+#     channel=DEFAULT_CHANNEL,
+# ):
+#     """Check for updates and clean."""
+#     package_name, version, _ = parse_conda_version_spec(package)
+#     res = check_updates(package_name, dev, channel)
+#     found_versions = res["found_versions"]
 
-    # Remove any prior installations
-    if res["installed"]:
-        for version in found_versions:
-            if version != res["latest_version"]:
-                remove_sentinel_file(package_name, version)
+#     # Remove any prior installations
+#     if res["installed"]:
+#         for version in found_versions:
+#             if version != res["latest_version"]:
+#                 remove_sentinel_file(package_name, version)
 
-        # Launch the detached application
-        # print(f"launching {package_name} version {res['latest_version']}")
+#         # Launch the detached application
+#         # print(f"launching {package_name} version {res['latest_version']}")
 
-        # Remove any prior installations
-        clean_all(package_name)
+#         # Remove any prior installations
+#         clean_all(package_name)
 
 
 def remove(package: str, use_mamba: bool = False):
@@ -396,45 +436,45 @@ def remove(package: str, use_mamba: bool = False):
         shutil.rmtree(prefix)
 
 
-def restore(package: str, channels: Tuple[str] = (DEFAULT_CHANNEL,)):
-    """Restore specific environment of a given package.
+# def restore(package: str, channels: Tuple[str] = (DEFAULT_CHANNEL,)):
+#     """Restore specific environment of a given package.
 
-    Parameters
-    ----------
-    package : str
-        Name of the package.
-    channels : tuple of str, optional
-        Check for available versions on these channels.
-        Default is ``('conda-forge', )``.
-    """
-    package_name, current_version, _ = parse_conda_version_spec(package)
-    env_name = f"{package_name}-{current_version}"
-    prefix = str(get_prefix_by_name(env_name))
-    installer = CondaInstaller(channels=channels)
-    job_id_remove = None
-    broken_prefix = ""
+#     Parameters
+#     ----------
+#     package : str
+#         Name of the package.
+#     channels : tuple of str, optional
+#         Check for available versions on these channels.
+#         Default is ``('conda-forge', )``.
+#     """
+#     package_name, current_version, _ = parse_conda_version_spec(package)
+#     env_name = f"{package_name}-{current_version}"
+#     prefix = str(get_prefix_by_name(env_name))
+#     installer = CondaInstaller(channels=channels)
+#     job_id_remove = None
+#     broken_prefix = ""
 
-    # Remove with conda/mamba
-    if os.path.isdir(prefix):
-        job_id_remove = installer.remove(prefix)
+#     # Remove with conda/mamba
+#     if os.path.isdir(prefix):
+#         job_id_remove = installer.remove(prefix)
 
-    # Otherwise rename the folder manually for later deletion
-    if job_id_remove and os.path.isdir(prefix):
-        broken_prefix = prefix + "-broken"
-        os.rename(prefix, broken_prefix)
+#     # Otherwise rename the folder manually for later deletion
+#     if job_id_remove and os.path.isdir(prefix):
+#         broken_prefix = prefix + "-broken"
+#         os.rename(prefix, broken_prefix)
 
-    # Create restored enviornment
-    job_id_restore = installer.create([package], prefix=prefix)
+#     # Create restored enviornment
+#     job_id_restore = installer.create([package], prefix=prefix)
 
-    # Remove the broken folder manually
-    if broken_prefix and job_id_remove and os.path.isdir(broken_prefix):
-        print("removing", broken_prefix)
-        shutil.rmtree(broken_prefix)
+#     # Remove the broken folder manually
+#     if broken_prefix and job_id_remove and os.path.isdir(broken_prefix):
+#         # print("removing", broken_prefix)
+#         shutil.rmtree(broken_prefix)
 
-    # Create a lock file for the restored environment
-    lock_environment(f"{package_name}={current_version}", channels=channels)
-    create_sentinel_file(package_name, current_version)
-    return installer._exit_codes[job_id_restore]
+#     # Create a lock file for the restored environment
+#     lock_environment(f"{package_name}={current_version}", channels=channels)
+#     create_sentinel_file(package_name, current_version)
+#     return installer._exit_codes[job_id_restore]
 
 
 # if __name__ == "__main__":

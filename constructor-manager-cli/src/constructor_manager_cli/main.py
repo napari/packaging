@@ -5,7 +5,6 @@ import json
 import os
 import sys
 import time
-import traceback
 from typing import Any, Tuple
 
 from constructor_manager_cli.actions import ActionManager
@@ -84,6 +83,16 @@ def _create_parser():
         check_updates,
         channel=True,
         dev=True,
+    )
+
+    # Check for current installed version
+    check_version = subparsers.add_parser("check-version")
+    check_version = _create_subparser(check_version)
+
+    # Check for current installed packages
+    check_packages = subparsers.add_parser("check-packages")
+    check_packages = _create_subparser(
+        check_packages,
         plugins_url=True,
     )
 
@@ -151,9 +160,21 @@ def _execute(args, lock, lock_created=None):
         Whether the lock was created or not, by default ``None``.
     """
     # Commands that can run in parallel
-    manager = ActionManager(args.package, args.channel)
+    if "channel" in args:
+        manager = ActionManager(args.package, args.channel)
+    else:
+        manager = ActionManager(args.package)
+
     if args.command == "check-updates":
-        res = manager.check_updates(args.plugins_url, args.dev)
+        res = manager.check_updates(args.dev)
+        sys.stdout.write(json.dumps(res, indent=4))
+        return
+    elif args.command == "check-version":
+        res = manager.check_version()
+        sys.stdout.write(json.dumps(res, indent=4))
+        return
+    elif args.command == "check-packages":
+        res = manager.check_packages(args.plugins_url)
         sys.stdout.write(json.dumps(res, indent=4))
         return
 

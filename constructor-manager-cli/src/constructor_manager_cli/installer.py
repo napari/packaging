@@ -132,7 +132,7 @@ class AbstractInstaller:
         # Do not include the last block parameter in hash
         job_id = hash(args)
         logging.debug("Starting %s %s", self._bin, args)
-        print("ÄRGS", args)
+        # print("ÄRGS", args)
 
         popen = subprocess.Popen(
             args,

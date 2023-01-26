@@ -60,6 +60,7 @@ def get_installed_versions(package_name: str) -> List[Tuple[str, ...]]:
     list of tuples
         List of tuples of installed versions.
     """
+    # TODO: Sort by version number
     versions = []
     envs_folder = get_prefix_by_name("base") / "envs"
 
@@ -83,6 +84,7 @@ def get_installed_versions(package_name: str) -> List[Tuple[str, ...]]:
                     parts = p.stem.rsplit("-")
                     if len(parts) == 3 and parts[-3] == package_name:
                         versions.append(tuple(parts[1:]))
+
     return versions
 
 

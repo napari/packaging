@@ -5,7 +5,6 @@ import requests
 
 from constructor_manager_cli import __version__
 from constructor_manager_cli.defaults import DEFAULT_TIMEOUT
-from constructor_manager_cli.utils.packages import normalized_name
 
 
 @lru_cache
