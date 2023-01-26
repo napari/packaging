@@ -35,14 +35,20 @@ class ConstructorManagerWorker(QObject):
 
     def _finished(self, *args, **kwargs):
         """Handle the finished signal of the worker and emit results."""
-        stdout = self._process.readAllStandardOutput()
-        stderr = self._process.readAllStandardError()
+        try:
+            stdout = self._process.readAllStandardOutput()
+            stderr = self._process.readAllStandardError()
+        except RuntimeError as e:
+            self.finished.emit({"data": {}, "error": str(e)})
+            return
+
         data = stdout.data().decode()
         error = stderr.data().decode()
         try:
             data = json.loads(data)
         except Exception as e:
-            print(e)
+            data = {}
+            # print(e)
 
         result = {"data": data, "error": error}
         self.finished.emit(result)
@@ -53,3 +59,8 @@ class ConstructorManagerWorker(QObject):
             self._process.startDetached()
         else:
             self._process.start()
+
+    def terminate(self):
+        """Terminate the process worker."""
+        self._process.terminate()
+        self._process.waitForFinished()

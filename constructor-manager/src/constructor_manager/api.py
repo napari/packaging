@@ -1,18 +1,23 @@
 """Constructor manager api."""
-
+import sys
+from pathlib import Path
 from typing import List, Optional
 
 from constructor_manager.defaults import DEFAULT_CHANNEL
 from constructor_manager.utils.worker import ConstructorManagerWorker
+from constructor_manager.utils.conda import get_base_prefix
+
+from qtpy.QtCore import QProcess
 
 
 def _run_action(
     cmd,
     package_name: Optional[str] = None,
     version: Optional[str] = None,
-    channel: str = DEFAULT_CHANNEL,
-    plugins: Optional[List[str]] = None,
+    build_string: Optional[str] = None,
+    channels: Optional[List[str]] = None,
     dev: bool = False,
+    plugins_url: Optional[str] = None,
 ) -> ConstructorManagerWorker:
     """Run constructor action.
 
@@ -24,8 +29,9 @@ def _run_action(
         Name of the package to execute action on.
     version : str, optional
         Version of package to execute action on, by default ``None``.
-    channel : str, optional
-        Channel to check for updates, by default ``DEFAULT_CHANNEL``.
+        If not provided the latest version found will be used.
+    channels : list of str, optional
+        Channel to check for updates, by default ``[DEFAULT_CHANNEL]``.
     plugins : List[str], optional
         List of plugins to install, by default ``None``.
     dev : bool, optional
@@ -38,27 +44,39 @@ def _run_action(
         a ``dict`` with the result.
     """
     args = [cmd]
-    if package_name is not None and version is not None:
-        spec: Optional[str] = f"{package_name}={version}"
-    else:
-        spec = package_name
+    if version is None:
+        version = "*"
+
+    spec = f"{package_name}={version}"
+
+    if build_string is not None:
+        spec += f"=*{build_string}*"
 
     if package_name is not None and version is not None:
-        args.extend([spec, "--channel", channel])
+        args.extend([spec])
+        if channels:
+            for channel in channels:
+                args.extend(["--channel", channel])
 
-    if plugins:
-        args.append("--plugins")
-        args.extend(plugins)
+    if plugins_url:
+        args.append("--plugins-url")
+        args.append(plugins_url)
 
     if dev:
         args.extend(["--dev"])
 
     detached = cmd != "status"
+    detached = False
+    print(args)
     return ConstructorManagerWorker(args, detached=detached)
 
 
 def check_updates(
-    package_name, current_version, channel: str = DEFAULT_CHANNEL, dev: bool = False
+    package_name: str,
+    current_version: Optional[str] = None,
+    build_string: Optional[str] = None,
+    channels: List[str] = [DEFAULT_CHANNEL, ],
+    dev: bool = False,
 ) -> ConstructorManagerWorker:
     """Check for updates.
 
@@ -66,10 +84,13 @@ def check_updates(
     ----------
     package_name : str
         Name of the package to check for updates.
-    current_version : str
-        Current version of the package.
-    channel : str, optional
-        Channel to check for updates, by default ``DEFAULT_CHANNEL``.
+    current_version : str, optional
+        Current version of the package. If ``None`` the latest version found
+        will be used.
+    build_string: str, optional
+        Build string of the package.
+    channels : list of str, optional
+        Channels to check for updates, by default ``[DEFAULT_CHANNEL]``.
     dev : bool, optional
         Check for development version, by default ``False``.
 
@@ -80,14 +101,52 @@ def check_updates(
         a ``dict`` with the result.
     """
     return _run_action(
-        "check-updates", package_name, version=current_version, channel=channel, dev=dev
+        "check-updates",
+        package_name,
+        version=current_version,
+        build_string=build_string,
+        channels=channels,
+        dev=dev,
     )
+
+
+def check_version(package_name: str,) -> ConstructorManagerWorker:
+    """Check for updates.
+
+    Parameters
+    ----------
+    package_name : str
+        Name of the package to check for updates.
+
+    Returns
+    -------
+    ConstructorManagerWorker
+        Worker to check for updates. Includes a finished signal that returns
+        a ``dict`` with the result.
+    """
+    return _run_action("check-version", package_name)
+
+
+def check_packages(package_name: str, version: Optional[str] = None, plugins_url: Optional[str] = None) -> ConstructorManagerWorker:
+    """Check for updates.
+
+    Parameters
+    ----------
+    package_name : str
+        Name of the package to check for updates.
+
+    Returns
+    -------
+    ConstructorManagerWorker
+        Worker to check for updates. Includes a finished signal that returns
+        a ``dict`` with the result.
+    """
+    return _run_action("check-packages", package_name, version=version, plugins_url=plugins_url)
 
 
 def update(
     package_name,
-    channel: str = DEFAULT_CHANNEL,
-    plugins: Optional[List[str]] = None,
+    channels: Optional[List[str]] = None,
     dev: bool = False,
 ) -> ConstructorManagerWorker:
     """Update the package to given version.
@@ -100,15 +159,14 @@ def update(
         a ``dict`` with the result.
     """
     return _run_action(
-        "update", package_name, channel=channel, plugins=plugins, dev=dev
+        "update", package_name, channels=channels, dev=dev
     )
 
 
 def rollback(
     package_name,
     current_version: Optional[str],
-    channel: str = DEFAULT_CHANNEL,
-    plugins: Optional[List[str]] = None,
+    channels: Optional[List[str]] = None,
     dev: bool = False,
 ) -> ConstructorManagerWorker:
     """Update the package to given version.
@@ -135,8 +193,7 @@ def rollback(
         "rollback",
         package_name,
         version=current_version,
-        channel=channel,
-        plugins=plugins,
+        channels=channels,
         dev=dev,
     )
 
@@ -144,9 +201,8 @@ def rollback(
 def restore(
     package_name,
     version,
-    channel: str = DEFAULT_CHANNEL,
+    channels: Optional[List[str]] = None,
     dev: bool = False,
-    plugins: Optional[List[str]] = None,
 ) -> ConstructorManagerWorker:
     """Restore the current version of package.
 
@@ -171,8 +227,7 @@ def restore(
         "restore",
         package_name,
         version=version,
-        channel=channel,
-        plugins=plugins,
+        channels=channels,
         dev=dev,
     )
 
@@ -180,3 +235,57 @@ def restore(
 def status():
     """Get status for the state of the constructor updater."""
     return _run_action("status")
+
+
+def open_manager(
+    package_name,
+    current_version: Optional[str] = None,
+    plugins_url: Optional[str] = None,
+    build_string: Optional[str] = None,
+    channels: Optional[List[str]] = None,
+    dev: bool = False,
+    ) -> None:
+    """
+    Open the constructor manager.
+
+    Parameters
+    ----------
+    package_name : str
+        Name of the package to check for updates.
+    current_version : str, optional
+        Current version of the package. If ``None`` the latest version found
+        will be used.
+    build_string: str, optional
+        Build string of the package.
+    channels : list of str, optional
+        Channels to check for updates, by default ``None``.
+    dev : bool, optional
+        Check for development version, by default ``False``.
+    """
+    path = (
+        get_base_prefix()
+        / "bin"
+        / "constructor-manager-ui"
+    )
+
+    args = [package_name]
+    if current_version:
+        args.extend(['--current-version', current_version])
+
+    if plugins_url:
+        args.extend(['--plugins-url', plugins_url])
+
+    if build_string:
+        args.extend(['--build-string', build_string])
+
+    if dev:
+        args.extend(['--dev'])
+
+    if channels:
+        for channel in channels:
+            args.extend(['--channel', channel])
+
+    QProcess.startDetached(
+        str(path),
+        args
+    )
