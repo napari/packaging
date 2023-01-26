@@ -1,10 +1,11 @@
 """Constructor manager main interface."""
 
 import sys
-from typing import Optional
+from typing import Optional, Tuple, Any, List
+from pathlib import Path
 
-from qtpy.QtCore import QSize, Qt, QTimer, Signal
-from qtpy.QtGui import QBrush, QMovie
+from qtpy.QtCore import QSize, Qt, Signal, QUrl
+from qtpy.QtGui import QBrush, QMovie, QCloseEvent, QDesktopServices
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -24,12 +25,10 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from constructor_manager.api import check_updates, check_version, check_packages
+
 # To get mock data
-from constructor_manager_ui.data import (
-    INSTALL_INFORMATION,
-    PACKAGES,
-    UPDATE_AVAILABLE_VERSION,
-)
+from constructor_manager_ui.data import PackageData
 
 # To setup image resources for .qss file
 from constructor_manager_ui.style import images  # noqa
@@ -169,10 +168,13 @@ class PackagesTable(QTableWidget):
             background_brush = QBrush(Qt.GlobalColor.black)
         else:
             background_brush = QBrush(Qt.GlobalColor.darkGray)
+
         item.setBackground(background_brush)
         if not related_package:
             foreground_brush = QBrush(Qt.GlobalColor.black)
             item.setForeground(foreground_brush)
+
+        item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
         return item
 
     def setup(self):
@@ -235,18 +237,96 @@ class InstallationManagerDialog(QDialog):
     def __init__(
         self,
         package_name: str,
-        install_information,
+        current_version: Optional[str] = None,
+        build_string: Optional[str] = None,
+        plugins_url: Optional[str] = None,
+        channels: Optional[List[str]] = None,
+        dev: bool = False,
         parent: Optional[QWidget] = None,
     ):
         super().__init__(parent=parent)
         self.package_name = package_name
-        self.current_version = install_information["current_version"]
-        self.snapshot_version = install_information["snapshot_version"]
+        self.current_version = current_version
+        self.plugins_url = plugins_url
+        self.build_string = build_string
+        self.channels = channels
+        self.dev = dev
+        self.snapshot_version = None
         self.updates_widget = None
         self.packages_tablewidget = None
         self.setWindowTitle(f"{package_name} installation manager")
-        self.setMinimumSize(QSize(500, 500))
+        self.setMinimumSize(QSize(500, 700))
         self.setup_layout()
+
+        self._worker_version = None
+        if current_version is None:
+            self.current_version_open_button.setVisible(False)
+            self._worker_version = check_version(self.package_name)
+            self._worker_version.finished.connect(self._update_version)
+            self._worker_version.start()
+
+        self._refresh()
+
+    def set_disabled(self, state):
+        pass
+        # self.packages_tablewidget.setEnabled(not state)
+        # self.updates_widget.setEnabled(not state)
+
+    def _refresh(self):
+        self._worker_packages = check_packages(
+            self.package_name,
+            version=self.current_version,
+            plugins_url=self.plugins_url,
+        )
+        self._worker_packages.finished.connect(self._update_packages)
+        self._worker_packages.start()
+
+        self._worker_updates = check_updates(
+            self.package_name,
+            current_version=self.current_version,
+            build_string=self.build_string,
+            channels=self.channels,
+            dev=self.dev,
+        )
+        self._worker_updates.finished.connect(self._update_widget)
+        self._worker_updates.start()
+
+        self.show_checking_updates_message()
+        self.set_disabled(True)
+
+    def _update_version(self, result):
+        data = result["data"]
+        self.current_version = data.get("version", "")
+        self.current_version_label.setText(
+            f"{self.package_name} v{self.current_version}"
+        )
+        self.current_version_open_button.setVisible(True)
+
+    def _update_packages(self, result):
+        data = result["data"]
+        packages = data.get("packages", [])
+        package_data = []
+        for pkg in packages:
+            package_data.append(
+                PackageData(
+                    pkg["name"],
+                    pkg["version"],
+                    pkg["source"],
+                    pkg["build_string"],
+                    pkg["is_plugin"],
+                )
+            )
+
+        self.set_packages(package_data)
+
+    def _update_widget(self, result):
+        data = result["data"]
+        if data.get("update"):
+            self.show_update_available_message(data.get("latest_version"))
+        else:
+            self.show_up_to_date_message()
+
+        self.set_disabled(False)
 
     def _create_install_information_group(self):
         install_information_group = QGroupBox("Install information")
@@ -254,19 +334,22 @@ class InstallationManagerDialog(QDialog):
         current_version_layout = QHBoxLayout()
 
         # Current version labels and button
-        current_version_label = QLabel(
-            f"{self.package_name} {self.current_version['version']}"
-        )
-        last_modified_version_label = QLabel(
-            f"Last modified {self.current_version['last_modified']}"
-        )
-        current_version_open_button = QPushButton("Open")
-        current_version_open_button.setObjectName("open_button")
-        current_version_layout.addWidget(current_version_label)
+        if self.current_version:
+            text = f"{self.package_name} v{self.current_version}"
+        else:
+            text = self.package_name
+
+        self.current_version_label = QLabel(text)
+        last_modified_version_label = QLabel()
+        # f"Last modified {self.current_version['last_modified']}"
+        # )
+        self.current_version_open_button = QPushButton("Open")
+        self.current_version_open_button.setObjectName("open_button")
+        current_version_layout.addWidget(self.current_version_label)
         current_version_layout.addSpacing(10)
         current_version_layout.addWidget(last_modified_version_label)
         current_version_layout.addSpacing(10)
-        current_version_layout.addWidget(current_version_open_button)
+        current_version_layout.addWidget(self.current_version_open_button)
         current_version_layout.addStretch(1)
         install_information_layout.addLayout(current_version_layout)
 
@@ -285,7 +368,7 @@ class InstallationManagerDialog(QDialog):
 
         # Signals
         # Open button signal
-        current_version_open_button.clicked.connect(self.open_installed)
+        self.current_version_open_button.clicked.connect(self.open_installed)
         # Update widget signals
         self.updates_widget.install_version.connect(self.install_version)
         self.updates_widget.skip_version.connect(self.skip_version)
@@ -325,24 +408,34 @@ class InstallationManagerDialog(QDialog):
         installation_actions_group = QGroupBox("Installation Actions")
         installation_actions_layout = QGridLayout()
 
+        # Restore action
+        restore_button = QPushButton("Restore Installation")
+        restore_label = QLabel(
+            "Restore installation to the latest snapshot of the current version: "
+            # f"{self.snapshot_version['version']} "
+            # f"({self.snapshot_version['last_modified']})"
+        )
+        installation_actions_layout.addWidget(restore_button, 0, 0)
+        installation_actions_layout.addWidget(restore_label, 0, 1)
+
         # Revert action
         revert_button = QPushButton("Revert Installation")
         revert_label = QLabel(
-            "Rollback installation to the latest snapshot: "
-            f"{self.snapshot_version['version']} "
-            f"({self.snapshot_version['last_modified']})"
+            "Rollback installation to the latest snapshot of the previous version: "
+            # f"{self.snapshot_version['version']} "
+            # f"({self.snapshot_version['last_modified']})"
         )
-        installation_actions_layout.addWidget(revert_button, 0, 0)
-        installation_actions_layout.addWidget(revert_label, 0, 1)
+        installation_actions_layout.addWidget(revert_button, 1, 0)
+        installation_actions_layout.addWidget(revert_label, 1, 1)
 
         # Reset action
         reset_button = QPushButton("Reset Installation")
         reset_label = QLabel(
-            "Reset the installation to clear "
+            "Reset the current installation to clear "
             "preferences, plugins, and other packages"
         )
-        installation_actions_layout.addWidget(reset_button, 1, 0)
-        installation_actions_layout.addWidget(reset_label, 1, 1)
+        installation_actions_layout.addWidget(reset_button, 2, 0)
+        installation_actions_layout.addWidget(reset_label, 2, 1)
 
         # Uninstall action
         uninstall_button = QPushButton("Uninstall")
@@ -351,12 +444,13 @@ class InstallationManagerDialog(QDialog):
             f"Remove the {self.package_name} Bundled App "
             "and Installation Manager from your computer"
         )
-        installation_actions_layout.addWidget(uninstall_button, 2, 0)
-        installation_actions_layout.addWidget(uninstall_label, 2, 1)
+        installation_actions_layout.addWidget(uninstall_button, 3, 0)
+        installation_actions_layout.addWidget(uninstall_label, 3, 1)
 
         installation_actions_group.setLayout(installation_actions_layout)
 
         # Signals
+        restore_button.clicked.connect(self.restore_installation)
         revert_button.clicked.connect(self.revert_installation)
         reset_button.clicked.connect(self.reset_installation)
         uninstall_button.clicked.connect(self.uninstall)
@@ -382,9 +476,14 @@ class InstallationManagerDialog(QDialog):
         self.setLayout(main_layout)
 
     def open_installed(self):
-        # TODO: To be handled with the backend.
-        #       Maybe this needs to be a signal
-        print(self.current_version)
+        path = (
+            Path(sys.prefix)
+            / "envs"
+            / f"{self.package_name}-{self.current_version}"
+            / "bin"
+            / self.package_name
+        )
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
 
     def show_checking_updates_message(self):
         self.updates_widget.show_checking_updates_message()
@@ -412,6 +511,11 @@ class InstallationManagerDialog(QDialog):
             self.packages_tablewidget.set_data(self.packages)
             self.packages_spinner_label.hide()
 
+    def restore_installation(self):
+        # TODO: To be handled with the backend.
+        #       Maybe this needs to be a signal
+        print("Restore installation")
+
     def revert_installation(self):
         # TODO: To be handled with the backend.
         #       Maybe this needs to be a signal
@@ -427,8 +531,26 @@ class InstallationManagerDialog(QDialog):
         #       Maybe this needs to be a signal
         print("Uninstall")
 
+    def closeEvent(self, a0: QCloseEvent) -> None:
+        if self._worker_version:
+            self._worker_version.terminate()
 
-def main(package_name: str):
+        self._worker_updates.terminate()
+        self._worker_packages.terminate()
+        return super().closeEvent(a0)
+
+
+def _dedup(items: Tuple[Any, ...]) -> Tuple[Any, ...]:
+    """Deduplicate an list of items."""
+    new_items: Tuple[Any, ...] = ()
+    for item in items:
+        if item not in new_items:
+            new_items += (item,)
+
+    return new_items
+
+
+def main(args):
     """Run the main interface.
 
     Parameters
@@ -436,23 +558,23 @@ def main(package_name: str):
     package_name : str
         Name of the package that the installation manager is handling.
     """
+    # TODO: Need to add a lock to avoid multiple instances!
     app = QApplication([])
     update_styles(app)
 
+    if "channel" in args:
+        if args.channel:
+            args.channel = _dedup(args.channel)
+
     # Installation manager dialog instance
     installation_manager_dlg = InstallationManagerDialog(
-        package_name,
-        INSTALL_INFORMATION,
+        args.package,
+        args.current_version,
+        plugins_url=args.plugins_url,
+        build_string=args.build_string,
+        channels=args.channel,
+        dev=args.dev,
     )
     installation_manager_dlg.show()
-
-    # Mock data initialization loading.
-    # Change commented lines to check different UI update widget states
-    def data_initialization():
-        installation_manager_dlg.set_packages(PACKAGES)
-        installation_manager_dlg.show_update_available_message(UPDATE_AVAILABLE_VERSION)
-        # installation_manager_dlg.show_up_to_date_message()
-
-    QTimer.singleShot(5000, data_initialization)
 
     sys.exit(app.exec_())
