@@ -140,7 +140,8 @@ def remove_sentinel_file(package_name: str, version: str):
     package_name = normalized_name(package_name)
     env_name = f"{package_name}-{version}"
     prefix = get_prefix_by_name(env_name)
-    os.remove(get_sentinel_path(prefix, package_name))
+    sentinel_path = get_sentinel_path(prefix, package_name)
+    sentinel_path.unlink(True)
 
 
 def get_config_path() -> Path:

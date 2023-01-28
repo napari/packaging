@@ -22,13 +22,30 @@ pip install -e .
 
 ## Examples
 
+### Check for version
+
+Check for the version of the currently (latest?) installed package.
+
+```bash
+constructor-manager check-version "napari"
+```
+
+### Check for packages
+
+Check for all the packages installed in the current environment for the latest version ot the package.
+
+```bash
+constructor-manager check-packages "napari=0.4.16" --plugins-url https://api.napari-hub.org/plugins
+constructor-manager check-packages "napari" --plugins-url https://api.napari-hub.org/plugins
+```
+
 ### Check for updates
 
 #### For a given package
 
 ```bash
-constructor-manager check-updates "napari=0.4.16=*pyside*" -c conda-forge --plugins-url https://api.napari-hub.org/plugins
-constructor-manager check-updates "napari=*=*pyside*" -c conda-forge --plugins-url https://api.napari-hub.org/plugins
+constructor-manager check-updates "napari=0.4.16=*pyside*" -c conda-forge
+constructor-manager check-updates "napari=*=*pyside*" -c conda-forge
 ```
 
 This will check for any updates available for the package named `napari`
@@ -393,6 +410,14 @@ These lock files are usable by the `rollback` command.
 constructor-manager lock "napari=0.4.16=*pyside*" -c conda-forge
 ```
 
+### Reset
+
+```bash
+constructor-manager reset "napari=0.4.16=*pyside*" -c conda-forge
+
+constructor-manager reset "pyzenhub=*=*" -c conda-forge
+```
+
 ### Restore
 
 This command will install a specified on a fresh environment, deleting the old environment first.
@@ -407,3 +432,4 @@ constructor-manager restore "napari=0.4.16=*pyside*" -c conda-forge
 cd constructor-manager-cli/src
 pytest constructor_manager_cli --cov=constructor_manager_cli --cov-report term-missing
 ```
+

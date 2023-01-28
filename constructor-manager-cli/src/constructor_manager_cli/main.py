@@ -4,8 +4,9 @@ import argparse
 import json
 import os
 import sys
-import time
+import warnings
 from typing import Any, Tuple
+import time
 
 from constructor_manager_cli.actions import ActionManager
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
@@ -13,12 +14,14 @@ from constructor_manager_cli.utils.io import get_lock_path
 from constructor_manager_cli.utils.locking import FilesystemLock
 
 
+warnings.filterwarnings("ignore")
+
+
 def _create_subparser(
     subparser,
     channel=False,
     plugins_url=False,
     dev=False,
-    launch=False,
 ):
     """Create a subparser for the constructor updater.
 
@@ -33,8 +36,6 @@ def _create_subparser(
         for the package. By default ``False``.
     dev : bool, optional
         Check for development version, by default ``False``.
-    launch : bool, optional
-        Launch the aplication, by default ``False``.
 
     Returns
     -------
@@ -60,9 +61,6 @@ def _create_subparser(
 
     if dev:
         subparser.add_argument("--dev", "-d", action="store_true")
-
-    if launch:
-        subparser.add_argument("--launch", "-l", action="store_true")
 
     return subparser
 
@@ -105,42 +103,21 @@ def _create_parser():
         plugins_url=True,
     )
 
-    # Run the update process after installation, to delete the old envs and
-    # optionally launch the application
-    update_clean = subparsers.add_parser("update-clean")
-    update_clean = _create_subparser(
-        update_clean,
-        channel=True,
-        dev=True,
-        launch=True,
-    )
-
-    # Lock the environment using conda-lock
-    lock = subparsers.add_parser("lock")
-    lock = _create_subparser(lock, channel=True)
-
     # Restore to a previous restore point of a current version
     restore = subparsers.add_parser("restore")
     restore = _create_subparser(restore, channel=True)
 
-    # Reset a current broken version to a clean napari install
-    reset = subparsers.add_parser("reset")
-    reset = _create_subparser(reset, channel=True)
-
-    # Revert to a previous version restore point of a previous version
+    # Revert to a previous version restore point
     revert = subparsers.add_parser("revert")
     revert = _create_subparser(revert, channel=True)
+
+    # Reset to a clean install
+    reset = subparsers.add_parser("reset")
+    reset = _create_subparser(reset, channel=True)
 
     # Get current status of the installer (update in progress?)
     status = subparsers.add_parser("status")
     status = _create_subparser(status)
-
-    # Clean any broken or stale environments
-    clean = subparsers.add_parser("clean")
-    clean = _create_subparser(clean)
-
-    clean_lock = subparsers.add_parser("clean-lock")
-    clean_lock = _create_subparser(clean_lock)
 
     return parser
 
@@ -159,63 +136,39 @@ def _execute(args, lock, lock_created=None):
     lock_created: bool, optional
         Whether the lock was created or not, by default ``None``.
     """
-    # Commands that can run in parallel
-    if "channel" in args:
-        manager = ActionManager(args.package, args.channel)
-    else:
-        manager = ActionManager(args.package)
+    channels = (DEFAULT_CHANNEL,) if "channel" not in args else args.channel
+    manager = ActionManager(args.package, channels)
 
+    # Commands that can run in parallel
+    result = []
     if args.command == "check-updates":
-        res = manager.check_updates(args.dev)
-        sys.stdout.write(json.dumps(res, indent=4))
-        return
+        result = manager.check_updates(args.dev)
     elif args.command == "check-version":
-        res = manager.check_version()
-        sys.stdout.write(json.dumps(res, indent=4))
-        return
+        result = manager.check_version()
     elif args.command == "check-packages":
-        res = manager.check_packages(args.plugins_url)
-        sys.stdout.write(json.dumps(res, indent=4))
-        return
+        result = manager.check_packages(args.plugins_url)
+
+    if result:
+        return result
 
     # Commands that need to be locked
     if lock_created:
         if args.command == "update":
-            res = manager.update(args.dev, args.plugins_url)
-        elif args.command == "update-clean":
-            pass
-            # res = check_updates(
-            #     args.package,
-            #     args.dev,
-            #     args.channel,
-            # )
-            # print(json.dumps(res))
+            result = manager.update(args.dev, args.plugins_url)
         elif args.command == "restore":
-            pass
-            # res = restore(args.package, args.channel)
-            # print(json.dumps(res))
-        elif args.command == "rollback":
-            pass
-            # res = check_updates(
-            #     args.package,
-            #     args.current_version,
-            #     args.stable,
-            #     args.channel,
-            # )
-            # print(json.dumps(res))
-        elif args.command == "lock":
-            pass
-            # res = lock_environment(args.package, args.channel)
-            # print(json.dumps(res))
+            result = manager.restore()
+        elif args.command == "revert":
+            result = manager.revert()
+        elif args.command == "reset":
+            result = manager.reset()
         elif args.command == "status":
-            pass
-        elif args.command == "clean":
-            pass
+            result = manager.get_status()
 
-        time.sleep(5)
+        # time.sleep(5)
         lock.unlock()
+        return result
     else:
-        sys.stdout.write("Another instance is running")
+        return "Another instance is running"
 
 
 def _handle_excecute(args, lock, lock_created=None):
@@ -230,7 +183,9 @@ def _handle_excecute(args, lock, lock_created=None):
     lock_created: bool, optional
         Whether the lock was created or not, by default ``None``.
     """
-    _execute(args, lock, lock_created)
+    result = _execute(args, lock, lock_created)
+    data = {"data": result, "error": None}
+    sys.stdout.write(json.dumps(data, indent=4))
     # try:
     #     _execute(args, lock, lock_created)
     # except Exception as e:

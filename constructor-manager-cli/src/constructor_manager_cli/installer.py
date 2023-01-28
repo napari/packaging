@@ -132,7 +132,7 @@ class AbstractInstaller:
         # Do not include the last block parameter in hash
         job_id = hash(args)
         logging.debug("Starting %s %s", self._bin, args)
-        # print("ÄRGS", args)
+        # print("ÄRGS", ' '.join(args))
 
         popen = subprocess.Popen(
             args,
@@ -385,6 +385,7 @@ class CondaInstaller(AbstractInstaller):
         pkg_list: Sequence[str],
         *,
         prefix: Optional[str] = None,
+        shortcuts: bool = False,
         block: bool = False,
     ) -> job_id:
         """Uninstall packages in `pkg_list` from `prefix`.

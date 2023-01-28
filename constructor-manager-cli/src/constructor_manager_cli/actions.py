@@ -1,6 +1,8 @@
 """Constructor manager actions."""
 import datetime
 import shutil
+import uuid
+import sys
 from typing import Dict, List, Optional, Tuple
 
 import yaml
@@ -39,27 +41,30 @@ class ActionManager:
         self,
         package,
         channels: Tuple[str] = (DEFAULT_CHANNEL,),
-        use_mamba: bool = False,
+        use_mamba: bool = True,
     ):
         self._channels = channels
         self._info = None
         self._platfonm = None
-        pn, cv, bs = parse_conda_version_spec(package)
+        self._package_name, cv, self._build_string = parse_conda_version_spec(package)
+        self._latest_version = None
 
         # If current version not provided, find the latest installed version
         if cv == "":
-            installed_versions_builds = get_installed_versions(pn)
+            installed_versions_builds = get_installed_versions(self._package_name)
             installed_versions = [vb[0] for vb in installed_versions_builds]
             installed_versions = sort_versions(installed_versions, reverse=True)
             if installed_versions:
                 cv = installed_versions[0]
             else:
                 # FIXME: What to do if no version is installed? Raise an error?
-                cv = ""
+                versions = self._check_available_versions()
+                self._log(versions)
+                self._latest_version = versions[0]
 
-        self._package_name, self._current_version, self._build_string = pn, cv, bs
+        self._current_version = cv
         self._installer = CondaInstaller(
-            channels=channels, pinned=pn, use_mamba=use_mamba
+            channels=channels, pinned=self._package_name, use_mamba=use_mamba
         )
 
     def get_info(self):
@@ -159,11 +164,29 @@ class ActionManager:
         #             lockfile.unlink()
         #             break
 
-    def _create_shortcuts(self):
-        pass
+    def _create_shortcuts(self, version):
+        """Create shortcuts for a given version.
 
-    def _remove_shortcuts(self):
-        pass
+        Parameters
+        ----------
+        version : str
+            Version to create shortcuts for.
+        """
+        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+        menu_spec = f"{self._package_name}-menu={version}"
+        return self._installer.install(prefix, pkg_list=[menu_spec], shortcuts=True, block=True)
+
+    def _remove_shortcuts(self, version):
+        """Remove shortcuts for a given version.
+
+        Parameters
+        ----------
+        version : str
+            Version to remove shortcuts for.
+        """
+        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+        menu_spec = f"{self._package_name}-menu={version}"
+        return self._installer.uninstall(pkg_list=[menu_spec], prefix=prefix, shortcuts=True, block=True)
 
     def _create_with_plugins(
         self,
@@ -219,6 +242,83 @@ class ActionManager:
 
         return self._installer._exit_codes[job_id]
 
+    def _remove(self, version: str, shortcuts: bool = True):
+        """Remove specific environment of a given package.
+
+        Environment will be removed using conda/mamba, or the folders deleted in
+        case conda fails.
+
+        Shortcuts for the package will also be removed.
+
+        Parameters
+        ----------
+        version : str
+            Package version.
+        shortcuts : bool, optional
+            If ``True``, remove the shortcuts. Default is ``True``.
+        """
+        # print("removing sentinel file")
+        # Remove the sentinel file of the old environment
+        remove_sentinel_file(self._package_name, version)
+
+        # Remove the shortcuts of the old environment
+        if shortcuts:
+            # print('removing shortcuts')
+            self._remove_shortcuts(version)
+
+        # Try to remove using conda/mamba
+        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+        # print('removing env with conda')
+        self._installer.remove(str(prefix), block=True)
+
+        # Otherwise rename and remove the folder manually
+        if prefix.exists():
+            # print('renaming for later removal')
+            prefix.rename(prefix.parent / f"{prefix.name}-{uuid.uuid1()}")
+
+    def _create(self, spec, shortcuts: bool = True):
+        """"""
+        package_name, version, _ = parse_conda_version_spec(spec)
+        prefix = get_prefix_by_name(f"{package_name}-{version}")
+        self._log(f"Creating environment {prefix}...")
+        self._installer.create(str(prefix), pkg_list=[spec], block=True)
+
+        # Lock environment
+        # TODO:
+
+        # Create the shortcuts for the new environment
+        if shortcuts:
+            self._create_shortcuts(version=version)
+
+        # Create the sentinel file for the new environment
+        create_sentinel_file(self._package_name, version)
+
+    def _check_available_versions(self, dev: bool = False) -> List[str]:
+        """Check for available versions.
+
+        Parameters
+        ----------
+        dev : bool, optional
+            If ``True``, check for development versions. Default is ``False``.
+
+        Returns
+        -------
+        list
+            List of available versions.
+        """
+        self._log("Checking available versions...")
+        versions = conda_package_versions(
+            self._package_name,
+            build=self._build_string,
+            channels=self._channels,
+            reverse=True,
+        )
+
+        if not dev:
+            versions = list(filter(is_stable_version, versions))
+
+        return versions
+
     def check_updates(self, dev: bool = False) -> Dict:
         """Check for package updates.
 
@@ -233,16 +333,7 @@ class ActionManager:
             Dictionary containing the current and latest versions, found
             installed versions.
         """
-        versions = conda_package_versions(
-            self._package_name,
-            build=self._build_string,
-            channels=self._channels,
-            reverse=True,
-        )
-
-        if not dev:
-            versions = list(filter(is_stable_version, versions))
-
+        versions = self._check_available_versions(dev)
         update = False
         latest_version = versions[0] if versions else ""
         installed_versions_builds = get_installed_versions(self._package_name)
@@ -276,6 +367,7 @@ class ActionManager:
     def check_version(self):
         """Return the currently installed version."""
         # TODO: Add modified date?
+        self._log("Checking version...")
         return {"version": self._current_version}
 
     def check_packages(self, plugins_url: Optional[str] = None):
@@ -290,7 +382,12 @@ class ActionManager:
         -------
         list
         """
+        self._log("Checking prefix exists...")
         prefix = get_prefix_by_name(f"{self._package_name}-{self._current_version}")
+        if not prefix.exists():
+            return {}
+
+        self._log("Getting installed packages info...")
         return {"packages": self._get_installed_packages(prefix, plugins_url)}
 
     def check_status(self):
@@ -365,31 +462,60 @@ class ActionManager:
         # Then create a sentinel file in the the new environment
         create_sentinel_file(self._package_name, latest_version)
 
+    def restore(self):
+        pass
 
-def clean_all(package):
-    """Clean all environments of a given package.
+    def revert(self):
+        pass
 
-    Environments will be removed using conda/mamba, or the folders deleted in
-    case conda fails.
+    def reset(self):
+        """Reset a specific environment."""
+        # Remove any pending broken envs
+        self._log("Cleaning any broken environments...")
+        self.clean_all()
 
-    Parameters
-    ----------
-    package_name : str
-        Name of the package.
-    """
-    package_name, _, _ = parse_conda_version_spec(package)
-    installer = CondaInstaller()
-    failed = []
-    for prefix in get_broken_envs(package_name):
-        # Try to remove using conda/mamba
-        job_id = installer.remove(prefix)
-        if installer._exit_codes[job_id]:
-            failed.append(prefix)
+        version = self._current_version if self._current_version else self._latest_version
 
-    # Otherwise remove the folders manually
-    for prefix in failed:
-        shutil.rmtree(prefix)
+        # Remove the old environment
+        self._log("Removing environment...")
+        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+        if prefix.exists():
+            self._remove(version=self._current_version)
 
+        # Create the new environment
+        self._log("Creating new environment...")
+        spec = f"{self._package_name}={version}=*{self._build_string}*"
+        self._create(spec)
+
+        # Remove any pending broken envs
+        self._log("Cleaning any broken environments...")
+        self.clean_all()
+
+        return "Environment reset complete!"
+
+    def get_status(self):
+        pass
+
+
+    def clean_all(self):
+        """Clean all environments of a given package.
+
+        Environments will be removed using conda/mamba, or the folders deleted in
+        case conda fails.
+
+        Parameters
+        ----------
+        package_name : str
+            Name of the package.
+        """
+        for prefix in get_broken_envs(self._package_name):
+            shutil.rmtree(prefix, ignore_errors=True)
+
+    def _log(self, msg):
+        """Log message to console."""
+        prefix = f"constructor-manager-cli ({self._package_name}): "
+        suffix = "\n"
+        sys.stderr.write(f"{prefix}{msg}{suffix}")
 
 # def check_updates_clean_and_launch(
 #     package: str,
@@ -412,28 +538,6 @@ def clean_all(package):
 
 #         # Remove any prior installations
 #         clean_all(package_name)
-
-
-def remove(package: str, use_mamba: bool = False):
-    """Remove specific environment of a given package.
-
-    Environment will be removed using conda/mamba, or the folders deleted in
-    case conda fails.
-
-    Parameters
-    ----------
-    package : str
-        Package specification.
-    """
-    # Try to remove using conda/mamba
-    installer = CondaInstaller(use_mamba=use_mamba)
-    package_name, version, _ = parse_conda_version_spec(package)
-    prefix = get_prefix_by_name(f"{package_name}-{version}")
-    job_id = installer.remove(str(prefix))
-
-    # Otherwise remove the folder manually
-    if job_id:
-        shutil.rmtree(prefix)
 
 
 # def restore(package: str, channels: Tuple[str] = (DEFAULT_CHANNEL,)):
