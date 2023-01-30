@@ -432,4 +432,3 @@ constructor-manager restore "napari=0.4.16=*pyside*" -c conda-forge
 cd constructor-manager-cli/src
 pytest constructor_manager_cli --cov=constructor_manager_cli --cov-report term-missing
 ```
-

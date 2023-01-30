@@ -1,9 +1,9 @@
 """IO utilities."""
 
 import json
-import os
 from pathlib import Path
 from typing import List, Tuple, Union
+from functools import lru_cache
 
 from constructor_manager_cli.utils.conda import get_prefix_by_name
 from constructor_manager_cli.utils.packages import (
@@ -144,28 +144,64 @@ def remove_sentinel_file(package_name: str, version: str):
     sentinel_path.unlink(True)
 
 
+@lru_cache
 def get_config_path() -> Path:
-    return get_prefix_by_name("base") / "var" / "constructor-manager"
+    path = get_prefix_by_name("base") / "var" / "constructor-manager"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
+@lru_cache
 def get_state_path() -> Path:
-    return get_config_path() / "state"
+    """Store the output of conda-lock for a given environment."""
+    path = get_config_path() / "state"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
+@lru_cache
 def get_lock_path() -> Path:
-    return get_config_path() / "lock"
+    """Store the lock files."""
+    path = get_config_path() / "lock"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
+@lru_cache
 def get_log_path() -> Path:
-    return get_config_path() / "log"
+    path = get_config_path() / "log"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
+@lru_cache
 def get_status_path() -> Path:
-    return get_config_path() / "status"
+    """Store the output of running conda commands."""
+    path = get_config_path() / "status"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
+@lru_cache
 def get_env_path() -> Path:
-    return get_config_path() / "env"
+    """Path that stores the input of conda-lock for a given environment.
+
+    The path is created if it does not exist already.
+    """
+    path = get_config_path() / "env"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+@lru_cache
+def get_list_path() -> Path:
+    """Store the output of conda list for a given environment.
+
+    The path is created if it does not exist already.
+    """
+    path = get_config_path() / "list"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def save_state_file(

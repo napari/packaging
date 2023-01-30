@@ -26,6 +26,8 @@ import errno
 import os
 from os import rename
 from time import time as _uniquefloat
+from pathlib import Path
+from typing import Union, Tuple
 
 
 def unique():
@@ -116,7 +118,7 @@ else:
         os.rmdir(filename)
 
 
-class FilesystemLock:
+class FileSystemLock:
     """
     A mutex.
 
@@ -232,7 +234,7 @@ def is_locked(name):
     @rtype: C{bool}
     @return: True if the lock is held, False otherwise.
     """
-    lock = FilesystemLock(name)
+    lock = FileSystemLock(name)
     result = None
     try:
         result = lock.lock()
@@ -242,4 +244,41 @@ def is_locked(name):
     return not result
 
 
-__all__ = ["FilesystemLock", "is_locked"]
+def get_lock(path: Union[str, Path]) -> Tuple[FileSystemLock, bool]:
+    """
+    Generate a lock file and return the lock object if successful.
+
+    Parameters
+    ----------
+    path : str
+        Path to the lock file.
+    """
+    lock = FileSystemLock(path)
+
+    # Try to lock the lock filelock. If it's *possible* to do it, then
+    # there is no previous instance running and we can start a
+    # new one. If *not*, then there is an instance already
+    # running, which is locking that file
+    try:
+        lock_created = lock.lock()
+    except Exception:
+        # If locking fails because of errors in the lockfile
+        # module, try to remove a possibly stale lock file.
+        try:
+            if os.name == "nt":
+                if os.path.isdir(path):
+                    import shutil
+
+                    shutil.rmtree(path, ignore_errors=True)
+            else:
+                if os.path.islink(path):
+                    os.unlink(path)
+        except Exception:
+            pass
+
+        lock_created = False
+
+    return lock, lock_created
+
+
+__all__ = ["FileSystemLock", "get_lock", "is_locked"]

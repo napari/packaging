@@ -1,9 +1,12 @@
 """Constructor manager actions."""
+import glob
 import datetime
 import shutil
 import uuid
 import sys
 from typing import Dict, List, Optional, Tuple
+from pathlib import Path
+from functools import lru_cache
 
 import yaml
 
@@ -21,6 +24,7 @@ from constructor_manager_cli.utils.io import (
     get_env_path,
     get_installed_versions,
     get_state_path,
+    get_list_path,
     remove_sentinel_file,
 )
 from constructor_manager_cli.utils.versions import (
@@ -44,32 +48,37 @@ class ActionManager:
         use_mamba: bool = True,
     ):
         self._channels = channels
-        self._info = None
+        self._info: Optional[Dict] = None
         self._platfonm = None
         self._package_name, cv, self._build_string = parse_conda_version_spec(package)
         self._latest_version = None
+        self._platform = None
 
         # If current version not provided, find the latest installed version
         if cv == "":
             installed_versions_builds = get_installed_versions(self._package_name)
             installed_versions = [vb[0] for vb in installed_versions_builds]
             installed_versions = sort_versions(installed_versions, reverse=True)
+
             if installed_versions:
                 cv = installed_versions[0]
             else:
-                # FIXME: What to do if no version is installed? Raise an error?
+                # If not installed, save the latest version found
                 versions = self._check_available_versions()
-                self._log(versions)
-                self._latest_version = versions[0]
+                if versions:
+                    self._latest_version = versions[0]
 
         self._current_version = cv
         self._installer = CondaInstaller(
             channels=channels, pinned=self._package_name, use_mamba=use_mamba
         )
 
-    def get_info(self):
+    @lru_cache
+    def _get_info(self) -> Dict:
+        """Get conda info."""
         self._info = self._installer.info()
         self._platform = self._info["platform"]
+        return self._info
 
     def _get_installed_packages(self, prefix, plugins_url: Optional[str] = None):
         """Return a list of installed packages for the given prefix.
@@ -122,27 +131,79 @@ class ActionManager:
 
         return plugins
 
+    def _create_environment_file_for_locking(self, version, packages) -> Path:
+        """Create an environment file for locking.
+
+        Parameters
+        ----------
+        version : str
+            Version to create environment for.
+        packages : list of str
+            Packages to include in the environment.
+
+        Returns
+        -------
+        Path
+            Path to the environment file.
+        """
+        if self._platform is None:
+            self._get_info()
+
+        dependencies = [f"{p['name']}={p['version']}" for p in packages]
+        yaml_spec = {
+            "dependencies": dependencies,
+            "channels": list(self._channels),
+            "platforms": [self._platform],
+        }
+
+        env_path = get_env_path() / f"{self._package_name}-{version}-environment.yaml"
+        with open(env_path, "w") as f:
+            yaml.dump(yaml_spec, f)
+
+        return env_path
+
+    def _create_list_file(self, version) -> None:
+        """Create a conda/mamba list file for a given version.
+
+        This use conda/mamba list for the given version and write a yaml file
+        if no other files exists, or if the previous file has different
+        content.
+
+        Parameters
+        ----------
+        version : str
+            Version to create conda list for.
+        """
+        date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        path = get_list_path() / f"{self._package_name}-{version}-{date}-list.yaml"
+        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+        packages = self._installer.list(str(prefix), block=True)
+
+        # Find all files with the same pattern
+        filepaths = glob.glob(
+            str(get_list_path() / f"{self._package_name}-{version}-*-list.yaml")
+        )
+
+        # Check if the latest file with the same content exists
+        data = {}
+        for filepath in sorted(filepaths, reverse=True):
+            with open(filepath) as f:
+                data = yaml.load(f, Loader=yaml.SafeLoader)
+            break
+
+        if data != packages:
+            with open(path, "w") as f:
+                yaml.dump(packages, f)
+
     def _lock_environment(self, version, packages):
         """
         Lock the environment, using conda lock.
         """
-        dependencies = [f"{p['name']}= {p['version']}" for p in packages]
-        yaml_spec = {"dependencies": dependencies}
-        yaml_spec["channels"] = list(self._channels)
-        platforms = (self._platform,)
-
+        env_path = self._create_env_for_locking(version, packages)
         date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         lockfile = get_state_path() / f"{self._package_name}-{version}-{date}-lock.yaml"
 
-        envs_path = get_env_path()
-        envs_path.mkdir(parents=True, exist_ok=True)
-        env_path = envs_path / f"{self._package_name}-{version}-environment.yaml"
-        with open(env_path, "w") as f:
-            yaml.dump(yaml_spec, f)
-
-        self._installer.lock(
-            str(env_path), platforms=platforms, lockfile=str(lockfile), block=True
-        )
+        self._installer.lock(str(env_path), lockfile=str(lockfile), block=True)
 
         with open(lockfile) as fh:
             lines = fh.read().split("\n")
@@ -167,6 +228,9 @@ class ActionManager:
     def _create_shortcuts(self, version):
         """Create shortcuts for a given version.
 
+        This assumes that the menu for a given package is a sepparate package
+        called ``'<package_name>-menu'`` with the same version.
+
         Parameters
         ----------
         version : str
@@ -174,9 +238,11 @@ class ActionManager:
         """
         prefix = get_prefix_by_name(f"{self._package_name}-{version}")
         menu_spec = f"{self._package_name}-menu={version}"
-        return self._installer.install(prefix, pkg_list=[menu_spec], shortcuts=True, block=True)
+        return self._installer.install(
+            prefix, pkg_list=[menu_spec], shortcuts=True, block=True
+        )
 
-    def _remove_shortcuts(self, version):
+    def _remove_shortcuts(self, version: str):
         """Remove shortcuts for a given version.
 
         Parameters
@@ -186,7 +252,9 @@ class ActionManager:
         """
         prefix = get_prefix_by_name(f"{self._package_name}-{version}")
         menu_spec = f"{self._package_name}-menu={version}"
-        return self._installer.uninstall(pkg_list=[menu_spec], prefix=prefix, shortcuts=True, block=True)
+        return self._installer.uninstall(
+            pkg_list=[menu_spec], prefix=str(prefix), shortcuts=True, block=True
+        )
 
     def _create_with_plugins(
         self,
@@ -319,6 +387,14 @@ class ActionManager:
 
         return versions
 
+    def _log(self, msg):
+        """Log message to console stderr."""
+        prefix = f"constructor-manager-cli ({self._package_name}): "
+        suffix = "\n"
+        sys.stderr.write(f"{prefix}{msg}{suffix}")
+
+    # --- Plugin API
+    # ------------------------------------------------------------------------
     def check_updates(self, dev: bool = False) -> Dict:
         """Check for package updates.
 
@@ -354,33 +430,31 @@ class ActionManager:
             "latest_version": latest_version,
             "previous_version": previous_version,
             "installed_versions": installed_versions,
-            "status": {
-                "data": "",
-                "stdout": "",
-                "stderr": "",
-            },
-            # Referes to the latest version that is newer than the current
+            # Refers to the latest version that is newer than the current
             "update": update,
             "installed": latest_version in installed_versions,
         }
 
-    def check_version(self):
+    def check_version(self) -> Dict:
         """Return the currently installed version."""
-        # TODO: Add modified date?
+        # TODO: Add modified date? This needs the lock file date
         self._log("Checking version...")
         return {"version": self._current_version}
 
-    def check_packages(self, plugins_url: Optional[str] = None):
+    def check_packages(self, plugins_url: Optional[str] = None) -> Dict:
         """Check for installed packages.
 
         Parameters
         ----------
         plugins_url : str, optional
             URL with list of plugins avaliable for package. Default is ``None``.
+            This endpoint should return a JSON object with the name of the plugins
+            as keys, or a JSON Array with the names of the plugins.
 
         Returns
         -------
         list
+            List of installed packages.
         """
         self._log("Checking prefix exists...")
         prefix = get_prefix_by_name(f"{self._package_name}-{self._current_version}")
@@ -392,12 +466,13 @@ class ActionManager:
 
     def check_status(self):
         """Get status of any running action."""
+        # TODO:
 
     def update(
         self,
         plugins_url: Optional[str] = None,
         dev: bool = False,
-    ):
+    ) -> Dict:
         """Update the package.
 
         Parameters
@@ -462,19 +537,21 @@ class ActionManager:
         # Then create a sentinel file in the the new environment
         create_sentinel_file(self._package_name, latest_version)
 
-    def restore(self):
+    def restore(self) -> Dict:
         pass
 
-    def revert(self):
+    def revert(self) -> Dict:
         pass
 
-    def reset(self):
-        """Reset a specific environment."""
+    def reset(self) -> Dict:
+        """Reset environment."""
         # Remove any pending broken envs
         self._log("Cleaning any broken environments...")
         self.clean_all()
 
-        version = self._current_version if self._current_version else self._latest_version
+        version = (
+            self._current_version if self._current_version else self._latest_version
+        )
 
         # Remove the old environment
         self._log("Removing environment...")
@@ -493,11 +570,7 @@ class ActionManager:
 
         return "Environment reset complete!"
 
-    def get_status(self):
-        pass
-
-
-    def clean_all(self):
+    def clean_all(self) -> Dict:
         """Clean all environments of a given package.
 
         Environments will be removed using conda/mamba, or the folders deleted in
@@ -510,78 +583,3 @@ class ActionManager:
         """
         for prefix in get_broken_envs(self._package_name):
             shutil.rmtree(prefix, ignore_errors=True)
-
-    def _log(self, msg):
-        """Log message to console."""
-        prefix = f"constructor-manager-cli ({self._package_name}): "
-        suffix = "\n"
-        sys.stderr.write(f"{prefix}{msg}{suffix}")
-
-# def check_updates_clean_and_launch(
-#     package: str,
-#     dev: bool = False,
-#     channel=DEFAULT_CHANNEL,
-# ):
-#     """Check for updates and clean."""
-#     package_name, version, _ = parse_conda_version_spec(package)
-#     res = check_updates(package_name, dev, channel)
-#     found_versions = res["found_versions"]
-
-#     # Remove any prior installations
-#     if res["installed"]:
-#         for version in found_versions:
-#             if version != res["latest_version"]:
-#                 remove_sentinel_file(package_name, version)
-
-#         # Launch the detached application
-#         # print(f"launching {package_name} version {res['latest_version']}")
-
-#         # Remove any prior installations
-#         clean_all(package_name)
-
-
-# def restore(package: str, channels: Tuple[str] = (DEFAULT_CHANNEL,)):
-#     """Restore specific environment of a given package.
-
-#     Parameters
-#     ----------
-#     package : str
-#         Name of the package.
-#     channels : tuple of str, optional
-#         Check for available versions on these channels.
-#         Default is ``('conda-forge', )``.
-#     """
-#     package_name, current_version, _ = parse_conda_version_spec(package)
-#     env_name = f"{package_name}-{current_version}"
-#     prefix = str(get_prefix_by_name(env_name))
-#     installer = CondaInstaller(channels=channels)
-#     job_id_remove = None
-#     broken_prefix = ""
-
-#     # Remove with conda/mamba
-#     if os.path.isdir(prefix):
-#         job_id_remove = installer.remove(prefix)
-
-#     # Otherwise rename the folder manually for later deletion
-#     if job_id_remove and os.path.isdir(prefix):
-#         broken_prefix = prefix + "-broken"
-#         os.rename(prefix, broken_prefix)
-
-#     # Create restored enviornment
-#     job_id_restore = installer.create([package], prefix=prefix)
-
-#     # Remove the broken folder manually
-#     if broken_prefix and job_id_remove and os.path.isdir(broken_prefix):
-#         # print("removing", broken_prefix)
-#         shutil.rmtree(broken_prefix)
-
-#     # Create a lock file for the restored environment
-#     lock_environment(f"{package_name}={current_version}", channels=channels)
-#     create_sentinel_file(package_name, current_version)
-#     return installer._exit_codes[job_id_restore]
-
-
-# if __name__ == "__main__":
-#     package = "napari=0.4.15=*pyside*"
-#     manager = ActionManager(package, ('conda-forge', ))
-#     print(manager.check_updates())

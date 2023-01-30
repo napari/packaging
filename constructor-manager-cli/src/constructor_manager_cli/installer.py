@@ -294,10 +294,19 @@ class CondaInstaller(AbstractInstaller):
             ("list", "--prefix", str(prefix), "--json"), block=block
         )
 
+    def install_from_lock(
+        self,
+        prefix: str,
+        lockfile: str,
+        block: bool = False,
+    ) -> job_id:
+        """Install packages from lockfile."""
+        args = ["-p", prefix, "--lockfile", lockfile]
+        return self._queue_args(args, bin="conda-lock", block=block)
+
     def lock(
         self,
         env_path: str,
-        platforms: Optional[Tuple[str, ...]] = None,
         lockfile: Optional[str] = None,
         block: bool = False,
     ) -> job_id:
@@ -314,10 +323,6 @@ class CondaInstaller(AbstractInstaller):
             ID that can be used to cancel the process.
         """
         args = ["-f", env_path]
-        if platforms:
-            for platform in platforms:
-                args.extend(["-p", platform])
-
         if lockfile:
             args.extend(["--lockfile", lockfile])
 

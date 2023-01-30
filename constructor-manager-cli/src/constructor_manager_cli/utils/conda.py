@@ -47,6 +47,7 @@ def get_base_prefix() -> Path:
     pathlib.Path
         Base conda prefix.
     """
+    # TODO: Check for conda-meta as well
     current = Path(sys.prefix)
     if (current / "envs").exists() and (current / "envs").is_dir():
         return current
