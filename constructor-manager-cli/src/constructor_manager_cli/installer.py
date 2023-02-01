@@ -13,6 +13,8 @@ from constructor_manager_cli.defaults import DEFAULT_CHANNEL
 
 job_id = int
 
+logger = logging.getLogger(__name__)
+
 
 class AbstractInstaller:
     """Abstract base class for package installers (pip, conda, etc)."""
@@ -131,8 +133,7 @@ class AbstractInstaller:
         block = self._queue[0][-1]
         # Do not include the last block parameter in hash
         job_id = hash(args)
-        logging.debug("Starting %s %s", self._bin, args)
-        # print("ÄRGS", ' '.join(args))
+        logger.debug("Executing %s %s", self._bin, args)
 
         popen = subprocess.Popen(
             args,
@@ -199,8 +200,8 @@ class AbstractInstaller:
         with contextlib.suppress(IndexError):
             self._queue.popleft()
 
-        logging.debug(
-            "Finished with exit code %s and status %s. Output:\n%s",
+        logger.debug(
+            "Finished with exit code %s and status %s.",
             exit_code,
             exit_status,
         )
@@ -323,6 +324,7 @@ class CondaInstaller(AbstractInstaller):
             ID that can be used to cancel the process.
         """
         args = ["-f", env_path]
+
         if lockfile:
             args.extend(["--lockfile", lockfile])
 

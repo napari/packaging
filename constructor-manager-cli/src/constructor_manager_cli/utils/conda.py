@@ -1,10 +1,13 @@
 """Conda utilities."""
 
 import sys
+import logging
 from pathlib import Path
 from typing import Optional, Tuple
 
 from conda.models.match_spec import MatchSpec  # type: ignore
+
+logger = logging.getLogger(__name__)
 
 
 def parse_conda_version_spec(package: str) -> Tuple[str, str, str]:

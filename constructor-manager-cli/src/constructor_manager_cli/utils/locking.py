@@ -23,11 +23,14 @@ Adapted from src/twisted/python/lockfile.py of the
 
 
 import errno
+import logging
 import os
 from os import rename
 from time import time as _uniquefloat
 from pathlib import Path
 from typing import Union, Tuple
+
+logger = logging.getLogger(__name__)
 
 
 def unique():

@@ -3,10 +3,13 @@
 import re
 from functools import lru_cache
 from typing import List, Optional
+import logging
 
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
 from constructor_manager_cli.utils.request import get_request
 from constructor_manager_cli.utils.versions import sort_versions
+
+logger = logging.getLogger(__name__)
 
 
 @lru_cache

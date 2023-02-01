@@ -1,6 +1,10 @@
 import argparse
+import logging
 
 from constructor_manager_cli.defaults import DEFAULT_CHANNEL
+
+
+logger = logging.getLogger(__name__)
 
 
 def _create_subparser(
@@ -29,6 +33,11 @@ def _create_subparser(
         The updated subparser.
     """
     subparser.add_argument("package", type=str)
+    subparser.add_argument(
+        "--log",
+        default="WARNING",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+    )
 
     if channel:
         subparser.add_argument(

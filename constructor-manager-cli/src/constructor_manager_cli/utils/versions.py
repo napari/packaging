@@ -1,5 +1,6 @@
 """Version handling utilities."""
 
+import logging
 import re
 from typing import TYPE_CHECKING, Iterable, List, Tuple, Union
 
@@ -7,6 +8,9 @@ LETTERS_PATTERN = re.compile(r"[a-zA-Z]")
 
 if TYPE_CHECKING:
     import packaging.version
+
+
+logger = logging.getLogger(__name__)
 
 
 def is_stable_version(version: Union[Tuple[str, ...], str]) -> bool:

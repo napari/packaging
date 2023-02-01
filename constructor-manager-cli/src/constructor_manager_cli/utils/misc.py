@@ -1,5 +1,9 @@
 from typing import Tuple, Any
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def dedup(items: Tuple[Any, ...]) -> Tuple[Any, ...]:
     """Deduplicate an list of items."""

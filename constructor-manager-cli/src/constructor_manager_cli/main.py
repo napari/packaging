@@ -1,5 +1,6 @@
 """Command line intrerface to the constructor updater."""
 
+import logging
 import json
 import sys
 import traceback
@@ -14,6 +15,7 @@ from constructor_manager_cli.cli import _create_parser
 
 
 warnings.filterwarnings("ignore")
+logger = logging.getLogger(__name__)
 
 
 def _execute(args, lock, lock_created=None):
@@ -63,10 +65,19 @@ def _execute(args, lock, lock_created=None):
         return "Another instance is running"
 
 
+def _configure_logging(log_level="WARNING"):
+    """Configure logging."""
+    log_level = getattr(logging, log_level.upper())
+    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    logging.basicConfig(format=log_format, level=log_level)
+
+
 def main():
     """Main function."""
     parser = _create_parser()
     args = parser.parse_args()
+    _configure_logging(args.log)
+
     if args.command is None:
         args = parser.parse_args(["-h"])
 
@@ -77,9 +88,12 @@ def main():
     constructor_manager_dir = get_lock_path()
     constructor_manager_dir.mkdir(parents=True, exist_ok=True)
     lock_file_path = constructor_manager_dir / "constructor-manager.lock"
+
+    logger.debug("Creating lock file: %s", lock_file_path)
     lock, lock_created = get_lock(lock_file_path)
     result = {}
     try:
+        logger.debug("Executing: %s", args)
         result = _execute(args, lock, lock_created)
         sys.stdout.write(str(json.dumps({"data": result, "error": ""}, indent=4)))
     except Exception as error:

@@ -1,6 +1,7 @@
 """IO utilities."""
 
 import json
+import logging
 from pathlib import Path
 from typing import List, Tuple, Union
 from functools import lru_cache
@@ -10,6 +11,9 @@ from constructor_manager_cli.utils.packages import (
     normalized_name,
     sentinel_file_name,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_broken_envs(package_name: str) -> List[Path]:

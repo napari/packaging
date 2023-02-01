@@ -1,11 +1,15 @@
 """Package utilities, name normalization and sentinel files."""
 
 import re
+import logging
 
 from constructor_manager_cli.defaults import (
     SENTINEL_FILE_PREFIX,
     SENTINEL_FILE_SUFFIX,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def sentinel_file_name(package_name):
