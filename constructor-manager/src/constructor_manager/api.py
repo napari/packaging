@@ -1,13 +1,16 @@
 """Constructor manager api."""
-import sys
-from pathlib import Path
+
 from typing import List, Optional
+import logging
 
 from constructor_manager.defaults import DEFAULT_CHANNEL
 from constructor_manager.utils.worker import ConstructorManagerWorker
 from constructor_manager.utils.conda import get_base_prefix
 
 from qtpy.QtCore import QProcess
+
+
+logger = logging.getLogger(__name__)
 
 
 def _run_action(
@@ -67,7 +70,10 @@ def _run_action(
 
     detached = cmd != "status"
     detached = False
-    print(args)
+
+    log_level = logging.getLevelName(logger.getEffectiveLevel())
+    args.extend(["--log", log_level])
+    logger.debug("Running: constructor-manager %s", " ".join(args))
     return ConstructorManagerWorker(args, detached=detached)
 
 
@@ -163,41 +169,6 @@ def update(
     )
 
 
-def rollback(
-    package_name,
-    current_version: Optional[str],
-    channels: Optional[List[str]] = None,
-    dev: bool = False,
-) -> ConstructorManagerWorker:
-    """Update the package to given version.
-    If version is None update to latest version found.
-
-    Parameters
-    ---------
-    package_name : str
-        Name of the package to check for updates.
-    version : str, optional
-        Version to rollback to, by default ``None``.
-    channel : str, optional
-        Channel to check for updates, by default ``DEFAULT_CHANNEL``.
-    dev : bool, optional
-        Check for development version, by default ``False``.
-
-    Returns
-    -------
-    ConstructorManagerWorker
-        Worker to check for updates. Includes a finished signal that returns
-        a ``dict`` with the result.
-    """
-    return _run_action(
-        "rollback",
-        package_name,
-        version=current_version,
-        channels=channels,
-        dev=dev,
-    )
-
-
 def restore(
     package_name,
     version,
@@ -232,7 +203,77 @@ def restore(
     )
 
 
-def status():
+def revert(
+    package_name,
+    current_version: Optional[str],
+    channels: Optional[List[str]] = None,
+    dev: bool = False,
+) -> ConstructorManagerWorker:
+    """Update the package to given version.
+    If version is None update to latest version found.
+
+    Parameters
+    ---------
+    package_name : str
+        Name of the package to check for updates.
+    version : str, optional
+        Version to rollback to, by default ``None``.
+    channel : str, optional
+        Channel to check for updates, by default ``DEFAULT_CHANNEL``.
+    dev : bool, optional
+        Check for development version, by default ``False``.
+
+    Returns
+    -------
+    ConstructorManagerWorker
+        Worker to check for updates. Includes a finished signal that returns
+        a ``dict`` with the result.
+    """
+    return _run_action(
+        "rollback",
+        package_name,
+        version=current_version,
+        channels=channels,
+        dev=dev,
+    )
+
+
+def reset(
+    package_name,
+    current_version: Optional[str],
+    channels: Optional[List[str]] = None,
+    dev: bool = False,
+) -> ConstructorManagerWorker:
+    """Update the package to given version.
+    If version is None update to latest version found.
+
+    Parameters
+    ---------
+    package_name : str
+        Name of the package to check for updates.
+    version : str, optional
+        Version to rollback to, by default ``None``.
+    channel : str, optional
+        Channel to check for updates, by default ``DEFAULT_CHANNEL``.
+    dev : bool, optional
+        Check for development version, by default ``False``.
+
+    Returns
+    -------
+    ConstructorManagerWorker
+        Worker to check for updates. Includes a finished signal that returns
+        a ``dict`` with the result.
+    """
+    return _run_action(
+        "reset",
+        package_name,
+        version=current_version,
+        channels=channels,
+        dev=dev,
+    )
+
+
+def get_status():
     """Get status for the state of the constructor updater."""
     return _run_action("status")
 
@@ -244,7 +285,7 @@ def open_manager(
     build_string: Optional[str] = None,
     channels: Optional[List[str]] = None,
     dev: bool = False,
-    ) -> None:
+    ) -> QProcess:
     """
     Open the constructor manager.
 
@@ -285,7 +326,28 @@ def open_manager(
         for channel in channels:
             args.extend(['--channel', channel])
 
-    QProcess.startDetached(
+    process = QProcess()
+    process.start(
         str(path),
         args
     )
+    return process
+
+
+def open_application(package_name, version):
+    return _run_action(
+        "open",
+        package_name,
+        version=version,
+    )
+
+
+def check_constructor_manager_updates():
+    # TODO: Use a separate worker and call conda/mamba directly!
+    # this could use the same worker and run through constructor-manager-cli
+    pass
+
+
+def update_constructor_manager():
+    # Use a separate worker and call conda/mamba directly!
+    pass

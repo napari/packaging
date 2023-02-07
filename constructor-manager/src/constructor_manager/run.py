@@ -30,6 +30,6 @@ if __name__ == "__main__":
     # worker.finished.connect(_finished)
     # worker.start()
 
-    open_manager("napari", build_string="pyside", plugins_url="https://api.napari-hub.org/plugins")
-
+    process = open_manager("napari", build_string="pyside", plugins_url="https://api.napari-hub.org/plugins")
+    process.finished.connect(lambda: sys.exit(0))
     sys.exit(app.exec_())
