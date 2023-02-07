@@ -114,4 +114,8 @@ def _create_parser():
     status = subparsers.add_parser("status")
     status = _create_subparser(status)
 
+    # Get current status of the installer (update in progress?)
+    open = subparsers.add_parser("open")
+    open = _create_subparser(open)
+
     return parser

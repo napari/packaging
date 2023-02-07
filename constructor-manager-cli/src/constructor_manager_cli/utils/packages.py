@@ -1,7 +1,7 @@
 """Package utilities, name normalization and sentinel files."""
 
-import re
 import logging
+import re
 
 from constructor_manager_cli.defaults import (
     SENTINEL_FILE_PREFIX,

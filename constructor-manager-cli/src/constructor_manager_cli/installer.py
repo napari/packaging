@@ -135,6 +135,10 @@ class AbstractInstaller:
         job_id = hash(args)
         logger.debug("Executing %s %s", self._bin, args)
 
+        # TODO: Provide a file like object to write to separate locations for
+        # logging the status in a sql database.
+        # WRite to sql locks the database but reads to it can be done from
+        # multiple processes.
         popen = subprocess.Popen(
             args,
             stdout=subprocess.PIPE,

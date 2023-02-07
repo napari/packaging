@@ -1,6 +1,6 @@
+import logging
 from typing import Tuple, Any
 
-import logging
 
 logger = logging.getLogger(__name__)
 

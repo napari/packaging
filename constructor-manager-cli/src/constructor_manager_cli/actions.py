@@ -18,6 +18,7 @@ from constructor_manager_cli.utils.conda import (
     get_prefix_by_name,
     parse_conda_version_spec,
 )
+from constructor_manager_cli.utils.shortcuts import open_application
 from constructor_manager_cli.utils.io import (
     create_sentinel_file,
     get_broken_envs,
@@ -728,6 +729,20 @@ class ActionManager:
 
     def uninstall(self) -> Dict:
         """Uninstall the bundle application."""
+        # Remove all shortcuts
+
+        # Remove all the application environments
+
+        # Remove the constructor environment
+
+        # Remove the base environment
+
+        # Remove everything else with rm rf $CONDA_PREFIX
+
+    def open(self) -> Dict:
+        """Open the bundle application with package name and version."""
+        exit_code = open_application(self._package_name, self._current_version)
+        return {"exit_code": exit_code}
 
 
 if __name__ == "__main__":
