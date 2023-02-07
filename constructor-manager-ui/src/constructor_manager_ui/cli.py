@@ -2,10 +2,8 @@
 
 import argparse
 
-from constructor_manager_ui.main import main
 
-
-def run():
+def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("package", type=str)
 
@@ -33,10 +31,10 @@ def run():
         action="append",
         default=None,
     )
+    parser.add_argument(
+        "--log",
+        default="WARNING",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+    )
     parser.add_argument("--dev", "-d", action="store_true")
-    args = parser.parse_args()
-    main(args)
-
-
-if __name__ == "__main__":
-    run()
+    return parser

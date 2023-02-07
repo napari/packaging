@@ -336,6 +336,12 @@ QHeaderView::section {
 
 /* ----------------- Buttons -------------------- */
 
+QPushButton:disabled  {
+  background-color: @background-color13;
+  background-color: @background-selection-color01;
+  background-color: #758193;
+}
+
 QPushButton#open_button, QPushButton#install_button {
   background-color: @background-color08;
 }
@@ -362,6 +368,10 @@ QPushButton#uninstall_button:hover {
 
 QPushButton#uninstall_button:pressed {
   background-color: @background-color016;
+}
+
+QPushButton#open_button:disabled, QPushButton#install_button:disabled  {
+  background-color: @background-color13;
 }
 
 /* ----------------- Separator -------------------- */
