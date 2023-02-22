@@ -6,14 +6,14 @@ import sys
 import traceback
 import warnings
 
-from constructor_manager_cli.actions import ActionManager
-from constructor_manager_cli.defaults import DEFAULT_CHANNEL
-from constructor_manager_cli.utils.io import get_lock_path
-from constructor_manager_cli.utils.locking import get_lock
-from constructor_manager_cli.utils.misc import dedup
-from constructor_manager_cli.cli import _create_parser
-from constructor_manager_cli.utils.shortcuts import create_temp_shortcut
-from constructor_manager_cli.utils.conda import get_prefix_by_name
+from constructor_manager_backend.actions import ActionManager
+from constructor_manager_backend.cli import _create_parser
+from constructor_manager_backend.defaults import DEFAULT_CHANNEL
+from constructor_manager_backend.utils.io import get_lock_path
+from constructor_manager_backend.utils.locking import get_lock
+from constructor_manager_backend.utils.misc import dedup
+
+# from constructor_manager_backend.utils.shortcuts import create_temp_shortcut
 
 
 warnings.filterwarnings("ignore")
@@ -79,13 +79,13 @@ def _configure_logging(log_level="WARNING"):
     logging.basicConfig(format=log_format, level=log_level)
 
 
-def _create():
-    name = "napari-0.4.16"
-    prefix = get_prefix_by_name(name)
-    python_prefix = prefix / "bin" / "python"
-    create_temp_shortcut(
-        "napari", "0.4.16", command=[str(python_prefix), "-m", "napari"]
-    )
+# def _create():
+#     name = "napari-0.4.16"
+#     prefix = get_prefix_by_name(name)
+#     python_prefix = prefix / "bin" / "python"
+#     create_temp_shortcut(
+#         "napari", "0.4.16", command=[str(python_prefix), "-m", "napari"]
+#     )
 
 
 def main():

@@ -1,8 +1,7 @@
-import shutil
 import random
+import shutil
 
 import pytest
-
 from constructor_manager_cli.installer import CondaInstaller
 from constructor_manager_cli.utils.conda import get_base_prefix, get_prefix_by_name
 

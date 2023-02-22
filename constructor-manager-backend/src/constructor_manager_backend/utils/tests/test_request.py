@@ -1,11 +1,9 @@
-from requests import Response
-
-
 from constructor_manager_cli.utils.request import (
     _user_agent,
     get_request,
     plugin_versions,
 )
+from requests import Response
 
 
 def test_user_agent():

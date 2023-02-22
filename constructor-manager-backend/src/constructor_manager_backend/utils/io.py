@@ -2,16 +2,15 @@
 
 import json
 import logging
+from functools import lru_cache
 from pathlib import Path
 from typing import List, Tuple, Union
-from functools import lru_cache
 
-from constructor_manager_cli.utils.conda import get_prefix_by_name
-from constructor_manager_cli.utils.packages import (
+from constructor_manager_backend.utils.conda import get_prefix_by_name
+from constructor_manager_backend.utils.packages import (
     normalized_name,
     sentinel_file_name,
 )
-
 
 logger = logging.getLogger(__name__)
 

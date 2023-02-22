@@ -3,11 +3,10 @@
 import logging
 import re
 
-from constructor_manager_cli.defaults import (
+from constructor_manager_backend.defaults import (
     SENTINEL_FILE_PREFIX,
     SENTINEL_FILE_SUFFIX,
 )
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,6 @@
 import sys
 
 import pytest
-
 from constructor_manager_cli.utils.conda import (
     get_base_prefix,
     get_prefix_by_name,

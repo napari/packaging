@@ -1,39 +1,41 @@
 """Constructor manager actions."""
-import glob
 import datetime
+import glob
+import logging
 import shutil
 import uuid
-from typing import Dict, List, Optional, Tuple
-from pathlib import Path
 from functools import lru_cache
-import logging
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 import yaml
-
-from constructor_manager_cli.defaults import DEFAULT_CHANNEL
-from constructor_manager_cli.installer import CondaInstaller
-from constructor_manager_cli.utils.request import plugin_versions
-from constructor_manager_cli.utils.anaconda import conda_package_versions
-from constructor_manager_cli.utils.conda import (
+from constructor_manager_backend.defaults import DEFAULT_CHANNEL
+from constructor_manager_backend.installer import CondaInstaller
+from constructor_manager_backend.utils.anaconda import conda_package_versions
+from constructor_manager_backend.utils.conda import (
     get_prefix_by_name,
     parse_conda_version_spec,
 )
-from constructor_manager_cli.utils.shortcuts import open_application
-from constructor_manager_cli.utils.io import (
+from constructor_manager_backend.utils.io import (
     create_sentinel_file,
     get_broken_envs,
     get_env_path,
     get_installed_versions,
-    get_state_path,
     get_list_path,
+    get_state_path,
     remove_sentinel_file,
 )
-from constructor_manager_cli.utils.versions import (
+from constructor_manager_backend.utils.request import plugin_versions
+from constructor_manager_backend.utils.shortcuts import (
+    create_shortcut,
+    open_application,
+    remove_shortcut,
+)
+from constructor_manager_backend.utils.versions import (
     is_stable_version,
     parse_version,
     sort_versions,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -301,9 +303,14 @@ class ActionManager:
         """
         prefix = get_prefix_by_name(f"{self._package_name}-{version}")
         menu_spec = f"{self._package_name}-menu={version}"
-        return self._installer.install(
+        rc = self._installer.install(
             prefix, pkg_list=[menu_spec], shortcuts=True, block=True
         )
+
+        # Install shortcuts manually using menuinst
+        paths = remove_shortcut(self._package_name, version)
+        paths = create_shortcut(self._package_name, version)
+        return rc, paths
 
     def _remove_shortcuts(self, version: str):
         """Remove shortcuts for a given version.
@@ -315,9 +322,13 @@ class ActionManager:
         """
         prefix = get_prefix_by_name(f"{self._package_name}-{version}")
         menu_spec = f"{self._package_name}-menu={version}"
-        return self._installer.uninstall(
+        rc = self._installer.uninstall(
             pkg_list=[menu_spec], prefix=str(prefix), shortcuts=True, block=True
         )
+        # Remove shortcuts manually using menuinst
+        paths = remove_shortcut(self._package_name, version)
+        print(paths)
+        return rc, paths
 
     # Install
     # -------------------------------------------------------------------------
@@ -390,23 +401,19 @@ class ActionManager:
         shortcuts : bool, optional
             If ``True``, remove the shortcuts. Default is ``True``.
         """
-        # print("removing sentinel file")
         # Remove the sentinel file of the old environment
         remove_sentinel_file(self._package_name, version)
 
         # Remove the shortcuts of the old environment
         if shortcuts:
-            # print('removing shortcuts')
             self._remove_shortcuts(version)
 
         # Try to remove using conda/mamba
         prefix = get_prefix_by_name(f"{self._package_name}-{version}")
-        # print('removing env with conda')
         self._installer.remove(str(prefix), block=True)
 
         # Otherwise rename and remove the folder manually
         if prefix.exists():
-            # print('renaming for later removal')
             prefix.rename(prefix.parent / f"{prefix.name}-{uuid.uuid1()}")
 
     def _create(self, spec, shortcuts: bool = True):
@@ -535,6 +542,8 @@ class ActionManager:
         self,
         plugins_url: Optional[str] = None,
         dev: bool = False,
+        installed: bool = False,  # TODO: Do not remove the previous installation
+        shortcuts: bool = True,  # TODO: Do not add shortcuts
     ) -> Dict:
         """Update the package.
 
@@ -595,10 +604,10 @@ class ActionManager:
         # TODO: This part could also be deferred when calling the update
         # process directly from the application
         # Remove the shortcuts from the old environment
-        self._remove_shortcuts(self._package_name, self._current_version)
+        self._remove_shortcuts(self._current_version)
 
         # Create shortcuts for the new environment
-        self._create_shortcuts(self._package_name, latest_version)
+        self._create_shortcuts(latest_version)
 
         # Then create a sentinel file in the the new environment
         create_sentinel_file(self._package_name, latest_version)
@@ -623,7 +632,7 @@ class ActionManager:
     def reset(self) -> str:
         """Reset environment."""
         # Remove any pending broken envs
-        logger.debug("Cleaning any broken environments...")
+        logger.debug("Cleaning environments...")
         self.clean_all()
 
         version = (
@@ -642,7 +651,7 @@ class ActionManager:
         self._create(spec)
 
         # Remove any pending broken envs
-        logger.debug("Cleaning any broken environments...")
+        logger.debug("Cleaning environments...")
         self.clean_all()
 
         return "Environment reset complete!"
@@ -674,8 +683,6 @@ class ActionManager:
             prefix, plugins_url
         )
 
-        # TODO: Do we need to lock?, did the env listing change with respect
-        # to the latest state file found?
         logger.debug("Should lock environment...?")
         should_lock = self._should_lock(version, packages)
 

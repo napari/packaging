@@ -21,14 +21,17 @@ Adapted from src/twisted/python/lockfile.py of the
 `Twisted project <https://github.com/twisted/twisted>`_.
 """
 
+# TODO: update with latest code
+# https://github.com/twisted/twisted/blob/trunk/src/twisted/python/lockfile.py
 
 import errno
 import logging
 import os
+import shutil
 from os import rename
-from time import time as _uniquefloat
 from pathlib import Path
-from typing import Union, Tuple
+from time import time as _uniquefloat
+from typing import Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -270,8 +273,6 @@ def get_lock(path: Union[str, Path]) -> Tuple[FileSystemLock, bool]:
         try:
             if os.name == "nt":
                 if os.path.isdir(path):
-                    import shutil
-
                     shutil.rmtree(path, ignore_errors=True)
             else:
                 if os.path.islink(path):
@@ -284,4 +285,4 @@ def get_lock(path: Union[str, Path]) -> Tuple[FileSystemLock, bool]:
     return lock, lock_created
 
 
-__all__ = ["FileSystemLock", "get_lock", "is_locked"]
+__all__ = ["get_lock"]

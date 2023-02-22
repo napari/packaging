@@ -32,8 +32,14 @@ repos:
         additional_dependencies: [flake8-typing-imports>=1.9.0]
         args: ["-j8", "--ignore=TYP001,E501,W503"]
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
+  # - repo: https://github.com/pycqa/isort
+  #   rev: 5.11.5
+  #   hooks:
+  #     - id: isort
+  #       name: isort (python)
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.143
+    rev: v0.0.165
     hooks:
       - id: ruff
+        args: ["--fix"]
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py

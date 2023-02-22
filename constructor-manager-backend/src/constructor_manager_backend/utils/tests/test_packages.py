@@ -1,9 +1,5 @@
 import pytest
-
-from constructor_manager_cli.utils.packages import (
-    sentinel_file_name,
-    normalized_name,
-)
+from constructor_manager_cli.utils.packages import normalized_name, sentinel_file_name
 
 
 def test_sentinel_file_name():

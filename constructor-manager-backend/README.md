@@ -1,4 +1,4 @@
-# Constructor Manager Commnand line interface
+# Constructor Manager Backend
 
 Handle (conda) constructor based bundled applications from the command line.
 
