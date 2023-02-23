@@ -91,6 +91,11 @@ def get_installed_versions(package_name: str) -> List[Tuple[str, ...]]:
     return versions
 
 
+def is_valid_environment(prefix, application_name) -> bool:
+    """Check if a given environment is valid."""
+    return get_sentinel_path(prefix, application_name).exists()
+
+
 def get_sentinel_path(prefix: Union[Path, str], package_name: str) -> Path:
     """Sentinel file path for a given environment.
 
@@ -149,7 +154,8 @@ def remove_sentinel_file(package_name: str, version: str):
 
 @lru_cache
 def get_config_path() -> Path:
-    path = get_prefix_by_name("base") / "var" / "constructor-manager"
+    # path = get_prefix_by_name("base") / "var" / "constructor-manager"
+    path = get_prefix_by_name("constructor-manager") / "var" / "constructor-manager"
     path.mkdir(parents=True, exist_ok=True)
     return path
 

@@ -28,11 +28,12 @@ COMMANDS = {
     "open": [],
 }
 COMMANDS_LOCKED = {
-    "update": ["plugins_url", "dev"],
+    "update": ["plugins_url", "dev", "delayed"],
     "restore": [],
     "revert": [],
     "reset": [],
     "uninstall": [],
+    "lock-environment": ["plugins_url"],
 }
 
 
@@ -47,7 +48,7 @@ def _execute(args, lock_file_path):
         Path to the lock file.
     """
     channels = (DEFAULT_CHANNEL,) if "channel" not in args else args.channel
-    manager = ActionManager(args.package, channels)
+    manager = ActionManager(args.application, channels)
 
     all_commands = {**COMMANDS, **COMMANDS_LOCKED}
     method_name = args.command.lower().replace("-", "_")
@@ -56,9 +57,15 @@ def _execute(args, lock_file_path):
         arg_name: getattr(args, arg_name) for arg_name in all_commands[args.command]
     }
 
+    lock, lock_created = get_lock(lock_file_path)
+    if lock_created:
+        lock.unlock()
+
+    method_kwargs["lock_created"] = lock_created
     result = []
     if args.command in COMMANDS:
         result = method(**method_kwargs)
+        # time.sleep(5)
     elif args.command in COMMANDS_LOCKED:
         logger.debug("Creating lock file: %s", lock_file_path)
         lock, lock_created = get_lock(lock_file_path)
@@ -93,7 +100,12 @@ def main():
     # _create()
     parser = _create_parser()
     args = parser.parse_args()
-    _configure_logging(args.log)
+    if getattr(args, "command", None) is None:
+        parser.print_help()
+        return
+
+    if getattr(args, "log", None):
+        _configure_logging(args.log)
 
     # Deduplicate channels
     if "channel" in args:

@@ -53,20 +53,22 @@ class ActionManager:
 
     def __init__(
         self,
-        package,
+        application,
         channels: Tuple[str] = (DEFAULT_CHANNEL,),
         use_mamba: bool = True,
     ):
         self._channels = channels
         self._info: Optional[Dict] = None
         self._platfonm = None
-        self._package_name, cv, self._build_string = parse_conda_version_spec(package)
+        self._application_name, cv, self._build_string = parse_conda_version_spec(
+            application
+        )
         self._latest_version = None
         self._platform = None
 
         # If current version not provided, find the latest installed version
         if cv == "":
-            installed_versions_builds = get_installed_versions(self._package_name)
+            installed_versions_builds = get_installed_versions(self._application_name)
             installed_versions = [vb[0] for vb in installed_versions_builds]
             installed_versions = sort_versions(installed_versions, reverse=True)
 
@@ -80,7 +82,7 @@ class ActionManager:
 
         self._current_version = cv
         self._installer = CondaInstaller(
-            channels=channels, pinned=self._package_name, use_mamba=use_mamba
+            channels=channels, pinned=self._application_name, use_mamba=use_mamba
         )
 
     @lru_cache
@@ -142,6 +144,7 @@ class ActionManager:
 
     def _get_installed_plugins(self, prefix, plugins_url, with_version=False):
         """"""
+        logger.debug(f"Getting installed packages for {prefix}...")
         packages, _ = self._get_installed_packages(prefix, plugins_url)
         if with_version:
             plugins = [
@@ -177,7 +180,9 @@ class ActionManager:
             "platforms": [self._platform],
         }
 
-        env_path = get_env_path() / f"{self._package_name}-{version}-environment.yml"
+        env_path = (
+            get_env_path() / f"{self._application_name}-{version}-environment.yml"
+        )
         with open(env_path, "w") as f:
             yaml.dump(yaml_spec, f)
 
@@ -196,13 +201,16 @@ class ActionManager:
     #         Version to create conda list for.
     #     """
     #     date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    #     path = get_list_path() / f"{self._package_name}-{version}-{date}-list.yaml"
-    #     prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+    #     path = (
+    #         get_list_path() /
+    #         f"{self._application_name}-{version}-{date}-list.yaml"
+    #     )
+    #     prefix = get_prefix_by_name(f"{self._application_name}-{version}")
     #     packages = self._installer.list(str(prefix), block=True)
 
     #     # Find all files with the same pattern
     #     filepaths = glob.glob(
-    #         str(get_list_path() / f"{self._package_name}-{version}-*-list.yaml")
+    #         str(get_list_path() / f"{self._application_name}-{version}-*-list.yaml")
     #     )
 
     #     # Check if the latest file with the same content exists
@@ -225,13 +233,15 @@ class ActionManager:
         date = date or datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
         # Include the application
-        application = {"name": self._package_name, "version": version}
+        application = {"name": self._application_name, "version": version}
         packages = [application] + packages
         env_path = self._create_environment_file_for_locking(version, packages)
 
-        lockfile = get_state_path() / f"{self._package_name}-{version}-{date}-lock.yml"
+        lockfile = (
+            get_state_path() / f"{self._application_name}-{version}-{date}-lock.yml"
+        )
         temp_lockfile = (
-            get_state_path() / f"{self._package_name}-{version}-{date}-temp.yml"
+            get_state_path() / f"{self._application_name}-{version}-{date}-temp.yml"
         )
         self._installer.lock(
             env_path=str(env_path), lockfile=str(temp_lockfile), block=True
@@ -264,23 +274,23 @@ class ActionManager:
         # otherwise, it means that a lock file process could not be completed
         # succesfully
         return glob.glob(
-            str(get_list_path() / f"{self._package_name}-{version}-*-list.yml")
+            str(get_list_path() / f"{self._application_name}-{version}-*-list.yml")
         )
 
     def _get_available_states(self) -> Dict:
         """Get available states and group them by version."""
-        pattern = f"{self._package_name}-*-lock.yml"
+        pattern = f"{self._application_name}-*-lock.yml"
         paths = [Path(p).name for p in glob.glob(str(get_state_path() / pattern))]
         versions = set()
         for path in paths:
-            versions.add(path.replace(f"{self._package_name}-", "").split("-")[0])
+            versions.add(path.replace(f"{self._application_name}-", "").split("-")[0])
 
         data = {}  # type: ignore
         for version in sorted(versions, reverse=True):
             data[version] = []
 
             for path in paths:
-                prefix = f"{self._package_name}-{version}-"
+                prefix = f"{self._application_name}-{version}-"
                 suffix = "-lock.yml"
                 if path.startswith(prefix):
                     path = path.replace(prefix, "").replace(suffix, "")
@@ -301,15 +311,15 @@ class ActionManager:
         version : str
             Version to create shortcuts for.
         """
-        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
-        menu_spec = f"{self._package_name}-menu={version}"
+        prefix = get_prefix_by_name(f"{self._application_name}-{version}")
+        menu_spec = f"{self._application_name}-menu={version}"
         rc = self._installer.install(
             prefix, pkg_list=[menu_spec], shortcuts=True, block=True
         )
 
         # Install shortcuts manually using menuinst
-        paths = remove_shortcut(self._package_name, version)
-        paths = create_shortcut(self._package_name, version)
+        paths = remove_shortcut(self._application_name, version)
+        paths = create_shortcut(self._application_name, version)
         return rc, paths
 
     def _remove_shortcuts(self, version: str):
@@ -320,13 +330,13 @@ class ActionManager:
         version : str
             Version to remove shortcuts for.
         """
-        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
-        menu_spec = f"{self._package_name}-menu={version}"
+        prefix = get_prefix_by_name(f"{self._application_name}-{version}")
+        menu_spec = f"{self._application_name}-menu={version}"
         rc = self._installer.uninstall(
             pkg_list=[menu_spec], prefix=str(prefix), shortcuts=True, block=True
         )
         # Remove shortcuts manually using menuinst
-        paths = remove_shortcut(self._package_name, version)
+        paths = remove_shortcut(self._application_name, version)
         print(paths)
         return rc, paths
 
@@ -352,8 +362,8 @@ class ActionManager:
             The return code of the installer.
         """
         # package_name, version = parse_conda_version_spec(package)
-        spec = f"{self._package_name}={version}=*{self._build_string}*"
-        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+        spec = f"{self._application_name}={version}=*{self._build_string}*"
+        prefix = get_prefix_by_name(f"{self._application_name}-{version}")
         packages = [spec] + plugins
         job_id = self._installer.create(str(prefix), pkg_list=packages)
         return self._installer._exit_codes[job_id]
@@ -377,8 +387,8 @@ class ActionManager:
         int
             The return code of the installer.
         """
-        spec = f"{self._package_name}={version}=*{self._build_string}*"
-        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+        spec = f"{self._application_name}={version}=*{self._build_string}*"
+        prefix = get_prefix_by_name(f"{self._application_name}-{version}")
 
         job_id = self._installer.create(str(prefix), pkg_list=[spec])
         for plugin in plugins:
@@ -402,36 +412,55 @@ class ActionManager:
             If ``True``, remove the shortcuts. Default is ``True``.
         """
         # Remove the sentinel file of the old environment
-        remove_sentinel_file(self._package_name, version)
+        remove_sentinel_file(self._application_name, version)
 
         # Remove the shortcuts of the old environment
         if shortcuts:
             self._remove_shortcuts(version)
 
         # Try to remove using conda/mamba
-        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+        prefix = get_prefix_by_name(f"{self._application_name}-{version}")
         self._installer.remove(str(prefix), block=True)
 
         # Otherwise rename and remove the folder manually
         if prefix.exists():
             prefix.rename(prefix.parent / f"{prefix.name}-{uuid.uuid1()}")
 
-    def _create(self, spec, shortcuts: bool = True):
+    def _create(
+        self,
+        application_spec,
+        plugins: Optional[List[str]] = None,
+        plugins_url: Optional[str] = None,
+        shortcuts: bool = True,
+    ):
         """"""
-        package_name, version, _ = parse_conda_version_spec(spec)
+        plugins = plugins or []
+        package_name, version, _ = parse_conda_version_spec(application_spec)
         prefix = get_prefix_by_name(f"{package_name}-{version}")
         logger.debug(f"Creating environment {prefix}...")
-        self._installer.create(str(prefix), pkg_list=[spec], block=True)
+
+        # Try to install all packages at once
+        pkg_list = [application_spec] + plugins
+        self._installer.create(str(prefix), pkg_list=pkg_list, block=True)
+
+        if not prefix.exists():
+            # Try to install the application and then the plugins one by one
+            self._installer.create(str(prefix), pkg_list=[application_spec], block=True)
+
+            # TODO: temporary fix, fix the installer!
+            if prefix.exists():
+                for plugin in plugins:
+                    self._installer.install(str(prefix), pkg_list=[plugin], block=True)
 
         # Lock environment
-        # TODO:
+        self.lock_environment(version=version, plugins_url=plugins_url)
 
         # Create the shortcuts for the new environment
         if shortcuts:
             self._create_shortcuts(version=version)
 
         # Create the sentinel file for the new environment
-        create_sentinel_file(self._package_name, version)
+        create_sentinel_file(self._application_name, version)
 
     # Other
     # -------------------------------------------------------------------------
@@ -450,7 +479,7 @@ class ActionManager:
         """
         logger.debug("Checking available versions...")
         versions = conda_package_versions(
-            self._package_name,
+            self._application_name,
             build=self._build_string,
             channels=self._channels,
             reverse=True,
@@ -463,7 +492,11 @@ class ActionManager:
 
     # --- API
     # ------------------------------------------------------------------------
-    def check_updates(self, dev: bool = False) -> Dict:
+    def check_updates(
+        self,
+        dev: bool = False,
+        lock_created: Optional[bool] = None,
+    ) -> Dict:
         """Check for package updates.
 
         Parameters
@@ -480,7 +513,7 @@ class ActionManager:
         versions = self._check_available_versions(dev)
         update = False
         latest_version = versions[0] if versions else ""
-        installed_versions_builds = get_installed_versions(self._package_name)
+        installed_versions_builds = get_installed_versions(self._application_name)
         installed_versions = [vb[0] for vb in installed_versions_builds]
         update = parse_version(latest_version) > parse_version(self._current_version)
         filtered_version = versions[:]
@@ -502,15 +535,23 @@ class ActionManager:
             # Refers to the latest version that is newer than the current
             "update": update,
             "installed": latest_version in installed_versions,
+            "busy": not bool(lock_created),
         }
 
-    def check_version(self) -> Dict:
+    def check_version(
+        self,
+        lock_created: Optional[bool] = None,
+    ) -> Dict:
         """Return the currently installed version."""
         # TODO: Add modified date? This needs the lock file date
         logger.debug("Checking version...")
         return {"version": self._current_version}
 
-    def check_packages(self, plugins_url: Optional[str] = None) -> Dict:
+    def check_packages(
+        self,
+        plugins_url: Optional[str] = None,
+        lock_created: Optional[bool] = None,
+    ) -> Dict:
         """Check for installed packages.
 
         Parameters
@@ -526,7 +567,7 @@ class ActionManager:
             List of installed packages.
         """
         logger.debug("Checking prefix exists...")
-        prefix = get_prefix_by_name(f"{self._package_name}-{self._current_version}")
+        prefix = get_prefix_by_name(f"{self._application_name}-{self._current_version}")
         if not prefix.exists():
             return {}
 
@@ -534,16 +575,20 @@ class ActionManager:
         packages, _ = self._get_installed_packages(prefix, plugins_url)
         return {"packages": packages}
 
-    def check_status(self):
+    def check_status(
+        self,
+        lock_created: Optional[bool] = None,
+    ):
         """Get status of any running action."""
+        logger.debug(f"Checking status for {self._application_name}...")
         return {}
 
     def update(
         self,
         plugins_url: Optional[str] = None,
         dev: bool = False,
-        installed: bool = False,  # TODO: Do not remove the previous installation
-        shortcuts: bool = True,  # TODO: Do not add shortcuts
+        delayed: bool = False,
+        lock_created: Optional[bool] = None,
     ) -> Dict:
         """Update the package.
 
@@ -553,67 +598,66 @@ class ActionManager:
             URL with list of plugins avaliable for package. Default is ``None``.
         dev : bool, optional
             If ``True``, check for development versions. Default is ``False``.
+        delayed : bool, optional
+            If ``True``, the update will be done in two steps, so that in can be
+            done in the backgroun while the main application is running.
+            Default is ``False``.
 
         Returns
         -------
         int
             The return code of the installer.
         """
+        shortcuts = not delayed
+        logger.debug(f"Checking updates for {self._application_name}...")
         data = self.check_updates(dev=dev)
         latest_version = data["latest_version"]
+        installed = data["installed"]  # If `True`, comes from a delayed installation
+        application_spec = f"{self._application_name}=={latest_version}"
 
-        # This does not check for existence of prefix
-        prefix = get_prefix_by_name(f"{self._package_name}-{self._current_version}")
-        available_plugins = []
-        if plugins_url:
-            available_plugins = self._get_installed_plugins(prefix, plugins_url)
+        old_prefix = get_prefix_by_name(
+            f"{self._application_name}-{self._current_version}"
+        )
+        new_prefix = get_prefix_by_name(f"{self._application_name}-{latest_version}")
+        if not installed:
+            available_plugins = []
+            if plugins_url:
+                available_plugins = self._get_installed_plugins(old_prefix, plugins_url)
 
-        print(available_plugins)
-        # First try to lock everything at once
+            logger.debug(f"Available plugins {available_plugins}")
 
-        # First try to install everything at once
-        return_code = self._create_with_plugins(latest_version, available_plugins)
+            if new_prefix.exists():
+                logger.debug(f"Removing prefix {new_prefix}...")
+                self._remove(self._current_version, shortcuts=True)
 
-        # Then try to install plugin by plugin if it failed
-        if bool(return_code):
-            # TODO: Erase any folder?
-            return_code = self._create_with_plugins_one_by_one(
-                latest_version,
-                available_plugins,
+            logger.debug(f"Creating {new_prefix}...")
+            self._create(
+                application_spec,
+                plugins=available_plugins,
+                plugins_url=plugins_url,
+                shortcuts=shortcuts,
             )
 
-        # Now run an environment lock if it succeeded
-        # TODO: Use all packages found in the environment?
-        new_prefix = get_prefix_by_name(f"{self._package_name}-{latest_version}")
-        available_plugins = []
-        if plugins_url:
-            available_plugins = self._get_installed_plugins(
-                new_prefix, plugins_url, with_version=True
-            )
+        if not delayed:
+            logger.debug(f"Removing prefix {old_prefix}...")
+            self._remove(self._current_version, shortcuts=shortcuts)
 
-        available_packages = self._get_installed_packages(new_prefix, plugins_url)
-        if not bool(return_code):
-            self._lock_environment(latest_version, available_packages)
-        else:
-            pass
-            # FIXME: Raise exception??
+        if installed and delayed:
+            logger.debug(f"Creating shorcuts {new_prefix}...")
+            self._create_shortcuts(latest_version)
 
-        # Then delete the sentinel file in the old environment
-        remove_sentinel_file(self._package_name, self._current_version)
+            logger.debug(f"Openning {self._application_name}={latest_version} ...")
+            self.open(latest_version)
 
-        # TODO: This part could also be deferred when calling the update
-        # process directly from the application
-        # Remove the shortcuts from the old environment
-        self._remove_shortcuts(self._current_version)
+            logger.debug(f"Removing prefix {old_prefix}...")
+            self._remove(self._current_version, shortcuts=True)
 
-        # Create shortcuts for the new environment
-        self._create_shortcuts(latest_version)
-
-        # Then create a sentinel file in the the new environment
-        create_sentinel_file(self._package_name, latest_version)
         return {}
 
-    def restore(self) -> Dict:
+    def restore(
+        self,
+        lock_created: Optional[bool] = None,
+    ) -> Dict:
         """Restore to a previously saved store point for the same version.
 
         This will only run if any restore points are found
@@ -621,7 +665,10 @@ class ActionManager:
         # lists, states = self._get_available_lists_and_states(self._current_version)
         return {}
 
-    def revert(self) -> Dict:
+    def revert(
+        self,
+        lock_created: Optional[bool] = None,
+    ) -> Dict:
         """Restore to a previously saved store point for the previous version.
 
         This will only run if any restore points are found
@@ -629,7 +676,10 @@ class ActionManager:
         # lists, states = self._get_available_lists_and_states(self._current_version)
         return {}
 
-    def reset(self) -> str:
+    def reset(
+        self,
+        lock_created: Optional[bool] = None,
+    ) -> str:
         """Reset environment."""
         # Remove any pending broken envs
         logger.debug("Cleaning environments...")
@@ -641,14 +691,14 @@ class ActionManager:
 
         # Remove the old environment
         logger.debug("Removing environment...")
-        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+        prefix = get_prefix_by_name(f"{self._application_name}-{version}")
         if prefix.exists():
             self._remove(version=self._current_version)
 
         # Create the new environment
         logger.debug("Creating new environment...")
-        spec = f"{self._package_name}={version}=*{self._build_string}*"
-        self._create(spec)
+        spec = f"{self._application_name}={version}=*{self._build_string}*"
+        self._create(spec, plugins_url=None)
 
         # Remove any pending broken envs
         logger.debug("Cleaning environments...")
@@ -658,8 +708,9 @@ class ActionManager:
 
     def lock_environment(
         self,
-        version: str,
+        version: Optional[str] = None,
         plugins_url: Optional[str] = None,
+        lock_created: Optional[bool] = None,
     ):
         """Lock environment.
 
@@ -672,8 +723,9 @@ class ActionManager:
         update : bool, optional
             If ``True``, update the lock file. Default is ``False``.
         """
+        version = self._current_version if version is None else version
         logger.debug("Locking environment...")
-        prefix = get_prefix_by_name(f"{self._package_name}-{version}")
+        prefix = get_prefix_by_name(f"{self._application_name}-{version}")
         if not prefix.exists():
             raise EnvironmentDoesNotExist(f"Environment '{prefix}' does not exist!")
 
@@ -692,10 +744,10 @@ class ActionManager:
 
             # Create a temporary list file
             temp_list_path = (
-                get_list_path() / f"{self._package_name}-{version}-{date}-temp.yml"
+                get_list_path() / f"{self._application_name}-{version}-{date}-temp.yml"
             )
             list_path = (
-                get_list_path() / f"{self._package_name}-{version}-{date}-list.yml"
+                get_list_path() / f"{self._application_name}-{version}-{date}-list.yml"
             )
             with open(temp_list_path, "w") as fh:
                 yaml.dump(packages, fh)
@@ -712,7 +764,10 @@ class ActionManager:
 
         return
 
-    def clean_all(self) -> Dict:
+    def clean_all(
+        self,
+        lock_created: Optional[bool] = None,
+    ) -> Dict:
         """Clean all environments of a given package.
 
         Environments will be removed using conda/mamba, or the folders deleted in
@@ -723,18 +778,24 @@ class ActionManager:
         package_name : str
             Name of the package.
         """
+        # Try to remove shortcuts
+
         # Remove any broken envs
-        for prefix in get_broken_envs(self._package_name):
+        for prefix in get_broken_envs(self._application_name):
             shutil.rmtree(prefix, ignore_errors=True)
 
         # TODO: Remove all data from the constructor manager config
 
         # TODO: Remove all the temp states and list files
+        # napari-0.4.17-2023-02-22-18-35-34-temp.yml
 
         # Add actions taken by the clean all command
         return {}
 
-    def uninstall(self) -> Dict:
+    def uninstall(
+        self,
+        lock_created: Optional[bool] = None,
+    ) -> Dict:
         """Uninstall the bundle application."""
         # Remove all shortcuts
 
@@ -746,9 +807,14 @@ class ActionManager:
 
         # Remove everything else with rm rf $CONDA_PREFIX
 
-    def open(self) -> Dict:
-        """Open the bundle application with package name and version."""
-        exit_code = open_application(self._package_name, self._current_version)
+    def open(
+        self,
+        version: str = None,
+        lock_created: Optional[bool] = None,
+    ) -> Dict:
+        """Open the application with package name and version."""
+        version = version if version else self._current_version
+        exit_code = open_application(self._application_name, version)
         return {"exit_code": exit_code}
 
 

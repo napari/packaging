@@ -11,6 +11,7 @@ def _create_subparser(
     channel=False,
     plugins_url=False,
     dev=False,
+    delayed=False,
 ):
     """Create a subparser for the constructor updater.
 
@@ -25,13 +26,15 @@ def _create_subparser(
         for the package. By default ``False``.
     dev : bool, optional
         Check for development version, by default ``False``.
+    delayed : bool, optional
+        Delay the execution of the update, by default ``False``.
 
     Returns
     -------
     argparse.ArgumentParser
         The updated subparser.
     """
-    subparser.add_argument("package", type=str)
+    subparser.add_argument("application", type=str)
     subparser.add_argument(
         "--log",
         default="WARNING",
@@ -55,6 +58,9 @@ def _create_subparser(
 
     if dev:
         subparser.add_argument("--dev", "-d", action="store_true")
+
+    if delayed:
+        subparser.add_argument("--delayed", action="store_true")
 
     return subparser
 
@@ -95,6 +101,7 @@ def _create_parser():
         channel=True,
         dev=True,
         plugins_url=True,
+        delayed=True,
     )
 
     # Restore to a previous restore point of a current version
@@ -112,6 +119,10 @@ def _create_parser():
     # Get current status of the installer (update in progress?)
     status = subparsers.add_parser("status")
     status = _create_subparser(status)
+
+    # Get current status of the installer (update in progress?)
+    lock = subparsers.add_parser("lock-environment")
+    lock = _create_subparser(lock, plugins_url=True)
 
     # Get current status of the installer (update in progress?)
     open = subparsers.add_parser("open")

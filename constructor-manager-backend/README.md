@@ -35,6 +35,7 @@ constructor-manager check-version "napari"
 Check for all the packages installed in the current environment for the latest version ot the package.
 
 ```bash
+constructor-manager check-packages "napari=0.4.15" --plugins-url https://api.napari-hub.org/plugins
 constructor-manager check-packages "napari=0.4.16" --plugins-url https://api.napari-hub.org/plugins
 constructor-manager check-packages "napari" --plugins-url https://api.napari-hub.org/plugins
 ```
@@ -383,8 +384,15 @@ is `0.4.15`. We are looking for available version on the `napari` channel.
 TODO
 
 ```bash
-constructor-manager update "napari=0.4.15=*pyside*" -c conda-forge --plugins-url https://api.napari-hub.org/plugins
-constructor-manager update "napari=0.4.16=*pyside*" -c conda-forge --plugins-url https://api.napari-hub.org/plugins
+
+conda create -n napari-0.4.15 "napari=0.4.15" "napari-menu=0.4.15" -c conda-forge -y --override-channels
+mamba create -n napari-0.4.15 "napari=0.4.15" "napari-menu=0.4.15" affinder -c conda-forge -y --override-channels
+mamba install -n napari-0.4.15 affinder -c conda-forge -y --override-channels
+touch "/Users/gpenacastellanos/opt/miniconda3/envs/napari-0.4.15/conda-meta/.napari_is_bundled_constructor"
+
+constructor-manager update "napari=0.4.15=*pyside*" -c conda-forge --plugins-url https://api.napari-hub.org/plugins --log DEBUG
+constructor-manager update "napari=0.4.15=*pyside*" -c conda-forge --plugins-url https://api.napari-hub.org/plugins --delayed --log DEBUG
+constructor-manager update "napari=0.4.16=*pyside*" -c conda-forge --plugins-url https://api.napari-hub.org/plugins --log DEBUG
 ```
 
 ```bash
@@ -407,7 +415,7 @@ Create a lock file using `conda-lock` and store it in `<BUNDLE-PREFIX>/var/const
 These lock files are usable by the `rollback` command.
 
 ```bash
-constructor-manager lock "napari=0.4.16=*pyside*" -c conda-forge
+constructor-manager lock-environment "napari=0.4.15"
 ```
 
 ### Reset
