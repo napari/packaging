@@ -8,3 +8,4 @@ dependencies:
   - tomlkit
   - ruamel.yaml
   - anaconda-client
+  - setuptools <66.0a

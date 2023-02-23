@@ -282,6 +282,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         definitions["pkg_name"] = INSTALLER_DEFAULT_PATH_STEM
         definitions["default_location_pkg"] = "Library"
         definitions["installer_type"] = "pkg"
+        definitions["progress_notifications"] = True
         definitions["welcome_image"] = os.path.join(resources, "napari_1227x600.png")
         welcome_text_tmpl = (Path(resources) / "osx_pkg_welcome.rtf.tmpl").read_text()
         welcome_file = Path(resources) / "osx_pkg_welcome.rtf"
