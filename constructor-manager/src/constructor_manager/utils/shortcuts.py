@@ -1,7 +1,7 @@
 import os
 import platform
 
-from constructor_manager_backend.utils.conda import get_base_prefix, get_prefix_by_name
+from constructor_manager.utils.conda import get_base_prefix, get_prefix_by_name
 from menuinst.api import _load, install, remove
 
 TEMPLATE = {

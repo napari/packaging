@@ -3,7 +3,7 @@
 import logging
 import re
 
-from constructor_manager_backend.defaults import (
+from constructor_manager.defaults import (
     SENTINEL_FILE_PREFIX,
     SENTINEL_FILE_SUFFIX,
 )

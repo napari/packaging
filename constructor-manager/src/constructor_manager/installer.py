@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Deque, Dict, List, Optional, Sequence, Tuple, cast
 
-from constructor_manager_backend.defaults import DEFAULT_CHANNEL
+from constructor_manager.defaults import DEFAULT_CHANNEL
 
 job_id = int
 

@@ -9,14 +9,14 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import yaml
-from constructor_manager_backend.defaults import DEFAULT_CHANNEL
-from constructor_manager_backend.installer import CondaInstaller
-from constructor_manager_backend.utils.anaconda import conda_package_versions
-from constructor_manager_backend.utils.conda import (
+from constructor_manager.defaults import DEFAULT_CHANNEL
+from constructor_manager.installer import CondaInstaller
+from constructor_manager.utils.anaconda import conda_package_versions
+from constructor_manager.utils.conda import (
     get_prefix_by_name,
     parse_conda_version_spec,
 )
-from constructor_manager_backend.utils.io import (
+from constructor_manager.utils.io import (
     create_sentinel_file,
     get_broken_envs,
     get_env_path,
@@ -25,13 +25,13 @@ from constructor_manager_backend.utils.io import (
     get_state_path,
     remove_sentinel_file,
 )
-from constructor_manager_backend.utils.request import plugin_versions
-from constructor_manager_backend.utils.shortcuts import (
+from constructor_manager.utils.request import plugin_versions
+from constructor_manager.utils.shortcuts import (
     create_shortcut,
     open_application,
     remove_shortcut,
 )
-from constructor_manager_backend.utils.versions import (
+from constructor_manager.utils.versions import (
     is_stable_version,
     parse_version,
     sort_versions,
@@ -188,42 +188,6 @@ class ActionManager:
 
         return env_path
 
-    # def _create_list_file(self, version) -> None:
-    #     """Create a conda/mamba list file for a given version.
-
-    #     This use conda/mamba list for the given version and write a yaml file
-    #     if no other files exists, or if the previous file has different
-    #     content.
-
-    #     Parameters
-    #     ----------
-    #     version : str
-    #         Version to create conda list for.
-    #     """
-    #     date = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    #     path = (
-    #         get_list_path() /
-    #         f"{self._application_name}-{version}-{date}-list.yaml"
-    #     )
-    #     prefix = get_prefix_by_name(f"{self._application_name}-{version}")
-    #     packages = self._installer.list(str(prefix), block=True)
-
-    #     # Find all files with the same pattern
-    #     filepaths = glob.glob(
-    #         str(get_list_path() / f"{self._application_name}-{version}-*-list.yaml")
-    #     )
-
-    #     # Check if the latest file with the same content exists
-    #     data = {}
-    #     for filepath in sorted(filepaths, reverse=True):
-    #         with open(filepath) as f:
-    #             data = yaml.load(f, Loader=yaml.SafeLoader)
-    #         break
-
-    #     if data != packages:
-    #         with open(path, "w") as f:
-    #             yaml.dump(packages, f)
-
     # Environment locking
     # -------------------------------------------------------------------------
     def _lock_environment(self, version, packages, date=None):
@@ -295,6 +259,8 @@ class ActionManager:
                 if path.startswith(prefix):
                     path = path.replace(prefix, "").replace(suffix, "")
                     data[version].append(str(path))
+
+            data[version] = list(sorted(data[version], reverse=True))
 
         return data
 
@@ -462,6 +428,17 @@ class ActionManager:
         # Create the sentinel file for the new environment
         create_sentinel_file(self._application_name, version)
 
+    def _create_from_lock(self, state_file, version):
+        """Create a new environment from a lock file."""
+        logger.debug("Removing environment...")
+        self._remove(version, shortcuts=True)
+
+        logger.debug(f"Restoring {state_file}...")
+        prefix = get_prefix_by_name(f"{self._application_name}-{version}")
+        state_path = get_state_path() / state_file
+        self._installer.install_from_lock(str(prefix), str(state_path), block=True)
+        self._create_shortcuts(version=version)
+
     # Other
     # -------------------------------------------------------------------------
     def _check_available_versions(self, dev: bool = False) -> List[str]:
@@ -581,7 +558,7 @@ class ActionManager:
     ):
         """Get status of any running action."""
         logger.debug(f"Checking status for {self._application_name}...")
-        return {}
+        return {"busy": not bool(lock_created)}
 
     def update(
         self,
@@ -656,13 +633,30 @@ class ActionManager:
 
     def restore(
         self,
+        state_file: Optional[str] = None,
         lock_created: Optional[bool] = None,
     ) -> Dict:
         """Restore to a previously saved store point for the same version.
 
         This will only run if any restore points are found
         """
-        # lists, states = self._get_available_lists_and_states(self._current_version)
+        states = self._get_available_states()
+        for version, states in states.items():
+            for state in states:
+                state_file_check = (
+                    f"{self._application_name}-{version}-{state}-lock.yml"
+                )
+                if state_file is None:
+                    break
+
+                if state_file_check == state_file:
+                    self._create_from_lock(state_file, version=version)
+                    return {}
+
+            if state_file is None:
+                self._create_from_lock(state_file_check, version=version)
+                return {}
+
         return {}
 
     def revert(
@@ -673,7 +667,22 @@ class ActionManager:
 
         This will only run if any restore points are found
         """
-        # lists, states = self._get_available_lists_and_states(self._current_version)
+        states = self._get_available_states()
+        state = None
+        version = None
+        for version, states in states.items():
+            if parse_version(version) < parse_version(self._current_version):
+                version = version
+                state = states[0]
+                break
+
+        if state:
+            logger.debug("Removing environment...")
+            self._remove(version, shortcuts=True)
+
+            state_file = f"{self._application_name}-{version}-{state}-lock.yml"
+            return self.restore(state_file)
+
         return {}
 
     def reset(
@@ -681,7 +690,6 @@ class ActionManager:
         lock_created: Optional[bool] = None,
     ) -> str:
         """Reset environment."""
-        # Remove any pending broken envs
         logger.debug("Cleaning environments...")
         self.clean_all()
 
@@ -689,18 +697,15 @@ class ActionManager:
             self._current_version if self._current_version else self._latest_version
         )
 
-        # Remove the old environment
         logger.debug("Removing environment...")
         prefix = get_prefix_by_name(f"{self._application_name}-{version}")
         if prefix.exists():
             self._remove(version=self._current_version)
 
-        # Create the new environment
         logger.debug("Creating new environment...")
         spec = f"{self._application_name}={version}=*{self._build_string}*"
         self._create(spec, plugins_url=None)
 
-        # Remove any pending broken envs
         logger.debug("Cleaning environments...")
         self.clean_all()
 
@@ -723,8 +728,8 @@ class ActionManager:
         update : bool, optional
             If ``True``, update the lock file. Default is ``False``.
         """
-        version = self._current_version if version is None else version
         logger.debug("Locking environment...")
+        version = self._current_version if version is None else version
         prefix = get_prefix_by_name(f"{self._application_name}-{version}")
         if not prefix.exists():
             raise EnvironmentDoesNotExist(f"Environment '{prefix}' does not exist!")
@@ -816,22 +821,3 @@ class ActionManager:
         version = version if version else self._current_version
         exit_code = open_application(self._application_name, version)
         return {"exit_code": exit_code}
-
-
-if __name__ == "__main__":
-    manager = ActionManager("napari=0.4.16")
-    # packages = [
-    #     {
-    #         "name": "napari-console",
-    #         "version": "0.4.11",
-    #     },
-    # ]
-    # manager.lock_environment(
-    #     "0.4.16",
-    #     plugins_url="https://api.napari-hub.org/plugins",
-    # )
-    print(manager._get_available_states())
-
-    # print(manager._get_available_lists("0.4.16"))
-    # manager._create_list(        "0.4.16",)
-    # print(manager._should_lock("0.4.16"))

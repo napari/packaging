@@ -3,8 +3,8 @@ from functools import lru_cache
 from typing import List
 
 import requests
-from constructor_manager_backend import __version__
-from constructor_manager_backend.defaults import DEFAULT_TIMEOUT
+from constructor_manager import __version__
+from constructor_manager.defaults import DEFAULT_TIMEOUT
 
 logger = logging.getLogger(__name__)
 

@@ -5,9 +5,9 @@ import re
 from functools import lru_cache
 from typing import List, Optional
 
-from constructor_manager_backend.defaults import DEFAULT_CHANNEL
-from constructor_manager_backend.utils.request import get_request
-from constructor_manager_backend.utils.versions import sort_versions
+from constructor_manager.defaults import DEFAULT_CHANNEL
+from constructor_manager.utils.request import get_request
+from constructor_manager.utils.versions import sort_versions
 
 logger = logging.getLogger(__name__)
 

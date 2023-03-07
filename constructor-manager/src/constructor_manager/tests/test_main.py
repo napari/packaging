@@ -1,4 +1,4 @@
-"""Constructor manager API."""
+"""Constructor manager CLI."""
 
 import constructor_manager
 

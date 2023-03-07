@@ -1,5 +1,5 @@
 import pytest  # type: ignore
-from constructor_manager_cli.utils.versions import (
+from constructor_manager.utils.versions import (
     is_stable_version,
     parse_version,
     sort_versions,

@@ -1,7 +1,7 @@
 import sys
 
 import pytest
-from constructor_manager_cli.utils.conda import (
+from constructor_manager.utils.conda import (
     get_base_prefix,
     get_prefix_by_name,
     parse_conda_version_spec,

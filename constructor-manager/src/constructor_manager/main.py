@@ -6,28 +6,26 @@ import sys
 import traceback
 import warnings
 
-from constructor_manager_backend.actions import ActionManager
-from constructor_manager_backend.cli import _create_parser
-from constructor_manager_backend.defaults import DEFAULT_CHANNEL
-from constructor_manager_backend.utils.io import get_lock_path
-from constructor_manager_backend.utils.locking import get_lock
-from constructor_manager_backend.utils.misc import dedup
-
-# from constructor_manager_backend.utils.shortcuts import create_temp_shortcut
+from constructor_manager.actions import ActionManager
+from constructor_manager.cli import _create_parser
+from constructor_manager.defaults import DEFAULT_CHANNEL
+from constructor_manager.utils.io import get_lock_path
+from constructor_manager.utils.locking import get_lock
+from constructor_manager.utils.misc import dedup
 
 
 warnings.filterwarnings("ignore")
 logger = logging.getLogger(__name__)
 
 
-COMMANDS = {
+_COMMANDS = {
     "check-updates": ["dev"],
     "check-version": [],
     "check-packages": ["plugins_url"],
     "status": [],
     "open": [],
 }
-COMMANDS_LOCKED = {
+_COMMANDS_LOCKED = {
     "update": ["plugins_url", "dev", "delayed"],
     "restore": [],
     "revert": [],
@@ -50,7 +48,7 @@ def _execute(args, lock_file_path):
     channels = (DEFAULT_CHANNEL,) if "channel" not in args else args.channel
     manager = ActionManager(args.application, channels)
 
-    all_commands = {**COMMANDS, **COMMANDS_LOCKED}
+    all_commands = {**_COMMANDS, **_COMMANDS_LOCKED}
     method_name = args.command.lower().replace("-", "_")
     method = getattr(manager, method_name)
     method_kwargs = {
@@ -63,10 +61,10 @@ def _execute(args, lock_file_path):
 
     method_kwargs["lock_created"] = lock_created
     result = []
-    if args.command in COMMANDS:
+    if args.command in _COMMANDS:
         result = method(**method_kwargs)
         # time.sleep(5)
-    elif args.command in COMMANDS_LOCKED:
+    elif args.command in _COMMANDS_LOCKED:
         logger.debug("Creating lock file: %s", lock_file_path)
         lock, lock_created = get_lock(lock_file_path)
         if lock_created:
@@ -79,25 +77,21 @@ def _execute(args, lock_file_path):
     return result
 
 
-def _configure_logging(log_level="WARNING"):
-    """Configure logging."""
+def _configure_logging(log_level: str = "WARNING"):
+    """Configure logging.
+
+    Parameters
+    ----------
+    log_level : str, optional
+        Log level, by default ``"WARNING"``.
+    """
     log_level = getattr(logging, log_level.upper(), logging.WARNING)
     log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     logging.basicConfig(format=log_format, level=log_level)
 
 
-# def _create():
-#     name = "napari-0.4.16"
-#     prefix = get_prefix_by_name(name)
-#     python_prefix = prefix / "bin" / "python"
-#     create_temp_shortcut(
-#         "napari", "0.4.16", command=[str(python_prefix), "-m", "napari"]
-#     )
-
-
 def main():
     """Main function."""
-    # _create()
     parser = _create_parser()
     args = parser.parse_args()
     if getattr(args, "command", None) is None:

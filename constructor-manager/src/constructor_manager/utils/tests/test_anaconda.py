@@ -1,4 +1,4 @@
-from constructor_manager_cli.utils.anaconda import (
+from constructor_manager.utils.anaconda import (
     conda_package_data,
     conda_package_versions,
 )

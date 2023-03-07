@@ -1,4 +1,4 @@
-from constructor_manager_cli.utils.request import (
+from constructor_manager.utils.request import (
     _user_agent,
     get_request,
     plugin_versions,

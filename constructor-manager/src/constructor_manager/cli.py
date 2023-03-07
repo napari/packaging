@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from constructor_manager_backend.defaults import DEFAULT_CHANNEL
+from constructor_manager.defaults import DEFAULT_CHANNEL
 
 logger = logging.getLogger(__name__)
 
