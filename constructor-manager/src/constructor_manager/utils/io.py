@@ -6,8 +6,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Tuple, Union
 
-from constructor_manager_backend.utils.conda import get_prefix_by_name
-from constructor_manager_backend.utils.packages import (
+from constructor_manager.utils.conda import get_prefix_by_name
+from constructor_manager.utils.packages import (
     normalized_name,
     sentinel_file_name,
 )
