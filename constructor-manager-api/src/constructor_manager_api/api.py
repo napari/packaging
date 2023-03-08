@@ -3,9 +3,9 @@
 from typing import List, Optional
 import logging
 
-from constructor_manager.defaults import DEFAULT_CHANNEL
-from constructor_manager.utils.worker import ConstructorManagerWorker
-from constructor_manager.utils.conda import get_base_prefix
+from constructor_manager_api.defaults import DEFAULT_CHANNEL
+from constructor_manager_api.utils.worker import ConstructorManagerWorker
+from constructor_manager_api.utils.conda import get_base_prefix
 
 from qtpy.QtCore import QProcess
 

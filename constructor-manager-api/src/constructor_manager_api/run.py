@@ -4,7 +4,7 @@ import sys
 
 from qtpy.QtCore import QCoreApplication, QTimer  # type: ignore
 
-from constructor_manager.api import check_updates, check_version, open_manager
+from constructor_manager_api.api import check_updates, check_version, open_manager
 
 
 def _finished(res):

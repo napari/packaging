@@ -2,10 +2,11 @@
 
 import json
 import logging
+from typing import List
 
 from qtpy.QtCore import QObject, QProcess, Signal  # type: ignore
 
-from constructor_manager.utils.conda import get_base_prefix
+from constructor_manager_api.utils.conda import get_prefix_by_name
 
 
 logger = logging.getLogger(__name__)
@@ -22,14 +23,14 @@ class ConstructorManagerWorker(QObject):
         Run the process detached, by default ``False``.
     """
 
-    _WORKERS: 'ConstructorManagerWorker' = []
+    _WORKERS: 'List[ConstructorManagerWorker]' = []
     finished = Signal(dict)
 
     def __init__(self, args, detached=False):
         super().__init__()
         ConstructorManagerWorker._WORKERS.append(self)
         self._detached = detached
-        self._program = get_base_prefix() / "bin" / "constructor-manager"
+        self._program = self._executable()
 
         if not self._program.is_file():
             raise FileNotFoundError(f"Could not find {self._program}")
@@ -40,6 +41,18 @@ class ConstructorManagerWorker(QObject):
         self._process.setArguments(args)
         self._process.setProgram(str(self._program))
         self._process.finished.connect(self._finished)
+
+    @staticmethod
+    def _executable():
+        """Get the executable for the constructor manager."""
+        bin = "constructor-manager-cli"
+        envs = ['_constructor-manager', 'constructor-manager', 'base']
+        for env in envs:
+            program = get_prefix_by_name(env) / "bin" / bin
+            if program.is_file():
+                return program
+        else:
+            raise FileNotFoundError(f"Could not find {bin} in any of the following environments: {envs}")
 
     def _finished(self, exit_code: int, exit_status: QProcess.ExitStatus = QProcess.ExitStatus.NormalExit):
         """Handle the finished signal of the worker and emit results."""
