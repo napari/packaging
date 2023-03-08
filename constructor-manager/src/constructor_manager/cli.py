@@ -12,6 +12,7 @@ def _create_subparser(
     plugins_url=False,
     dev=False,
     delayed=False,
+    target_prefix=False,
 ):
     """Create a subparser for the constructor updater.
 
@@ -28,6 +29,8 @@ def _create_subparser(
         Check for development version, by default ``False``.
     delayed : bool, optional
         Delay the execution of the update, by default ``False``.
+    target_prefix : bool, optional
+        Target prefix for the open command, by default ``False``.
 
     Returns
     -------
@@ -61,6 +64,13 @@ def _create_subparser(
 
     if delayed:
         subparser.add_argument("--delayed", action="store_true")
+
+    if target_prefix:
+        subparser.add_argument(
+            "--target-prefix",
+            "-tp",
+            type=str,
+        )
 
     return subparser
 
@@ -126,6 +136,6 @@ def _create_parser():
 
     # Get current status of the installer (update in progress?)
     open = subparsers.add_parser("open")
-    open = _create_subparser(open)
+    open = _create_subparser(open, target_prefix=True)
 
     return parser

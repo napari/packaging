@@ -23,7 +23,7 @@ _COMMANDS = {
     "check-version": [],
     "check-packages": ["plugins_url"],
     "status": [],
-    "open": [],
+    "open": ["target_prefix"],
 }
 _COMMANDS_LOCKED = {
     "update": ["plugins_url", "dev", "delayed"],

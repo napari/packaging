@@ -815,9 +815,12 @@ class ActionManager:
     def open(
         self,
         version: str = None,
+        target_prefix: str = None,
         lock_created: Optional[bool] = None,
     ) -> Dict:
         """Open the application with package name and version."""
         version = version if version else self._current_version
-        exit_code = open_application(self._application_name, version)
+        exit_code = open_application(
+            self._application_name, version, target_prefix=target_prefix
+        )
         return {"exit_code": exit_code}
