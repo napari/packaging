@@ -110,6 +110,7 @@ def main():
     constructor_manager_dir.mkdir(parents=True, exist_ok=True)
     lock_file_path = constructor_manager_dir / "constructor-manager.lock"
 
+    # result = _execute(args, lock_file_path)
     try:
         logger.debug("Executing: %s", args)
         result = _execute(args, lock_file_path)

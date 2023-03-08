@@ -202,7 +202,8 @@ class ActionManager:
         env_path = self._create_environment_file_for_locking(version, packages)
 
         lockfile = (
-            get_state_path() / f"{self._application_name}-{version}-{date}-lock.yml"
+            get_state_path()
+            / f"{self._application_name}-{version}-{date}-conda-lock.yml"
         )
         temp_lockfile = (
             get_state_path() / f"{self._application_name}-{version}-{date}-temp.yml"
@@ -243,7 +244,7 @@ class ActionManager:
 
     def _get_available_states(self) -> Dict:
         """Get available states and group them by version."""
-        pattern = f"{self._application_name}-*-lock.yml"
+        pattern = f"{self._application_name}-*-conda-lock.yml"
         paths = [Path(p).name for p in glob.glob(str(get_state_path() / pattern))]
         versions = set()
         for path in paths:
@@ -255,7 +256,7 @@ class ActionManager:
 
             for path in paths:
                 prefix = f"{self._application_name}-{version}-"
-                suffix = "-lock.yml"
+                suffix = "-conda-lock.yml"
                 if path.startswith(prefix):
                     path = path.replace(prefix, "").replace(suffix, "")
                     data[version].append(str(path))
@@ -296,14 +297,17 @@ class ActionManager:
         version : str
             Version to remove shortcuts for.
         """
+        logger.debug(
+            f"Removing shortcuts for version: {self._application_name}={version}"
+        )
+        paths = remove_shortcut(self._application_name, version)
+
+        logger.debug(f"Removing menu package: {self._application_name}-menu={version}")
         prefix = get_prefix_by_name(f"{self._application_name}-{version}")
         menu_spec = f"{self._application_name}-menu={version}"
         rc = self._installer.uninstall(
             pkg_list=[menu_spec], prefix=str(prefix), shortcuts=True, block=True
         )
-        # Remove shortcuts manually using menuinst
-        paths = remove_shortcut(self._application_name, version)
-        print(paths)
         return rc, paths
 
     # Install
@@ -438,6 +442,9 @@ class ActionManager:
         state_path = get_state_path() / state_file
         self._installer.install_from_lock(str(prefix), str(state_path), block=True)
         self._create_shortcuts(version=version)
+
+        # Create the sentinel file for the environment
+        create_sentinel_file(self._application_name, version)
 
     # Other
     # -------------------------------------------------------------------------
@@ -598,7 +605,7 @@ class ActionManager:
         new_prefix = get_prefix_by_name(f"{self._application_name}-{latest_version}")
         if not installed:
             available_plugins = []
-            if plugins_url:
+            if plugins_url and old_prefix.exists():
                 available_plugins = self._get_installed_plugins(old_prefix, plugins_url)
 
             logger.debug(f"Available plugins {available_plugins}")
@@ -615,6 +622,7 @@ class ActionManager:
                 shortcuts=shortcuts,
             )
 
+        logger.debug(f"delayed  {delayed}?...")
         if not delayed:
             logger.debug(f"Removing prefix {old_prefix}...")
             self._remove(self._current_version, shortcuts=shortcuts)
@@ -640,11 +648,12 @@ class ActionManager:
 
         This will only run if any restore points are found
         """
+        logger.debug("Restoring environment...")
         states = self._get_available_states()
         for version, states in states.items():
             for state in states:
                 state_file_check = (
-                    f"{self._application_name}-{version}-{state}-lock.yml"
+                    f"{self._application_name}-{version}-{state}-conda-lock.yml"
                 )
                 if state_file is None:
                     break
@@ -677,11 +686,12 @@ class ActionManager:
                 break
 
         if state:
-            logger.debug("Removing environment...")
-            self._remove(version, shortcuts=True)
+            state_file = f"{self._application_name}-{version}-{state}-conda-lock.yml"
+            logger.debug(f"Reverting to {state_file}...")
+            self.restore(state_file)
 
-            state_file = f"{self._application_name}-{version}-{state}-lock.yml"
-            return self.restore(state_file)
+            logger.debug("Removing old environment...")
+            self._remove(self._current_version, shortcuts=True)
 
         return {}
 

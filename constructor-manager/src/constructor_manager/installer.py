@@ -306,7 +306,7 @@ class CondaInstaller(AbstractInstaller):
         block: bool = False,
     ) -> job_id:
         """Install packages from lockfile."""
-        args = ["-p", prefix, "--lockfile", lockfile]
+        args = ["install", lockfile, "--prefix", prefix]
         return self._queue_args(args, bin="conda-lock", block=block)
 
     def lock(
