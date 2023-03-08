@@ -26,7 +26,7 @@ def dedup(items: Tuple[Any, ...]) -> Tuple[Any, ...]:
 
 def _configure_logging(log_level="WARNING"):
     """Configure logging."""
-    import constructor_manager
+    import constructor_manager_api
 
     log_level = getattr(logging, log_level.upper())
     log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -34,7 +34,7 @@ def _configure_logging(log_level="WARNING"):
     logging.basicConfig(format=log_format, level=log_level)
 
     # Set logging level for libraries used
-    api_logger = logging.getLogger(constructor_manager.__name__)
+    api_logger = logging.getLogger(constructor_manager_api.__name__)
     api_logger.setLevel(log_level)
 
 

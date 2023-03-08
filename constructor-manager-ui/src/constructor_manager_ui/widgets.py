@@ -25,7 +25,7 @@ from qtpy.QtWidgets import (
     QProgressBar,
 )
 
-from constructor_manager.api import (
+from constructor_manager_api import (
     check_updates,
     check_version,
     check_packages,
@@ -34,7 +34,7 @@ from constructor_manager.api import (
     reset,
     open_application,
 )
-from constructor_manager.utils.worker import ConstructorManagerWorker
+from constructor_manager_api.utils.worker import ConstructorManagerWorker
 
 # To get mock data
 from constructor_manager_ui.data import PackageData

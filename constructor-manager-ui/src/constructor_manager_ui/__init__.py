@@ -1,1 +1,1 @@
-"""Constructor manager."""
+"""Constructor manager ui."""
