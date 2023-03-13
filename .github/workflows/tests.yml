@@ -35,7 +35,7 @@ jobs:
 
       - name: Install dependencies on main environment
         run: |
-          conda install -n base conda-lock mamba
+          conda install -n base conda-lock mamba -y -c conda-forge
 
       - name: create constructor-manager-environment
         run: |
@@ -59,4 +59,3 @@ jobs:
         run: |
           conda activate constructor-manager
           conda list
-
