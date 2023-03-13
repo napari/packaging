@@ -9,7 +9,7 @@ on:
       - main
     paths:
       - 'constructor-manager/**'
-      - 'constructor-manager-cli/**'
+      - 'constructor-manager-api/**'
   workflow_dispatch:
 
 jobs:
@@ -42,16 +42,23 @@ jobs:
         run: |
           conda create -n constructor-manager conda packaging requests pyyaml -y -c conda-forge
           conda activate constructor-manager
+          # List installed packages
           conda list
 
       - name: Install constructor-manager
         run: |
           conda activate constructor-manager
+          # Install dev branch
+          pip install https://github.com/user/repo.git@branch
+          # Install constructor manager
           git clone https://github.com/goanpeca/packaging.git packaging_clone
           cd packaging_clone
           git checkout constructor-updater
           cd constructor-manager
           pip install -e . --no-deps
+          # Install test deps
+          conda install -n constructor-manager pytest pytes-cov pytest-qt -c conda-forge -y 
+          # List installed packages
           conda list
 
       - name: Install constructor-manager-api
@@ -64,4 +71,8 @@ jobs:
       - name: Test constructor-manager-api
         run: |
           conda activate constructor-manager
+          # List installed packages
           conda list
+          cd constructor-manager-api/src
+          # Run Tests
+          pytest constructor_manager_api --cov=constructor_manager_api
