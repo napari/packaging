@@ -36,10 +36,13 @@ jobs:
       - name: Install dependencies on main environment
         run: |
           conda install -n base conda-lock mamba -y -c conda-forge
+          conda list
 
       - name: create constructor-manager-environment
         run: |
           conda create -n constructor-manager conda packaging requests pyyaml -y -c conda-forge
+          conda activate constructor-manager
+          conda list
 
       - name: Install constructor-manager
         run: |
@@ -49,11 +52,12 @@ jobs:
           git checkout constructor-updater
           cd constructor-manager
           pip install -e . --no-deps
+          conda list
 
       - name: Install constructor-manager-api
         run: |
           conda activate constructor-manager
-          conda install -n constructor-manager qtpy -y -c conda-forge
+          conda install -n constructor-manager qtpy pyqt -y -c conda-forge
           cd constructor-manager-api
           pip install -e . --no-deps
 
