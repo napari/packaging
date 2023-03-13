@@ -55,7 +55,7 @@ jobs:
           cd constructor-manager
           pip install -e . --no-deps
           # Install test deps
-          conda install -n constructor-manager pytest pytes-cov pytest-qt -c conda-forge -y
+          conda install -n constructor-manager pytest pytest-cov pytest-qt -c conda-forge -y
           # List installed packages
           conda list
 
