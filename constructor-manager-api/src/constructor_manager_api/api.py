@@ -5,7 +5,8 @@ import logging
 
 from constructor_manager_api.defaults import DEFAULT_CHANNEL
 from constructor_manager_api.utils.worker import ConstructorManagerWorker
-from constructor_manager_api.utils.conda import get_base_prefix
+from constructor_manager_api.utils.conda import get_prefix_by_name
+from constructor_manager_api.utils.settings import save_settings
 
 from qtpy.QtCore import QProcess
 
@@ -21,6 +22,8 @@ def _run_action(
     channels: Optional[List[str]] = None,
     dev: bool = False,
     plugins_url: Optional[str] = None,
+    target_prefix: Optional[str] = None,
+    delayed: bool = False,
 ) -> ConstructorManagerWorker:
     """Run constructor action.
 
@@ -39,6 +42,10 @@ def _run_action(
         List of plugins to install, by default ``None``.
     dev : bool, optional
         Check for development version, by default ``False``.
+    target_prefix : str, optional
+        Target prefix to install package to, by default ``None``.
+    delayed : bool, optional
+        Delay execution of action, by default ``False``.
 
     Returns
     -------
@@ -67,6 +74,13 @@ def _run_action(
 
     if dev:
         args.extend(["--dev"])
+
+    if target_prefix:
+        args.append("--target-prefix")
+        args.append(target_prefix)
+
+    if delayed:
+        args.append("--delayed")
 
     detached = cmd != "status"
     detached = False
@@ -152,8 +166,12 @@ def check_packages(package_name: str, version: Optional[str] = None, plugins_url
 
 def update(
     package_name,
+    version: str,
+    build_string: Optional[str] = None,
     channels: Optional[List[str]] = None,
+    plugins_url: Optional[str] = None,
     dev: bool = False,
+    delayed: bool = False,
 ) -> ConstructorManagerWorker:
     """Update the package to given version.
     If version is None update to latest version found.
@@ -164,8 +182,9 @@ def update(
         Worker to check for updates. Includes a finished signal that returns
         a ``dict`` with the result.
     """
+
     return _run_action(
-        "update", package_name, channels=channels, dev=dev
+        "update", package_name, version, build_string=build_string, channels=channels, dev=dev, delayed=delayed, plugins_url=plugins_url
     )
 
 
@@ -230,7 +249,7 @@ def revert(
         a ``dict`` with the result.
     """
     return _run_action(
-        "rollback",
+        "revert",
         package_name,
         version=current_version,
         channels=channels,
@@ -285,7 +304,8 @@ def open_manager(
     build_string: Optional[str] = None,
     channels: Optional[List[str]] = None,
     dev: bool = False,
-    ) -> QProcess:
+    log: Optional[str] = None,
+    ) -> bool:
     """
     Open the constructor manager.
 
@@ -303,51 +323,50 @@ def open_manager(
     dev : bool, optional
         Check for development version, by default ``False``.
     """
-    path = (
-        get_base_prefix()
-        / "bin"
-        / "constructor-manager-ui"
-    )
+    envs = ['_constructor-manager', 'constructor-manager', 'base']
+    for env in envs:
+        target_prefix = get_prefix_by_name(env)
+        path = (
+            target_prefix
+            / "bin"
+            / "constructor-manager-ui"
+        )
+        if path.exists():
+            break
+
+    settings = {}
 
     args = [package_name]
     if current_version:
-        args.extend(['--current-version', current_version])
+        settings['current_version'] = current_version
 
     if plugins_url:
-        args.extend(['--plugins-url', plugins_url])
+        settings['plugins_url'] = plugins_url
 
     if build_string:
-        args.extend(['--build-string', build_string])
+        settings['build_string'] = build_string
 
     if dev:
-        args.extend(['--dev'])
+        settings['dev'] = dev  # type: ignore
 
     if channels:
-        for channel in channels:
-            args.extend(['--channel', channel])
+        settings['channels'] = channels  # type: ignore
 
-    process = QProcess()
-    process.start(
+    if log:
+        settings['log'] = log  # type: ignore
+
+    save_settings(package_name, settings)
+    # TODO: use open_application
+    return QProcess.startDetached(
         str(path),
-        args
+        args,
     )
-    return process
 
 
-def open_application(package_name, version):
+def open_application(package_name, version, target_prefix=None):
     return _run_action(
         "open",
         package_name,
         version=version,
+        target_prefix=target_prefix,
     )
-
-
-def check_constructor_manager_updates():
-    # TODO: Use a separate worker and call conda/mamba directly!
-    # this could use the same worker and run through constructor-manager-cli
-    pass
-
-
-def update_constructor_manager():
-    # Use a separate worker and call conda/mamba directly!
-    pass
