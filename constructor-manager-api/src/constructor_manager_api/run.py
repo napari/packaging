@@ -4,7 +4,7 @@ import sys
 
 from qtpy.QtCore import QCoreApplication, QTimer  # type: ignore
 
-from constructor_manager_api.api import check_updates, check_version, open_manager
+from constructor_manager_api.api import open_manager
 
 
 def _finished(res):
@@ -25,7 +25,11 @@ if __name__ == "__main__":
     #     channel="napari",
     #     dev=True,
     # )
-    # worker = check_updates("napari", build_string="pyside", plugins_url="https://api.napari-hub.org/plugins")
+    # worker = check_updates(
+    #     "napari",
+    #     build_string="pyside",
+    #     plugins_url="https://api.napari-hub.org/plugins",
+    # )
     # worker = check_version("napari")
     # worker.finished.connect(_finished)
     # worker.start()
@@ -34,8 +38,8 @@ if __name__ == "__main__":
         "napari",
         build_string="pyside",
         plugins_url="https://api.napari-hub.org/plugins",
-        channels=['napari', 'conda-forge'],
-        log='DEBUG',
+        channels=["napari", "conda-forge"],
+        log="DEBUG",
     )
     sys.exit(process)
     # sys.exit(app.exec_())

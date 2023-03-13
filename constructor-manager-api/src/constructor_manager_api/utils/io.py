@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 from constructor_manager_api.utils.conda import get_prefix_by_name
@@ -13,6 +12,6 @@ def get_config_path() -> Path:
 
 def get_settings_path(package_name: str) -> Path:
     """Get the path to the settings file for a package."""
-    path = get_config_path() / 'settings' / f"{package_name}.yaml"
+    path = get_config_path() / "settings" / f"{package_name}.yaml"
     path.parent.mkdir(parents=True, exist_ok=True)
     return path

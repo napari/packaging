@@ -89,7 +89,6 @@ def _run_action(
         args.append("--state")
         args.append(state)
 
-
     detached = cmd != "status"
     detached = False
 
@@ -103,7 +102,9 @@ def check_updates(
     package_name: str,
     current_version: Optional[str] = None,
     build_string: Optional[str] = None,
-    channels: List[str] = [DEFAULT_CHANNEL, ],
+    channels: List[str] = [
+        DEFAULT_CHANNEL,
+    ],
     dev: bool = False,
 ) -> ConstructorManagerWorker:
     """Check for updates.
@@ -175,7 +176,9 @@ def check_packages(
         Worker to check for updates. Includes a finished signal that returns
         a ``dict`` with the result.
     """
-    return _run_action("check-packages", package_name, version=version, plugins_url=plugins_url)
+    return _run_action(
+        "check-packages", package_name, version=version, plugins_url=plugins_url
+    )
 
 
 def update(
@@ -378,7 +381,7 @@ def open_manager(
     channels: Optional[List[str]] = None,
     dev: bool = False,
     log: Optional[str] = None,
-    ) -> bool:
+) -> bool:
     """
     Open the constructor manager.
 
@@ -396,14 +399,10 @@ def open_manager(
     dev : bool, optional
         Check for development version, by default ``False``.
     """
-    envs = ['_constructor-manager', 'constructor-manager', 'base']
+    envs = ["_constructor-manager", "constructor-manager", "base"]
     for env in envs:
         target_prefix = get_prefix_by_name(env)
-        path = (
-            target_prefix
-            / "bin"
-            / "constructor-manager-ui"
-        )
+        path = target_prefix / "bin" / "constructor-manager-ui"
         if path.exists():
             break
 
@@ -411,22 +410,22 @@ def open_manager(
 
     args = [package_name]
     if current_version:
-        settings['current_version'] = current_version
+        settings["current_version"] = current_version
 
     if plugins_url:
-        settings['plugins_url'] = plugins_url
+        settings["plugins_url"] = plugins_url
 
     if build_string:
-        settings['build_string'] = build_string
+        settings["build_string"] = build_string
 
     if dev:
-        settings['dev'] = dev  # type: ignore
+        settings["dev"] = dev  # type: ignore
 
     if channels:
-        settings['channels'] = channels  # type: ignore
+        settings["channels"] = channels  # type: ignore
 
     if log:
-        settings['log'] = log  # type: ignore
+        settings["log"] = log  # type: ignore
 
     save_settings(package_name, settings)
     # TODO: For a separate PR, use open_application when the convention

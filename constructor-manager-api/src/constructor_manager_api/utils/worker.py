@@ -23,7 +23,7 @@ class ConstructorManagerWorker(QObject):
         Run the process detached, by default ``False``.
     """
 
-    _WORKERS: 'List[ConstructorManagerWorker]' = []
+    _WORKERS: "List[ConstructorManagerWorker]" = []
     finished = Signal(dict)
 
     def __init__(self, args, detached=False):
@@ -35,7 +35,6 @@ class ConstructorManagerWorker(QObject):
         if not self._program.is_file():
             raise FileNotFoundError(f"Could not find {self._program}")
 
-        # TODO: check environemnt variables
         self._args = args
         self._process = QProcess()
         self._process.setArguments(args)
@@ -46,18 +45,25 @@ class ConstructorManagerWorker(QObject):
     def _executable():
         """Get the executable for the constructor manager."""
         bin = "constructor-manager-cli"
-        envs = ['_constructor-manager', 'constructor-manager', 'base']
+        envs = ["_constructor-manager", "constructor-manager", "base"]
         for env in envs:
             program = get_prefix_by_name(env) / "bin" / bin
             if program.is_file():
                 return program
         else:
-            raise FileNotFoundError(f"Could not find {bin} in any of the following environments: {envs}")
+            raise FileNotFoundError(
+                f"Could not find {bin} in any of the following environments: {envs}"
+            )
 
-    def _finished(self, exit_code: int, exit_status: QProcess.ExitStatus = QProcess.ExitStatus.NormalExit):
+    def _finished(
+        self,
+        exit_code: int,
+        exit_status: QProcess.ExitStatus = QProcess.ExitStatus.NormalExit,
+    ):
         """Handle the finished signal of the worker and emit results."""
         logger.debug(
-            "Worker with args `%s` finished with exit code %s and exit status %s", ' '.join(self._args),
+            "Worker with args `%s` finished with exit code %s and exit status %s",
+            " ".join(self._args),
             exit_code,
             exit_status,
         )
@@ -65,7 +71,6 @@ class ConstructorManagerWorker(QObject):
             stdout = self._process.readAllStandardOutput()
             stderr = self._process.readAllStandardError()
         except RuntimeError as e:
-            # TODO: Fix this?
             self.finished.emit({"data": {}, "error": str(e)})
             return
 
@@ -77,12 +82,17 @@ class ConstructorManagerWorker(QObject):
         if exit_code == 0 and exit_status == QProcess.ExitStatus.NormalExit:
             try:
                 output = json.loads(raw_output)
-            except Exception as e:
+            except Exception:
                 error = raw_output
 
         data = output.get("data", raw_output)
         error = error or output.get("error", error)
-        result = {"data": data, "error": error, "exit_code": exit_code, "exit_status": exit_status}
+        result = {
+            "data": data,
+            "error": error,
+            "exit_code": exit_code,
+            "exit_status": exit_status,
+        }
         self.finished.emit(result)
 
     def state(self):
@@ -91,10 +101,10 @@ class ConstructorManagerWorker(QObject):
 
     def start(self):
         """Start the worker."""
-        logger.debug("Worker with args `%s` started!", ' '.join(self._args))
+        logger.debug("Worker with args `%s` started!", " ".join(self._args))
         self._process.startDetached() if self._detached else self._process.start()
 
     def terminate(self):
         """Terminate the process worker."""
-        logger.debug("Worker with args `%s` terminated!", ' '.join(self._args))
+        logger.debug("Worker with args `%s` terminated!", " ".join(self._args))
         self._process.terminate()
