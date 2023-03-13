@@ -35,7 +35,7 @@ class ConstructorManagerWorker(QObject):
         if not self._program.is_file():
             raise FileNotFoundError(f"Could not find {self._program}")
 
-        # TODO: Environemnt variables?
+        # TODO: check environemnt variables
         self._args = args
         self._process = QProcess()
         self._process.setArguments(args)
@@ -56,7 +56,11 @@ class ConstructorManagerWorker(QObject):
 
     def _finished(self, exit_code: int, exit_status: QProcess.ExitStatus = QProcess.ExitStatus.NormalExit):
         """Handle the finished signal of the worker and emit results."""
-        logger.debug("Worker with args `%s` finished with exit code %s and exit status %s", ' '.join(self._args), exit_code, exit_status)
+        logger.debug(
+            "Worker with args `%s` finished with exit code %s and exit status %s", ' '.join(self._args),
+            exit_code,
+            exit_status,
+        )
         try:
             stdout = self._process.readAllStandardOutput()
             stderr = self._process.readAllStandardError()
@@ -65,7 +69,6 @@ class ConstructorManagerWorker(QObject):
             self.finished.emit({"data": {}, "error": str(e)})
             return
 
-        # TODO: Ensure to have the proper propagation of issues
         raw_output = stdout.data().decode()
         raw_error = stderr.data().decode()
         error = raw_error

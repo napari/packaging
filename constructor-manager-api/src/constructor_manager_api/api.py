@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def _run_action(
-    cmd,
+    cmd: str,
     package_name: Optional[str] = None,
     version: Optional[str] = None,
     build_string: Optional[str] = None,
@@ -24,6 +24,7 @@ def _run_action(
     plugins_url: Optional[str] = None,
     target_prefix: Optional[str] = None,
     delayed: bool = False,
+    state: Optional[str] = None,
 ) -> ConstructorManagerWorker:
     """Run constructor action.
 
@@ -46,6 +47,8 @@ def _run_action(
         Target prefix to install package to, by default ``None``.
     delayed : bool, optional
         Delay execution of action, by default ``False``.
+    state : str, optional
+        State to restore, by default ``None``.
 
     Returns
     -------
@@ -81,6 +84,11 @@ def _run_action(
 
     if delayed:
         args.append("--delayed")
+
+    if state:
+        args.append("--state")
+        args.append(state)
+
 
     detached = cmd != "status"
     detached = False
@@ -130,7 +138,7 @@ def check_updates(
     )
 
 
-def check_version(package_name: str,) -> ConstructorManagerWorker:
+def check_version(package_name: str) -> ConstructorManagerWorker:
     """Check for updates.
 
     Parameters
@@ -147,13 +155,19 @@ def check_version(package_name: str,) -> ConstructorManagerWorker:
     return _run_action("check-version", package_name)
 
 
-def check_packages(package_name: str, version: Optional[str] = None, plugins_url: Optional[str] = None) -> ConstructorManagerWorker:
+def check_packages(
+    package_name: str,
+    version: Optional[str] = None,
+    plugins_url: Optional[str] = None,
+) -> ConstructorManagerWorker:
     """Check for updates.
 
     Parameters
     ----------
     package_name : str
         Name of the package to check for updates.
+    version : str
+        Version of package to execute action on, by default ``None``.
 
     Returns
     -------
@@ -165,8 +179,8 @@ def check_packages(package_name: str, version: Optional[str] = None, plugins_url
 
 
 def update(
-    package_name,
-    version: str,
+    package_name: str,
+    current_version: str,
     build_string: Optional[str] = None,
     channels: Optional[List[str]] = None,
     plugins_url: Optional[str] = None,
@@ -174,7 +188,26 @@ def update(
     delayed: bool = False,
 ) -> ConstructorManagerWorker:
     """Update the package to given version.
+
     If version is None update to latest version found.
+
+    Parameters
+    ----------
+    package_name : str
+        Name of the package to update.
+    current_version : str
+        Current version of the package to update. This is not the version to
+        update to.
+    build_string: str, optional
+        Build string of the package. For example `'*pyside*`'.
+    channels : list of str, optional
+        Conda channels to check for updates.
+    dev : bool, optional
+        Check for development versions of the package, by default ``False``.
+    delayed : bool, optional
+        Delay execution of action, by default ``False``. Useful when running
+        from the main application in the background, instead of using the
+        constructor manager UI.
 
     Returns
     -------
@@ -182,26 +215,35 @@ def update(
         Worker to check for updates. Includes a finished signal that returns
         a ``dict`` with the result.
     """
-
     return _run_action(
-        "update", package_name, version, build_string=build_string, channels=channels, dev=dev, delayed=delayed, plugins_url=plugins_url
+        "update",
+        package_name,
+        current_version,
+        build_string=build_string,
+        channels=channels,
+        dev=dev,
+        delayed=delayed,
+        plugins_url=plugins_url,
     )
 
 
 def restore(
-    package_name,
-    version,
+    package_name: str,
+    current_version: str,
+    state: str,
     channels: Optional[List[str]] = None,
     dev: bool = False,
 ) -> ConstructorManagerWorker:
-    """Restore the current version of package.
+    """Restore to a given saved state within the current version.
 
     Parameters
     ---------
     package_name : str
         Name of the package to check for updates.
-    version : str, optional
+    current_version : str, optional
         Version to rollback to, by default ``None``.
+    state : str
+        State to restore to.
     channel : str, optional
         Channel to check for updates, by default ``DEFAULT_CHANNEL``.
     dev : bool, optional
@@ -216,28 +258,28 @@ def restore(
     return _run_action(
         "restore",
         package_name,
-        version=version,
+        version=current_version,
         channels=channels,
         dev=dev,
+        state=state,
     )
 
 
 def revert(
-    package_name,
+    package_name: str,
     current_version: Optional[str],
     channels: Optional[List[str]] = None,
     dev: bool = False,
 ) -> ConstructorManagerWorker:
-    """Update the package to given version.
-    If version is None update to latest version found.
+    """Revert to a previous version state of the current package.
 
     Parameters
     ---------
     package_name : str
         Name of the package to check for updates.
-    version : str, optional
-        Version to rollback to, by default ``None``.
-    channel : str, optional
+    current_version : str, optional
+        Current version of the package to revert.
+    channels : str, optional
         Channel to check for updates, by default ``DEFAULT_CHANNEL``.
     dev : bool, optional
         Check for development version, by default ``False``.
@@ -258,13 +300,15 @@ def revert(
 
 
 def reset(
-    package_name,
+    package_name: str,
     current_version: Optional[str],
     channels: Optional[List[str]] = None,
     dev: bool = False,
 ) -> ConstructorManagerWorker:
-    """Update the package to given version.
-    If version is None update to latest version found.
+    """Reset an environment from scratch.
+
+    This will remove all packages and reinstall the current version
+    of the package.
 
     Parameters
     ---------
@@ -292,13 +336,42 @@ def reset(
     )
 
 
-def get_status():
-    """Get status for the state of the constructor updater."""
-    return _run_action("status")
+def lock_environment(
+    package_name: str,
+    current_version: Optional[str],
+    plugins_url: Optional[str] = None,
+) -> ConstructorManagerWorker:
+    """Generate a lock state file using conda-lock for the environment
+    with package and version.
+
+    This will generate a state file in the configuration folder, so that
+    the restore command can be used with these checkpoints.
+
+    Parameters
+    ---------
+    package_name : str
+        Name of the package to check for updates.
+    current_version : str, optional
+        Version to rollback to, by default ``None``.
+    plugins_url : str, optional
+        URL to the plugins to install, by default ``None``.
+
+    Returns
+    -------
+    ConstructorManagerWorker
+        Worker to check for updates. Includes a finished signal that returns
+        a ``dict`` with the result.
+    """
+    return _run_action(
+        "lock-environment",
+        package_name,
+        version=current_version,
+        plugins_url=plugins_url,
+    )
 
 
 def open_manager(
-    package_name,
+    package_name: str,
     current_version: Optional[str] = None,
     plugins_url: Optional[str] = None,
     build_string: Optional[str] = None,
@@ -356,14 +429,27 @@ def open_manager(
         settings['log'] = log  # type: ignore
 
     save_settings(package_name, settings)
-    # TODO: use open_application
+    # TODO: For a separate PR, use open_application when the convention
+    # for applications using constructor nanager is defined in the bundle
+    # workflow
     return QProcess.startDetached(
         str(path),
         args,
     )
 
 
-def open_application(package_name, version, target_prefix=None):
+def open_application(package_name: str, version: str, target_prefix=None):
+    """Open the application name for given version in a specific prefix.
+
+    Parameters
+    ----------
+    package_name : str
+        Name of the package to check for updates.
+    version : str
+        Version to open.
+    target_prefix : str, optional
+        Target prefix to open the application in, by default ``None``.
+    """
     return _run_action(
         "open",
         package_name,
