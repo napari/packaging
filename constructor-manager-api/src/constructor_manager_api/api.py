@@ -1,5 +1,6 @@
 """Constructor manager api."""
 
+from enum import Enum
 from typing import List, Optional
 import logging
 
@@ -14,8 +15,20 @@ from qtpy.QtCore import QProcess
 logger = logging.getLogger(__name__)
 
 
+class ActionsEnum(str, Enum):
+    check_updates = "check-updates"
+    check_version = "check-version"
+    check_packages = "check-packages"
+    update = "update"
+    lock_environment = "lock-environment"
+    restore = "restore"
+    revert = "revert"
+    reset = "reset"
+    open = "open"
+
+
 def _run_action(
-    cmd: str,
+    cmd: ActionsEnum,
     package_name: Optional[str] = None,
     version: Optional[str] = None,
     build_string: Optional[str] = None,
@@ -30,7 +43,7 @@ def _run_action(
 
     Parameters
     ----------
-    cmd : str
+    cmd : ActionsEnum
         Action to run.
     package_name : str, optional
         Name of the package to execute action on.
@@ -56,7 +69,7 @@ def _run_action(
         Worker to check for updates. Includes a finished signal that returns
         a ``dict`` with the result.
     """
-    args = [cmd]
+    args = [cmd.value]
     if version is None:
         version = "*"
 
@@ -130,7 +143,7 @@ def check_updates(
         a ``dict`` with the result.
     """
     return _run_action(
-        "check-updates",
+        ActionsEnum.check_updates,
         package_name,
         version=current_version,
         build_string=build_string,
@@ -153,7 +166,7 @@ def check_version(package_name: str) -> ConstructorManagerWorker:
         Worker to check for updates. Includes a finished signal that returns
         a ``dict`` with the result.
     """
-    return _run_action("check-version", package_name)
+    return _run_action(ActionsEnum.check_version, package_name)
 
 
 def check_packages(
@@ -177,7 +190,10 @@ def check_packages(
         a ``dict`` with the result.
     """
     return _run_action(
-        "check-packages", package_name, version=version, plugins_url=plugins_url
+        ActionsEnum.check_packages,
+        package_name,
+        version=version,
+        plugins_url=plugins_url,
     )
 
 
@@ -219,7 +235,7 @@ def update(
         a ``dict`` with the result.
     """
     return _run_action(
-        "update",
+        ActionsEnum.update,
         package_name,
         current_version,
         build_string=build_string,
@@ -259,7 +275,7 @@ def restore(
         a ``dict`` with the result.
     """
     return _run_action(
-        "restore",
+        ActionsEnum.restore,
         package_name,
         version=current_version,
         channels=channels,
@@ -294,7 +310,7 @@ def revert(
         a ``dict`` with the result.
     """
     return _run_action(
-        "revert",
+        ActionsEnum.revert,
         package_name,
         version=current_version,
         channels=channels,
@@ -331,7 +347,7 @@ def reset(
         a ``dict`` with the result.
     """
     return _run_action(
-        "reset",
+        ActionsEnum.reset,
         package_name,
         version=current_version,
         channels=channels,
@@ -366,7 +382,7 @@ def lock_environment(
         a ``dict`` with the result.
     """
     return _run_action(
-        "lock-environment",
+        ActionsEnum.lock_environment,
         package_name,
         version=current_version,
         plugins_url=plugins_url,
@@ -450,7 +466,7 @@ def open_application(package_name: str, version: str, target_prefix=None):
         Target prefix to open the application in, by default ``None``.
     """
     return _run_action(
-        "open",
+        ActionsEnum.open,
         package_name,
         version=version,
         target_prefix=target_prefix,
