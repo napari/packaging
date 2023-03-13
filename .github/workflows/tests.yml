@@ -44,14 +44,16 @@ jobs:
       - name: Install constructor-manager
         run: |
           conda activate constructor-manager
-          git checkout https://github.com/goanpeca/packaging.git
-          cd packaging
+          git clone https://github.com/goanpeca/packaging.git packaging_clone
+          cd packaging_clone
+          git checkout constructor-updater
           cd constructor-manager
           pip install -e . --no-deps
 
       - name: Install constructor-manager-api
         run: |
           conda activate constructor-manager
+          conda install -n constructor-manager qtpy -y -c conda-forge
           cd constructor-manager-api
           pip install -e . --no-deps
 
