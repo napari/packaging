@@ -48,8 +48,6 @@ jobs:
       - name: Install constructor-manager
         run: |
           conda activate constructor-manager
-          # Install dev branch
-          pip install https://github.com/user/repo.git@branch
           # Install constructor manager
           git clone https://github.com/goanpeca/packaging.git packaging_clone
           cd packaging_clone
@@ -57,7 +55,7 @@ jobs:
           cd constructor-manager
           pip install -e . --no-deps
           # Install test deps
-          conda install -n constructor-manager pytest pytes-cov pytest-qt -c conda-forge -y 
+          conda install -n constructor-manager pytest pytes-cov pytest-qt -c conda-forge -y
           # List installed packages
           conda list
 
