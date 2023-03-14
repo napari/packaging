@@ -1,4 +1,4 @@
-"""Constructor manager main interface."""
+"""Constructor manager main dialog."""
 
 from typing import Optional, List
 import logging
@@ -30,7 +30,6 @@ from constructor_manager_api import (
     open_application,
     update,
 )
-from constructor_manager_api.utils.worker import ConstructorManagerWorker
 
 # To get mock data
 from constructor_manager_ui.data import PackageData
@@ -55,7 +54,7 @@ class InstallationManagerDialog(QDialog):
         plugins_url: Optional[str] = None,
         channels: Optional[List[str]] = None,
         dev: bool = False,
-        log: str = 'WARNING',
+        log: str = "WARNING",
         parent: Optional[QWidget] = None,
     ):
         super().__init__(parent=parent)
@@ -70,25 +69,200 @@ class InstallationManagerDialog(QDialog):
         self.snapshot_version = None
         self.updates_widget = None
         self.packages_tablewidget = None
+        self._worker_version = None
+
+        # Setup
         self.setWindowTitle(f"{package_name} installation manager")
         self.setMinimumSize(QSize(500, 750))
         self.setup_layout()
-
-        self._worker_version = None
-        # if current_version is None:
-        #     self.current_version_open_button.setVisible(False)
-        #     self._worker_version = check_version(self.package_name)
-        #     self._worker_version.finished.connect(self._update_version)
-        #     self._worker_version.start()
-        # else:
-        #     self.set_version_actions_enabled(True)
-
         self._refresh()
 
-    def set_disabled(self, state):
-        pass
-        # self.packages_tablewidget.setEnabled(not state)
-        # self.updates_widget.setEnabled(not state)
+    def _create_install_information_group(self):
+        install_information_group = QGroupBox("Install information")
+        install_information_layout = QVBoxLayout()
+        current_version_layout = QHBoxLayout()
+
+        # Current version labels and button
+        if self.current_version:
+            text = f"{self.package_name} v{self.current_version}"
+        else:
+            text = self.package_name
+
+        self.current_version_label = QLabel(text)
+        last_modified_version_label = QLabel()
+        # f"Last modified {self.current_version['last_modified']}"
+        # )
+        self.current_version_open_button = QPushButton("Open")
+        self.current_version_open_button.setObjectName("open_button")
+        self.refresh_button = QPushButton("Refresh")
+        current_version_layout.addWidget(self.current_version_label)
+        current_version_layout.addSpacing(10)
+        current_version_layout.addWidget(last_modified_version_label)
+        current_version_layout.addSpacing(10)
+        current_version_layout.addWidget(self.current_version_open_button)
+        current_version_layout.addStretch(1)
+        current_version_layout.addWidget(self.refresh_button)
+        install_information_layout.addLayout(current_version_layout)
+
+        # Line to divide current section and update section
+        install_version_line = QFrame()
+        install_version_line.setObjectName("separator")
+        install_version_line.setFrameShape(QFrame.HLine)
+        install_version_line.setFrameShadow(QFrame.Sunken)
+        install_version_line.setLineWidth(1)
+        install_information_layout.addWidget(install_version_line)
+
+        # Update information widget
+        self.updates_widget = UpdateWidget(self.package_name, parent=self)
+        install_information_layout.addWidget(self.updates_widget)
+        install_information_group.setLayout(install_information_layout)
+
+        # Signals
+        # Open button signal
+        self.current_version_open_button.clicked.connect(self.open_installed)
+
+        # Update widget signals
+        self.updates_widget.install_version.connect(self.install_version)
+        self.updates_widget.skip_version.connect(self.skip_version)
+        self.refresh_button.clicked.connect(self._refresh)
+        self.refresh_button.setVisible(False)
+
+        return install_information_group
+
+    def _create_packages_group(self):
+        packages_group = QGroupBox("Packages")
+        packages_layout = QVBoxLayout()
+
+        packages_filter_layout = QHBoxLayout()
+        packages_filter_label = QLabel("Show:")
+        self.packages_spinner_label = SpinnerWidget("Loading packages...", parent=self)
+        show_detailed_view_checkbox = QCheckBox("Detailed view")
+        show_detailed_view_checkbox.setChecked(False)
+
+        packages_filter_layout.addWidget(packages_filter_label)
+        packages_filter_layout.addWidget(show_detailed_view_checkbox)
+        packages_filter_layout.addStretch(1)
+        packages_filter_layout.addWidget(self.packages_spinner_label)
+
+        self.packages_tablewidget = PackagesTable(None, parent=self)
+        packages_layout.addLayout(packages_filter_layout)
+        packages_layout.addWidget(self.packages_tablewidget)
+        packages_group.setLayout(packages_layout)
+
+        show_detailed_view_checkbox.stateChanged.connect(
+            self.packages_tablewidget.change_detailed_info_visibility
+        )
+        self.packages_tablewidget.change_detailed_info_visibility(
+            show_detailed_view_checkbox.checkState()
+        )
+
+        return packages_group
+
+    def _create_installation_actions_group(self):
+        installation_actions_group = QGroupBox("Installation Actions")
+        installation_actions_layout = QGridLayout()
+
+        self.spinner_installation_actions = SpinnerWidget("", parent=self)
+        self.spinner_installation_actions.setVisible(False)
+        installation_actions_layout.addWidget(QLabel(""), 0, 0)
+        installation_actions_layout.addWidget(
+            self.spinner_installation_actions, 0, 1, alignment=Qt.AlignRight
+        )
+
+        # Restore action
+        self._restore_button = QPushButton("Restore Installation")
+        self.restore_label = QLabel(
+            "Restore installation to the latest snapshot of the current version: "
+            # f"{self.snapshot_version['version']} "
+            # f"({self.snapshot_version['last_modified']})"
+        )
+        installation_actions_layout.addWidget(self._restore_button, 1, 0)
+        installation_actions_layout.addWidget(self.restore_label, 1, 1)
+
+        # Revert action
+        self._revert_button = QPushButton("Revert Installation")
+        self.revert_label = QLabel(
+            "Rollback installation to the latest snapshot of the previous version: "
+            # f"{self.snapshot_version['version']} "
+            # f"({self.snapshot_version['last_modified']})"
+        )
+        installation_actions_layout.addWidget(self._revert_button, 2, 0)
+        installation_actions_layout.addWidget(self.revert_label, 2, 1)
+
+        # Reset action
+        self._reset_button = QPushButton("Reset Installation")
+        self.reset_label = QLabel(
+            "Reset the current installation to clear "
+            "preferences, plugins, and other packages"
+        )
+        installation_actions_layout.addWidget(self._reset_button, 3, 0)
+        installation_actions_layout.addWidget(self.reset_label, 3, 1)
+
+        # Uninstall action
+        self.uninstall_button = QPushButton("Uninstall")
+        self.uninstall_button.setObjectName("uninstall_button")
+        self.uninstall_label = QLabel(
+            f"Remove the {self.package_name} Bundled App "
+            "and Installation Manager from your computer"
+        )
+        self.uninstall_button.setVisible(False)
+        self.uninstall_label.setVisible(False)
+        # TODO: to be enabled later on
+        # installation_actions_layout.addWidget(self.uninstall_button, 3, 0)
+        # installation_actions_layout.addWidget(uninstall_label, 3, 1)
+
+        installation_actions_group.setLayout(installation_actions_layout)
+
+        # Signals
+        self._restore_button.clicked.connect(self.restore_installation)
+        self._revert_button.clicked.connect(self.revert_installation)
+        self._reset_button.clicked.connect(self.reset_installation)
+        self.uninstall_button.clicked.connect(self.uninstall)
+
+        return installation_actions_group
+
+    def _create_feedback_group(self):
+        feedback_group = QGroupBox("Feedback")
+        self._status_data = QTextEdit(self)
+        self._status_error = QTextEdit(self)
+
+        self._status_data.setReadOnly(True)
+        self._status_error.setReadOnly(True)
+
+        feedback_layout = QVBoxLayout()
+        feedback_status_layout = QHBoxLayout()
+        feedback_status_layout.addWidget(self._status_data)
+        feedback_status_layout.addWidget(self._status_error)
+
+        feedback_layout.addLayout(feedback_status_layout)
+        feedback_group.setLayout(feedback_layout)
+        return feedback_group
+
+    def setup_layout(self):
+        main_layout = QVBoxLayout(self)
+
+        # Install information
+        install_information_group = self._create_install_information_group()
+        main_layout.addWidget(install_information_group, stretch=2)
+
+        # Packages
+        packages_group = self._create_packages_group()
+        main_layout.addWidget(packages_group, stretch=2)
+
+        # Installation Actions
+        installation_actions_group = self._create_installation_actions_group()
+        main_layout.addWidget(installation_actions_group, stretch=2)
+
+        # Installation Actions
+        feedback_group = self._create_feedback_group()
+        main_layout.addWidget(feedback_group, stretch=1)
+        print(self.log)
+        feedback_group.setVisible(self.log == "DEBUG")
+
+        # Layout
+        self.setLayout(main_layout)
+
+        self.set_version_actions_enabled(False)
 
     def _refresh(self):
         self.set_busy(True)
@@ -135,7 +309,6 @@ class InstallationManagerDialog(QDialog):
 
             self.current_version_label.setText(f"{self.package_name} {text}")
             self.current_version_open_button.setVisible(True)
-            # self.set_version_actions_enabled(True)
 
         self._refresh_after_version()
 
@@ -173,195 +346,69 @@ class InstallationManagerDialog(QDialog):
             if states:
                 print(states)
 
+    # Qt Overrides
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Override Qt method."""
+        if self._busy:
+            QMessageBox.warning(
+                self, "Busy", "Please wait until the current action finishes!"
+            )
+            event.ignore()
+            return
 
-    def _create_install_information_group(self):
-        install_information_group = QGroupBox("Install information")
-        install_information_layout = QVBoxLayout()
-        current_version_layout = QHBoxLayout()
+        # while ConstructorManagerWorker._WORKERS:
+        #     worker = ConstructorManagerWorker._WORKERS.pop()
+        #     self._terminate_worker(worker)
 
-        # Current version labels and button
-        if self.current_version:
-            text = f"{self.package_name} v{self.current_version}"
-        else:
-            text = self.package_name
+        return super().closeEvent(event)
 
-        self.current_version_label = QLabel(text)
-        last_modified_version_label = QLabel()
-        # f"Last modified {self.current_version['last_modified']}"
-        # )
-        self.current_version_open_button = QPushButton("Open")
-        self.current_version_open_button.setObjectName("open_button")
-        self.refresh_button = QPushButton("Refresh")
-        current_version_layout.addWidget(self.current_version_label)
-        current_version_layout.addSpacing(10)
-        current_version_layout.addWidget(last_modified_version_label)
-        current_version_layout.addSpacing(10)
-        current_version_layout.addWidget(self.current_version_open_button)
-        current_version_layout.addStretch(1)
-        current_version_layout.addWidget(self.refresh_button)
-        # current_version_layout.addStretch(1)
-        install_information_layout.addLayout(current_version_layout)
+    # Helpers
+    def _handle_finished(self, result):
+        self._status_data.append("<br>")
+        self._status_error.append("<br>")
+        data = result.get("data", {})
+        error = result.get("error", "")
+        self._status_data.append(str(data))
+        self._status_error.append(str(error))
 
-        # Line to divide current section and update section
-        install_version_line = QFrame()
-        install_version_line.setObjectName("separator")
-        install_version_line.setFrameShape(QFrame.HLine)
-        install_version_line.setFrameShadow(QFrame.Sunken)
-        install_version_line.setLineWidth(1)
-        install_information_layout.addWidget(install_version_line)
+    def _terminate_worker(self, worker):
+        not_running = QProcess.ProcessState.NotRunning
+        if worker and worker.state() != not_running:
+            self._worker_version.terminate()
 
-        # Update information widget
-        self.updates_widget = UpdateWidget(self.package_name, parent=self)
-        install_information_layout.addWidget(self.updates_widget)
-        install_information_group.setLayout(install_information_layout)
+    def handle_finished(self, result):
+        self._handle_finished(result)
+        self.spinner_installation_actions.hide()
+        self._refresh()
 
-        # Signals
-        # Open button signal
-        self.current_version_open_button.clicked.connect(self.open_installed)
-        # Update widget signals
-        self.updates_widget.install_version.connect(self.install_version)
-        self.updates_widget.skip_version.connect(self.skip_version)
-        self.refresh_button.clicked.connect(self._refresh)
-        self.refresh_button.setVisible(False)
+    def show_checking_updates_message(self):
+        self.updates_widget.show_checking_updates_message()
 
-        return install_information_group
+    def show_up_to_date_message(self):
+        self.updates_widget.show_up_to_date_message()
 
-    def _create_packages_group(self):
-        packages_group = QGroupBox("Packages")
-        packages_layout = QVBoxLayout()
+    def show_update_available_message(self, update_available_version):
+        self.updates_widget.show_update_available_message(update_available_version)
 
-        packages_filter_layout = QHBoxLayout()
-        packages_filter_label = QLabel("Show:")
-        self.packages_spinner_label = SpinnerWidget("Loading packages...", parent=self)
-        show_detailed_view_checkbox = QCheckBox("Detailed view")
-        show_detailed_view_checkbox.setChecked(False)
+    def set_packages(self, packages):
+        self.packages = packages
+        if self.packages_tablewidget:
+            self.packages_tablewidget.set_data(self.packages)
+            self.packages_spinner_label.hide()
 
-        packages_filter_layout.addWidget(packages_filter_label)
-        packages_filter_layout.addWidget(show_detailed_view_checkbox)
-        packages_filter_layout.addStretch(1)
-        packages_filter_layout.addWidget(self.packages_spinner_label)
+    def set_busy(self, value):
+        self._restore_button.setDisabled(value)
+        self._revert_button.setDisabled(value)
+        self._reset_button.setDisabled(value)
+        self._busy = value
 
-        self.packages_tablewidget = PackagesTable(None, parent=self)
-        packages_layout.addLayout(packages_filter_layout)
-        packages_layout.addWidget(self.packages_tablewidget)
-        packages_group.setLayout(packages_layout)
+    def set_version_actions_enabled(self, value):
+        self._restore_button.setEnabled(value)
+        self._revert_button.setEnabled(value)
+        self._reset_button.setEnabled(value)
+        self.current_version_open_button.setVisible(value)
 
-        show_detailed_view_checkbox.stateChanged.connect(
-            self.packages_tablewidget.change_detailed_info_visibility
-        )
-        self.packages_tablewidget.change_detailed_info_visibility(
-            show_detailed_view_checkbox.checkState()
-        )
-
-        return packages_group
-
-    def _create_installation_actions_group(self):
-        installation_actions_group = QGroupBox("Installation Actions")
-        installation_actions_layout = QGridLayout()
-
-        self.spinner_installation_actions = SpinnerWidget('', parent=self)
-        self.spinner_installation_actions.setVisible(False)
-        installation_actions_layout.addWidget(QLabel(''), 0, 0)
-        installation_actions_layout.addWidget(self.spinner_installation_actions, 0, 1, alignment=Qt.AlignRight)
-
-        # Restore action
-        self._restore_button = QPushButton("Restore Installation")
-        self.restore_label = QLabel(
-            "Restore installation to the latest snapshot of the current version: "
-            # f"{self.snapshot_version['version']} "
-            # f"({self.snapshot_version['last_modified']})"
-        )
-        installation_actions_layout.addWidget(self._restore_button, 1, 0)
-        installation_actions_layout.addWidget(self.restore_label, 1, 1)
-
-        # Revert action
-        self._revert_button = QPushButton("Revert Installation")
-        self.revert_label = QLabel(
-            "Rollback installation to the latest snapshot of the previous version: "
-            # f"{self.snapshot_version['version']} "
-            # f"({self.snapshot_version['last_modified']})"
-        )
-        installation_actions_layout.addWidget(self._revert_button, 2, 0)
-        installation_actions_layout.addWidget(self.revert_label, 2, 1)
-
-        # Reset action
-        self._reset_button = QPushButton("Reset Installation")
-        self.reset_label = QLabel(
-            "Reset the current installation to clear "
-            "preferences, plugins, and other packages"
-        )
-        installation_actions_layout.addWidget(self._reset_button, 3, 0)
-        installation_actions_layout.addWidget(self.reset_label, 3, 1)
-
-        # Uninstall action
-        self.uninstall_button = QPushButton("Uninstall")
-        self.uninstall_button.setObjectName("uninstall_button")
-        self.uninstall_label = QLabel(
-            f"Remove the {self.package_name} Bundled App "
-            "and Installation Manager from your computer"
-        )
-        self.uninstall_button.setVisible(False)
-        self.uninstall_label.setVisible(False)
-        #installation_actions_layout.addWidget(self.uninstall_button, 3, 0)
-        #installation_actions_layout.addWidget(uninstall_label, 3, 1)
-
-        installation_actions_group.setLayout(installation_actions_layout)
-
-        # Signals
-        self._restore_button.clicked.connect(self.restore_installation)
-        self._revert_button.clicked.connect(self.revert_installation)
-        self._reset_button.clicked.connect(self.reset_installation)
-        self.uninstall_button.clicked.connect(self.uninstall)
-
-        return installation_actions_group
-
-    def _create_feedback_group(self):
-        feedback_group = QGroupBox("Feedback")
-        self._status_data = QTextEdit(self)
-        self._status_error = QTextEdit(self)
-        # self._progress = QProgressBar(self)
-
-        self._status_data.setReadOnly(True)
-        self._status_error.setReadOnly(True)
-        # self._progress.setTextVisible(False)
-
-        feedback_layout = QVBoxLayout()
-        feedback_status_layout = QHBoxLayout()
-        feedback_status_layout.addWidget(self._status_data)
-        feedback_status_layout.addWidget(self._status_error)
-
-        feedback_layout.addLayout(feedback_status_layout)
-        # feedback_layout.addWidget(self._progress)
-        feedback_group.setLayout(feedback_layout)
-        # feedback_group.setVisible(False)
-        return feedback_group
-
-    def setup_layout(self):
-        main_layout = QVBoxLayout(self)
-
-        # Install information
-        install_information_group = self._create_install_information_group()
-        main_layout.addWidget(install_information_group, stretch=2)
-
-        # Packages
-        packages_group = self._create_packages_group()
-        main_layout.addWidget(packages_group, stretch=2)
-
-        # Installation Actions
-        installation_actions_group = self._create_installation_actions_group()
-        main_layout.addWidget(installation_actions_group, stretch=2)
-
-        # Installation Actions
-        feedback_group = self._create_feedback_group()
-        main_layout.addWidget(feedback_group, stretch=1)
-        print(self.log)
-        feedback_group.setVisible(self.log == "DEBUG")
-
-        # Layout
-        self.setLayout(main_layout)
-
-        self.set_version_actions_enabled(False)
-
+    # Actions
     def open_installed(self):
         self._open_worker = open_application(self.package_name, self.current_version)
         self._open_worker.start()
@@ -374,15 +421,6 @@ class InstallationManagerDialog(QDialog):
         )
         self._timer_open_button.setSingleShot(True)
         self._timer_open_button.start(10000)
-
-    def show_checking_updates_message(self):
-        self.updates_widget.show_checking_updates_message()
-
-    def show_up_to_date_message(self):
-        self.updates_widget.show_up_to_date_message()
-
-    def show_update_available_message(self, update_available_version):
-        self.updates_widget.show_update_available_message(update_available_version)
 
     def install_version(self, update_version):
         print("Update version")
@@ -398,30 +436,6 @@ class InstallationManagerDialog(QDialog):
         worker.finished.connect(self.handle_finished)
         worker.start()
         self.set_busy(True)
-
-    def skip_version(self, skip_version):
-        # TODO: To be handled with the backend.
-        #       Maybe this needs to be a signal
-        print(skip_version)
-
-    def set_packages(self, packages):
-        self.packages = packages
-        if self.packages_tablewidget:
-            self.packages_tablewidget.set_data(self.packages)
-            self.packages_spinner_label.hide()
-
-    def _handle_finished(self, result):
-        self._status_data.append("<br>")
-        self._status_error.append("<br>")
-        data = result.get("data", {})
-        error = result.get("error", "")
-        self._status_data.append(str(data))
-        self._status_error.append(str(error))
-
-    def handle_finished(self, result):
-        self._handle_finished(result)
-        self.spinner_installation_actions.hide()
-        self._refresh()
 
     def restore_installation(self):
         self.spinner_installation_actions.set_text("Restoring installation...")
@@ -451,46 +465,8 @@ class InstallationManagerDialog(QDialog):
         self._worker.start()
         self.set_busy(True)
 
+    def skip_version(self, skip_version):
+        pass
+
     def uninstall(self):
-        self.set_busy(False)
-
-    def set_busy(self, value):
-        # if value:
-        #     # self._status.setText("")
-        #     self._progress.setValue(0)
-        #     self._progress.setMinimum(0)
-        #     self._progress.setMaximum(0)
-        # else:
-        #     self._progress.setValue(0)
-        #     self._progress.setMinimum(0)
-        #     self._progress.setMaximum(1)
-        #     self._progress.reset()
-
-        self._restore_button.setDisabled(value)
-        self._revert_button.setDisabled(value)
-        self._reset_button.setDisabled(value)
-        self._busy = value
-
-    def set_version_actions_enabled(self, value):
-        self._restore_button.setEnabled(value)
-        self._revert_button.setEnabled(value)
-        self._reset_button.setEnabled(value)
-        self.current_version_open_button.setVisible(value)
-
-    def _terminate_worker(self, worker):
-        not_running = QProcess.ProcessState.NotRunning
-        if worker and worker.state() != not_running:
-            self._worker_version.terminate()
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        """Override Qt method."""
-        if self._busy:
-            QMessageBox.warning(self, "Busy", "Please wait until the current action finishes!")
-            event.ignore()
-            return
-        # while ConstructorManagerWorker._WORKERS:
-        #     worker = ConstructorManagerWorker._WORKERS.pop()
-        #     self._terminate_worker(worker)
-
-        return super().closeEvent(event)
-
+        pass

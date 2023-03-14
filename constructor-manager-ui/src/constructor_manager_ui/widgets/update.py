@@ -1,4 +1,4 @@
-"""Constructor manager main interface."""
+"""Constructor manager update section widgets."""
 
 from typing import Optional
 import logging

@@ -75,11 +75,8 @@ def run():
     if "channel" in args:
         channels = args.channel or dedup(settings["channels"])
 
-    # TODO: check precedence
     dev = settings["dev"] if settings["dev"] is not None else args.dev
     log = settings["log"] if settings["log"] is not None else args.log
-
-    print("help", log)
 
     # Installation manager dialog instance
     installation_manager_dlg = InstallationManagerDialog(

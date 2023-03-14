@@ -5,11 +5,7 @@ import logging
 
 from qtpy.QtCore import QSize
 from qtpy.QtGui import QMovie
-from qtpy.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QWidget,
-)
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 
 logger = logging.getLogger(__name__)
@@ -41,13 +37,13 @@ class SpinnerWidget(QWidget):
     def show(self):
         try:
             self.spinner_movie.start()
-        except RuntimeError as e:
+        except RuntimeError:
             pass
         super().show()
 
     def hide(self):
         try:
             self.spinner_movie.stop()
-        except RuntimeError as e:
+        except RuntimeError:
             pass
         super().hide()
