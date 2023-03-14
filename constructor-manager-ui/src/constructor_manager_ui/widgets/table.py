@@ -39,7 +39,7 @@ class PackagesTable(QTableWidget):
             foreground_brush = QBrush(Qt.GlobalColor.black)
             item.setForeground(foreground_brush)
 
-        item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+        item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)  # type: ignore
         return item
 
     def setup(self):

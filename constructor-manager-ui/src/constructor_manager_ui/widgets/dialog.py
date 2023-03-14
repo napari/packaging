@@ -20,16 +20,7 @@ from qtpy.QtWidgets import (
     QMessageBox,
 )
 
-from constructor_manager_api import (
-    check_updates,
-    check_version,
-    check_packages,
-    restore,
-    revert,
-    reset,
-    open_application,
-    update,
-)
+from constructor_manager_api import api  # type: ignore
 
 # To get mock data
 from constructor_manager_ui.data import PackageData
@@ -268,13 +259,13 @@ class InstallationManagerDialog(QDialog):
         self.set_busy(True)
         self.refresh_button.setVisible(False)
         self.packages_spinner_label.show()
-        self._worker_version = check_version(self.package_name)
+        self._worker_version = api.check_version(self.package_name)
         self._worker_version.finished.connect(self._update_version)
         self._worker_version.start()
         self.show_checking_updates_message()
 
     def _refresh_after_version(self):
-        self._worker_packages = check_packages(
+        self._worker_packages = api.check_packages(
             self.package_name,
             version=self.current_version,
             plugins_url=self.plugins_url,
@@ -282,7 +273,7 @@ class InstallationManagerDialog(QDialog):
         self._worker_packages.finished.connect(self._update_packages)
         self._worker_packages.start()
 
-        self._worker_updates = check_updates(
+        self._worker_updates = api.check_updates(
             self.package_name,
             current_version=self.current_version,
             build_string=self.build_string,
@@ -410,7 +401,9 @@ class InstallationManagerDialog(QDialog):
 
     # Actions
     def open_installed(self):
-        self._open_worker = open_application(self.package_name, self.current_version)
+        self._open_worker = api.open_application(
+            self.package_name, self.current_version
+        )
         self._open_worker.start()
         self.current_version_open_button.setEnabled(False)
 
@@ -424,7 +417,7 @@ class InstallationManagerDialog(QDialog):
 
     def install_version(self, update_version):
         print("Update version")
-        worker = update(
+        worker = api.update(
             self.package_name,
             self.current_version,
             build_string=self.build_string,
@@ -440,7 +433,7 @@ class InstallationManagerDialog(QDialog):
     def restore_installation(self):
         self.spinner_installation_actions.set_text("Restoring installation...")
         self.spinner_installation_actions.show()
-        worker = restore(self.package_name)
+        worker = api.restore(self.package_name)
         worker.finished.connect(self.handle_finished)
         worker.start()
         self.set_busy(True)
@@ -448,7 +441,7 @@ class InstallationManagerDialog(QDialog):
     def revert_installation(self):
         self.spinner_installation_actions.set_text("Reverting installation...")
         self.spinner_installation_actions.show()
-        worker = revert(self.package_name, self.current_version)
+        worker = api.revert(self.package_name, self.current_version)
         worker.finished.connect(self.handle_finished)
         worker.start()
         self.set_busy(True)
@@ -456,7 +449,7 @@ class InstallationManagerDialog(QDialog):
     def reset_installation(self):
         self.spinner_installation_actions.set_text("Reseting installation...")
         self.spinner_installation_actions.show()
-        self._worker = reset(
+        self._worker = api.reset(
             package_name=self.package_name,
             current_version=self.current_version,
             channels=self.channels,

@@ -7,7 +7,7 @@ from qtpy.QtWidgets import QApplication
 from constructor_manager_ui.style.utils import update_styles
 from constructor_manager_ui.widgets.dialog import InstallationManagerDialog
 from constructor_manager_ui.cli import create_parser
-from constructor_manager_api.utils.settings import load_settings
+from constructor_manager_api.utils.settings import load_settings  # type: ignore
 
 # To setup image resources for .qss file
 from constructor_manager_ui.style import images  # noqa
@@ -28,7 +28,7 @@ def dedup(items: Tuple[Any, ...]) -> Tuple[Any, ...]:
 
 def _configure_logging(log_level="WARNING"):
     """Configure logging."""
-    import constructor_manager_api
+    import constructor_manager_api  # type: ignore
 
     log_level = getattr(logging, log_level.upper())
     log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

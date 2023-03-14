@@ -54,14 +54,4 @@ constructor-manager-ui napari --current-version 0.4.16 --build-string pyside --p
 constructor-manager-ui napari --build-string pyside --plugins-url https://api.napari-hub.org/plugins --channel conda-forge --channel napari
 constructor-manager-ui napari --build-string pyside --plugins-url https://api.napari-hub.org/plugins --channel conda-forge --channel napari --dev
 constructor-manager-ui napari --build-string pyside --plugins-url https://api.napari-hub.org/plugins --channel conda-forge --channel napari -cv 0.4.17
-
-
-constructor-manager-ui pyzenhub --channel conda-forge
-constructor-manager-ui loghub --channel conda-forge
-
-
-menuinst.api.install("path al json")
-
-conda bucket de numfocus
-
 ```
