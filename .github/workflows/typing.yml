@@ -9,7 +9,7 @@ on:
       - main
     paths:
       - 'constructor-manager/**'
-      - 'constructor-manager-cli/**'
+      - 'constructor-manager-api/**'
       - 'constructor-manager-ui/**'
   workflow_dispatch:
 
@@ -30,16 +30,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies cli
+      - name: Install dependencies
         run: |
-          cd constructor-manager-cli
+          cd constructor-manager
           python -m pip install --upgrade pip
           python -m pip install mypy typing-extensions types-requests types-urllib3 typing-inspect mypy-extensions types-PyYAML
           pip list
 
       - name: Typing
         run: |
-          cd constructor-manager-cli
+          cd constructor-manager
           mypy src
 
       - name: Install dependencies

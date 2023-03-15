@@ -7,7 +7,7 @@ from requests import Response
 
 
 def test_user_agent():
-    from constructor_manager_cli import __version__
+    from constructor_manager import __version__
 
     assert _user_agent() == f"constructor-manager-{__version__}"
 

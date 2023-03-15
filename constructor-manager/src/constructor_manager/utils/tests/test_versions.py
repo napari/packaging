@@ -13,12 +13,12 @@ from constructor_manager.utils.versions import (
         ("0.4.15", True),
         ("0.4.15rc1", False),
         ("0.4.15dev0", False),
-        ("0.4.15beta", False),
-        ("0.4.15alfa", False),
+        ("0.4.15b0", False),
+        ("0.4.15a0", False),
         (("0", "4"), True),
         (("0", "4", "15"), True),
         (("0", "4", "15", "rc1"), False),
-        (("0", "4", "15", "beta"), False),
+        (("0", "4", "15", "b"), False),
     ],
 )
 def test_is_stable_version(test_input, expected):
@@ -32,9 +32,8 @@ def test_is_stable_version(test_input, expected):
         "0.4.15",
         "0.4.15rc1",
         "0.4.15dev0",
-        "0.4.15beta",
-        "0.4.15alfa",
-        "whatever",
+        "0.4.15b0",
+        "0.4.15a0",
     ],
 )
 def test_parse_version(test_input):

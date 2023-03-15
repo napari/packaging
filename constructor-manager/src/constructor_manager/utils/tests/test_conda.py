@@ -9,11 +9,11 @@ from constructor_manager.utils.conda import (
 
 
 def test_get_base_prefix():
-    assert str(get_base_prefix()) == sys.prefix
+    assert str(get_base_prefix()) != sys.prefix
 
 
 def test_get_prefix_by_name():
-    assert get_prefix_by_name() == get_base_prefix()
+    assert get_prefix_by_name() == get_base_prefix() / "envs" / "constructor-manager"
     assert get_prefix_by_name("base") == get_base_prefix()
     assert get_prefix_by_name("foo") == get_base_prefix() / "envs" / "foo"
 

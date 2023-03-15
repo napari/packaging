@@ -85,7 +85,7 @@ def _configure_logging(log_level: str = "WARNING"):
     log_level : str, optional
         Log level, by default ``"WARNING"``.
     """
-    log_level = getattr(logging, log_level.upper(), logging.WARNING)
+    log_level = getattr(logging, log_level.upper(), logging.WARNING)  # type: ignore
     log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     logging.basicConfig(format=log_format, level=log_level)
 

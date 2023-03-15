@@ -2,7 +2,7 @@ import os
 import platform
 
 from constructor_manager.utils.conda import get_base_prefix, get_prefix_by_name
-from menuinst.api import _load, install, remove
+from menuinst.api import _load, install, remove  # type: ignore
 
 TEMPLATE = {
     "$schema": "https://json-schema.org/draft-07/schema",

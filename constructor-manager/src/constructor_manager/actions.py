@@ -306,7 +306,7 @@ class ActionManager:
         prefix = get_prefix_by_name(f"{self._application_name}-{version}")
         menu_spec = f"{self._application_name}-menu={version}"
         rc = self._installer.uninstall(
-            pkg_list=[menu_spec], prefix=str(prefix), shortcuts=True, block=True
+            pkg_list=[menu_spec], prefix=str(prefix), block=True
         )
         return rc, paths
 
@@ -807,25 +807,10 @@ class ActionManager:
         # Add actions taken by the clean all command
         return {}
 
-    def uninstall(
-        self,
-        lock_created: Optional[bool] = None,
-    ) -> Dict:
-        """Uninstall the bundle application."""
-        # Remove all shortcuts
-
-        # Remove all the application environments
-
-        # Remove the constructor environment
-
-        # Remove the base environment
-
-        # Remove everything else with rm rf $CONDA_PREFIX
-
     def open(
         self,
-        version: str = None,
-        target_prefix: str = None,
+        version: Optional[str] = None,
+        target_prefix: Optional[str] = None,
         lock_created: Optional[bool] = None,
     ) -> Dict:
         """Open the application with package name and version."""

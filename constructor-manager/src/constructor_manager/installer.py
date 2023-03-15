@@ -49,9 +49,8 @@ class AbstractInstaller:
     # -------------------------- Public API ------------------------------
     def install(
         self,
+        prefix: str,
         pkg_list: Sequence[str],
-        *,
-        prefix: Optional[str] = None,
         block: bool = False,
     ) -> job_id:
         """Install packages in `pkg_list` into `prefix`.
@@ -71,7 +70,9 @@ class AbstractInstaller:
         return self._queue_args(self._get_install_args(pkg_list, prefix))
 
     def uninstall(
-        self, pkg_list: Sequence[str], *, prefix: Optional[str] = None
+        self,
+        prefix: str,
+        pkg_list: Sequence[str],
     ) -> job_id:
         """Uninstall packages in `pkg_list` from `prefix`.
 
@@ -370,9 +371,8 @@ class CondaInstaller(AbstractInstaller):
 
     def install(
         self,
-        prefix: Optional[str],
+        prefix: str,
         pkg_list: Sequence[str],
-        shortcuts: bool = False,
         block: bool = False,
     ) -> job_id:
         """Install packages in `pkg_list` into `prefix`.
@@ -393,10 +393,8 @@ class CondaInstaller(AbstractInstaller):
 
     def uninstall(
         self,
+        prefix: str,
         pkg_list: Sequence[str],
-        *,
-        prefix: Optional[str] = None,
-        shortcuts: bool = False,
         block: bool = False,
     ) -> job_id:
         """Uninstall packages in `pkg_list` from `prefix`.
