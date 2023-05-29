@@ -40,6 +40,7 @@ CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD:
 """
 import atexit
 import importlib.metadata
+import importlib.resources
 import json
 import os
 import platform
@@ -53,7 +54,6 @@ from subprocess import check_call, check_output
 from tempfile import NamedTemporaryFile
 from textwrap import dedent, indent
 
-import napari
 import requests
 from ruamel.yaml import YAML
 
@@ -129,7 +129,7 @@ def _generate_background_images(installer_type, outpath="./", napari_repo=HERE):
 
     from PIL import Image
 
-    logo_path = Path(napari.__file__).parent / "resources" / "logo.png"
+    logo_path = importlib.resources.files("napari") / "resources/logo.png"
     logo = Image.open(logo_path, "r")
 
     global clean_these_files
