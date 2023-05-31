@@ -153,7 +153,7 @@ def check_updates(
 
 
 def check_version(package_name: str) -> ConstructorManagerWorker:
-    """Check for updates.
+    """Check for version.
 
     Parameters
     ----------
@@ -163,8 +163,7 @@ def check_version(package_name: str) -> ConstructorManagerWorker:
     Returns
     -------
     ConstructorManagerWorker
-        Worker to check for updates. Includes a finished signal that returns
-        a ``dict`` with the result.
+        Worker to check for the current version insytalled.
     """
     return _run_action(ActionsEnum.check_version, package_name)
 
@@ -182,6 +181,10 @@ def check_packages(
         Name of the package to check for updates.
     version : str
         Version of package to execute action on, by default ``None``.
+    plugins_url : str, optional
+        URL to plugins provided by the application as a list of dicts.
+        Keys will be used to filter out packages that are plugins of the
+        application.
 
     Returns
     -------
