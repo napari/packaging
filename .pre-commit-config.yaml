@@ -33,7 +33,8 @@ repos:
         args: ["-j8", "--ignore=TYP001,E501,W503"]
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.143
+    rev: v0.0.165
     hooks:
       - id: ruff
+        args: ["--fix"]
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
