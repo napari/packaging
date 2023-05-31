@@ -45,6 +45,8 @@ def plugin_versions(
 ) -> List[str]:
     """Return information on package plugins from endpoint in json.
 
+    An example of the expected format can be found at https://npe2api.vercel.app/api/plugins
+
     Parameters
     ----------
     url : str

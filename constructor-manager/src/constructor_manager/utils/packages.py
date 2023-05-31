@@ -43,4 +43,5 @@ def normalized_name(name: str) -> str:
     str
         The normalized package name.
     """
+    # TODO: casefold() may be more appropriate than lower() here.
     return re.sub(r"[-_.]+", "-", name).lower()

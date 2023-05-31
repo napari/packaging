@@ -191,6 +191,7 @@ class FileSystemLock:
                         if kill is not None:
                             kill(int(pid), 0)
 
+                        # TODO: Convert to check if it is a napari process
                         # if not is_spyder_process(int(pid)):
                         #     raise(OSError(errno.ESRCH, 'No such process'))
                     except OSError as e:

@@ -7,4 +7,4 @@ SENTINEL_FILE_SUFFIX = "_is_bundled_constructor"
 DEFAULT_TIMEOUT = 60  # Seconds
 DEFAULT_REQUEST_TIMEOUT = 60  # Seconds
 DEFAULT_PROCESS_TIMEOUT = 60 * 60  # Seconds
-DEFAULT_MENU_TEMPLANTE = "{package_name}-{version}-menu"
+DEFAULT_MENU_TEMPLATE = "{package_name}-{version}-menu"

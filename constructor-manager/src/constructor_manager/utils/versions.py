@@ -34,6 +34,9 @@ def is_stable_version(version: Union[Tuple[str, ...], str]) -> bool:
     if not isinstance(version, tuple):
         version = tuple(version.split("."))
 
+    # TODO: parsed version here and check the is_prerelease property
+    # Post releases are stable, and this is not checked here.
+
     return not LETTERS_PATTERN.search(version[-1])
 
 

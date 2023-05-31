@@ -19,6 +19,7 @@ from constructor_manager.utils.versions import (
         (("0", "4", "15"), True),
         (("0", "4", "15", "rc1"), False),
         (("0", "4", "15", "b"), False),
+        # TODO: add some test cases for post releases in here.
     ],
 )
 def test_is_stable_version(test_input, expected):

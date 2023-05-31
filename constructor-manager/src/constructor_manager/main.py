@@ -69,7 +69,6 @@ def _execute(args, lock_file_path):
         lock, lock_created = get_lock(lock_file_path)
         if lock_created:
             result = method(**method_kwargs)
-            # time.sleep(5)
             lock.unlock()
         else:
             result = "Another instance is running"
@@ -110,7 +109,6 @@ def main():
     constructor_manager_dir.mkdir(parents=True, exist_ok=True)
     lock_file_path = constructor_manager_dir / "constructor-manager.lock"
 
-    # result = _execute(args, lock_file_path)
     try:
         logger.debug("Executing: %s", args)
         result = _execute(args, lock_file_path)
@@ -119,7 +117,7 @@ def main():
         try:
             data = {"data": {}, "error": error}
             sys.stdout.write(json.dumps(data, indent=4))
-            sys.stderr.write(error)
+            sys.stderr.write(str(error))
         except Exception:
             data = {"data": {}, "error": traceback.format_exc()}
             sys.stdout.write(json.dumps(data, indent=4))

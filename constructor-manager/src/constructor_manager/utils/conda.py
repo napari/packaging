@@ -34,6 +34,8 @@ def parse_conda_version_spec(package: str) -> Tuple[str, str, str]:
         version, build_string = parts[1:]
 
     if version:
+        # FIXME: rstrip removes all trailing characters in the given list of characters,
+        # so this second call is redundant?
         version = version.rstrip(".*")  # ?
         version = version.rstrip("*")  # ?
     else:

@@ -11,6 +11,12 @@ Handle (conda) constructor based bundled applications from the command line.
 - requests
 - pyyaml
 
+### Menuinst
+
+```bash
+pip install git+https://github.com/conda/menuinst.git@cep-devel
+```
+
 ## Installation
 
 This package needs to be installed on the `base` conda environemnt.
@@ -27,17 +33,22 @@ pip install -e .
 Check for the version of the currently (latest?) installed package.
 
 ```bash
-constructor-manager check-version "napari"
+constructor-manager-cli check-version "napari"
 ```
 
 ### Check for packages
 
 Check for all the packages installed in the current environment for the latest version ot the package.
 
+We use a subset of the version spec defined by [conda](https://docs.conda.io/projects/conda-build/en/latest/resources/package-spec.html)
+
+Namely the spec coontains a `<package-name>=<version>=<build-string>` where the `*` symbol can be used as a wildcard.
+
+
 ```bash
-constructor-manager check-packages "napari=0.4.15" --plugins-url https://api.napari-hub.org/plugins
-constructor-manager check-packages "napari=0.4.16" --plugins-url https://api.napari-hub.org/plugins
-constructor-manager check-packages "napari" --plugins-url https://api.napari-hub.org/plugins
+constructor-manager-cli check-packages "napari=0.4.15" --plugins-url https://api.napari-hub.org/plugins
+constructor-manager-cli check-packages "napari=0.4.16" --plugins-url https://api.napari-hub.org/plugins
+constructor-manager-cli check-packages "napari" --plugins-url https://api.napari-hub.org/plugins
 ```
 
 ### Check for updates
@@ -45,8 +56,8 @@ constructor-manager check-packages "napari" --plugins-url https://api.napari-hub
 #### For a given package
 
 ```bash
-constructor-manager check-updates "napari=0.4.16=*pyside*" -c conda-forge
-constructor-manager check-updates "napari=*=*pyside*" -c conda-forge
+constructor-manager-cli check-updates "napari=0.4.16=*pyside*" -c conda-forge
+constructor-manager-cli check-updates "napari=*=*pyside*" -c conda-forge
 ```
 
 This will check for any updates available for the package named `napari`
@@ -76,7 +87,7 @@ available version on the `conda-forge` channel.
 #### For a given package development versions
 
 ```bash
-constructor-manager check-updates napari=0.4.15 -c conda-forge -c napari --dev
+constructor-manager-cli check-updates napari=0.4.15 -c conda-forge -c napari --dev
 ```
 
 ```json
@@ -379,12 +390,10 @@ This will check for any updates available for the package named `napari`
 including development version taking into account that the current version
 is `0.4.15`. We are looking for available version on the `napari` channel.
 
-### Update
+### Setting up a napari version to be detected
 
-TODO
 
 ```bash
-
 conda create -n napari-0.4.15 "napari=0.4.15" "napari-menu=0.4.15" -c conda-forge -y --override-channels
 mamba create -n napari-0.4.15 "napari=0.4.15" "napari-menu=0.4.15" affinder -c conda-forge -y --override-channels
 mamba install -n napari-0.4.15 affinder -c conda-forge -y --override-channels
@@ -415,15 +424,15 @@ Create a lock file using `conda-lock` and store it in `<BUNDLE-PREFIX>/var/const
 These lock files are usable by the `rollback` command.
 
 ```bash
-constructor-manager lock-environment "napari=0.4.15"
+constructor-manager-cli lock-environment "napari=0.4.15"
 ```
 
 ### Reset
 
 ```bash
-constructor-manager reset "napari=0.4.16=*pyside*" -c conda-forge
+constructor-manager-cli reset "napari=0.4.16=*pyside*" -c conda-forge
 
-constructor-manager reset "pyzenhub=*=*" -c conda-forge
+constructor-manager-cli reset "pyzenhub=*=*" -c conda-forge
 ```
 
 ### Revert
@@ -431,7 +440,7 @@ constructor-manager reset "pyzenhub=*=*" -c conda-forge
 This command will install a specified on a fresh environment, deleting the old environment first.
 
 ```bash
-constructor-manager revert "napari=0.4.17"
+constructor-manager-cli revert "napari=0.4.17"
 ```
 
 
@@ -446,18 +455,12 @@ constructor-manager restore "napari=0.4.16=*pyside*" -c conda-forge
 ### Run tests
 
 ```bash
-cd constructor-manager-cli/src
-pytest constructor_manager_cli --cov=constructor_manager_cli --cov-report term-missing
+cd constructor-manager/src
+pytest constructor_manager --cov=constructor_manager --cov-report term-missing
 ```
 
 ### Open
 
 ```bash
-constructor-manager open "napari=0.4.16"
-```
-
-### Menuinst
-
-```bash
-pip install git+https://github.com/conda/menuinst.git@cep-devel
+constructor-manager-cli open "napari=0.4.16"
 ```

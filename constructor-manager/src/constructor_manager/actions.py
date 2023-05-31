@@ -40,7 +40,7 @@ from constructor_manager.utils.versions import (
 logger = logging.getLogger(__name__)
 
 
-class EnvironmentDoesNotExist(Exception):
+class EnvironmentDoesNotExistError(Exception):
     pass
 
 
@@ -121,6 +121,7 @@ class ActionManager:
         packages_original_format = self._installer.list(str(prefix), block=True)
         for pkg in packages_original_format:  # type: ignore
             source = "pip" if pkg["platform"] == "pypi" else "conda"
+            # TODO: make this a dataclass?
             package = {
                 "name": pkg["name"],
                 "version": pkg["version"],
@@ -238,9 +239,7 @@ class ActionManager:
         # TODO: Check that there is a corresponding state file with the same date,
         # otherwise, it means that a lock file process could not be completed
         # succesfully
-        return glob.glob(
-            str(get_list_path() / f"{self._application_name}-{version}-*-list.yml")
-        )
+        return get_list_path().glob(f"{self._application_name}-{version}-*-list.yml")
 
     def _get_available_states(self) -> Dict:
         """Get available states and group them by version."""
@@ -277,6 +276,13 @@ class ActionManager:
         ----------
         version : str
             Version to create shortcuts for.
+
+        Returns
+        -------
+            rc : int
+                Return code of the installation process.
+            paths : list of str
+                List of paths to the shortcuts created.
         """
         prefix = get_prefix_by_name(f"{self._application_name}-{version}")
         menu_spec = f"{self._application_name}-menu={version}"
@@ -285,7 +291,7 @@ class ActionManager:
         )
 
         # Install shortcuts manually using menuinst
-        paths = remove_shortcut(self._application_name, version)
+        remove_shortcut(self._application_name, version)
         paths = create_shortcut(self._application_name, version)
         return rc, paths
 
@@ -332,6 +338,7 @@ class ActionManager:
             The return code of the installer.
         """
         # package_name, version = parse_conda_version_spec(package)
+        # TODO: change the fstrings to use a method or property and reuse
         spec = f"{self._application_name}={version}=*{self._build_string}*"
         prefix = get_prefix_by_name(f"{self._application_name}-{version}")
         packages = [spec] + plugins
@@ -500,6 +507,7 @@ class ActionManager:
         installed_versions_builds = get_installed_versions(self._application_name)
         installed_versions = [vb[0] for vb in installed_versions_builds]
         update = parse_version(latest_version) > parse_version(self._current_version)
+
         filtered_version = versions[:]
         previous_version: Optional[str] = None
         if self._current_version in filtered_version:
@@ -509,6 +517,7 @@ class ActionManager:
             else:
                 previous_version = None
 
+        # TODO: maybe add type hints for them as TypedDict
         return {
             "available_versions": versions,
             "current_version": self._current_version,
@@ -698,7 +707,7 @@ class ActionManager:
     def reset(
         self,
         lock_created: Optional[bool] = None,
-    ) -> str:
+    ) -> Dict:
         """Reset environment."""
         logger.debug("Cleaning environments...")
         self.clean_all()
@@ -719,7 +728,7 @@ class ActionManager:
         logger.debug("Cleaning environments...")
         self.clean_all()
 
-        return "Environment reset complete!"
+        return {}
 
     def lock_environment(
         self,
@@ -742,7 +751,7 @@ class ActionManager:
         version = self._current_version if version is None else version
         prefix = get_prefix_by_name(f"{self._application_name}-{version}")
         if not prefix.exists():
-            raise EnvironmentDoesNotExist(f"Environment '{prefix}' does not exist!")
+            raise EnvironmentDoesNotExistError(f"Environment '{prefix}' does not exist!")
 
         # FIXME: Should this only compare plugin changes?
         logger.debug("Getting installed plugins...")
@@ -777,7 +786,7 @@ class ActionManager:
         else:
             logger.debug("no locking needed...")
 
-        return
+        return {}
 
     def clean_all(
         self,

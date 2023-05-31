@@ -154,7 +154,6 @@ def remove_sentinel_file(package_name: str, version: str):
 
 @lru_cache
 def get_config_path() -> Path:
-    # path = get_prefix_by_name("base") / "var" / "constructor-manager"
     path = get_prefix_by_name("constructor-manager") / "var" / "constructor-manager"
     path.mkdir(parents=True, exist_ok=True)
     return path
