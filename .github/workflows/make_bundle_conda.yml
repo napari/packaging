@@ -4,10 +4,10 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'build_installers.py'
-      - 'conda-recipe/*'
-      - '.github/workflows/make_bundle_conda.yml'  # this file
+    # paths:
+    #   - 'build_installers.py'
+    #   - 'conda-recipe/*'
+    #   - '.github/workflows/make_bundle_conda.yml'  # this file
   workflow_call:
     inputs:
       event_name:
