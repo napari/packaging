@@ -39,7 +39,7 @@ outputs:
         - python >=3.8
 
         # dependencies matched to setup.cfg
-        - app-model >=0.1.0,<0.3.0
+        - app-model >=0.1.2,<0.3.0
         - appdirs >=1.4.4
         - cachey >=0.2.1
         - certifi >=2020.6.20
@@ -50,7 +50,7 @@ outputs:
         - magicgui >=0.3.6
         - napari-console >=0.0.6
         - napari-plugin-engine >=0.1.9
-        - napari-svg >=0.1.6
+        - napari-svg >=0.1.7
         - npe2 >=0.5.2
         - numpy >=1.20
         - numpydoc >=0.9.2
