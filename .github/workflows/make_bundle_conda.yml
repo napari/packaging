@@ -119,11 +119,10 @@ jobs:
         working-directory: napari-feedstock
         env:
           DOCKER_IMAGE: quay.io/condaforge/linux-anvil-comp7
-          CONFIG: linux_64_qt_bindingspyqt # filename under feedstock's .ci_support/
+          CONFIG: linux_64_  # filename under feedstock's .ci_support/
           CI: github_actions
           CONDA_BLD_PATH: "${{ github.workspace }}${{ env.conda_bld_suffix }}"
         run: |
-          export
           ./.scripts/run_docker_build.sh
 
       - name: Run build scripts (PySide)
