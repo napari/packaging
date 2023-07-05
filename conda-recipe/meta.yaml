@@ -19,7 +19,6 @@ outputs:
     build:
       noarch: python
       number: {{ build }}
-      string: pyh{{ PKG_HASH }}_{{ build }}_{{ qt_bindings }}
       script: PIP_NO_INDEX=True PIP_NO_DEPENDENCIES=True PIP_NO_BUILD_ISOLATION=False PIP_IGNORE_INSTALLED=True PYTHONDONTWRITEBYTECODE=True {{ PREFIX }}/bin/python -m pip install . -vv
       entry_points:
         - napari = napari.__main__:main
