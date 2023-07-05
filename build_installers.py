@@ -80,6 +80,7 @@ else:
     ARCH = (platform.machine() or "generic").lower().replace("amd64", "x86_64")
 TARGET_PLATFORM = os.environ.get("CONSTRUCTOR_TARGET_PLATFORM")
 PY_VER = f"{sys.version_info.major}.{sys.version_info.minor}"
+PYSIDE_VER = os.environ.get("CONSTRUCTOR_PYSIDE_VER", "*")
 if WINDOWS:
     EXT, OS = "exe", "Windows"
 elif LINUX:
@@ -216,6 +217,7 @@ def _base_env(python_version=PY_VER):
 def _napari_env(
     python_version=PY_VER,
     napari_version=_version(),
+    pyside_version=PYSIDE_VER,
     extra_specs=None,
 ):
     return {
@@ -223,8 +225,9 @@ def _napari_env(
         # "channels": same as _base_env(), omit to inherit :)
         "specs": [
             f"python={python_version}.*=*_cpython",
-            f"napari={napari_version}=*pyside*",
+            f"napari={napari_version}",
             f"napari-menu={napari_version}",
+            f"pyside2={pyside_version}",
             "conda",
             "mamba",
             "pip",
