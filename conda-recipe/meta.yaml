@@ -23,9 +23,6 @@ outputs:
       script: PIP_NO_INDEX=True PIP_NO_DEPENDENCIES=True PIP_NO_BUILD_ISOLATION=False PIP_IGNORE_INSTALLED=True PYTHONDONTWRITEBYTECODE=True {{ PREFIX }}/bin/python -m pip install . -vv
       entry_points:
         - napari = napari.__main__:main
-      # de-prioritize pyside so pyqt gets installed by default if unspecified
-      track_features:   # [qt_bindings == 'pyside2']
-        - napari_pyside2  # [qt_bindings == 'pyside2']
 
     requirements:
       build:
@@ -59,7 +56,7 @@ outputs:
         - pint >=0.17
         - psutil >=5.0
         - psygnal>=0.3.4
-        - pydantic >=1.9.0
+        - pydantic >=1.9.0,<2.0a0
         - pygments >=2.4.0
         - pyopengl >=3.1.0
         - pyyaml >=5.1
@@ -80,9 +77,9 @@ outputs:
         - pooch >=1.3.0
         - zarr
 
-        # variants
-        - pyside2 >=5.13.2,!=5.15.0  # [qt_bindings == 'pyside2']
-        - pyqt >=5.12.3,!=5.15.0  # [qt_bindings == 'pyqt']
+      run_constrained:
+        - pyside2 >=5.13.2,!=5.15.0
+        - pyqt >=5.12.3,!=5.15.0
 
     test:
       requires:
@@ -125,7 +122,6 @@ outputs:
     version: {{ version }}
     build:
       noarch: python
-      skip: true  # [qt_bindings == 'pyside2']
       number: {{ build }}
       script:
         - mkdir -p "${PREFIX}/Menu"
