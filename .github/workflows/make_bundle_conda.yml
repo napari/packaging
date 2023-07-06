@@ -534,6 +534,7 @@ jobs:
         working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
+          MENUINST_DEBUG: 1
         run: |
           bash napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} -bfp "${{ runner.temp }}/napari-${{ env.version }}"
           . "${{ runner.temp }}/napari-${{ env.version }}/etc/profile.d/conda.sh"
@@ -555,6 +556,7 @@ jobs:
         working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
+          MENUINST_DEBUG: 1
         run: |
           set -x
           installer -pkg napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} -target CurrentUserHomeDirectory -dumplog
@@ -581,6 +583,7 @@ jobs:
         working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
+          MENUINST_DEBUG: 1
         run: |
           cmd.exe /c start /wait napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} /S /D=${{ runner.temp }}\napari-${{ env.version }}
           CALL ${{ runner.temp }}\napari-${{ env.version }}\Scripts\activate ${{ runner.temp }}\napari-${{ env.version }}\envs\napari-${{ env.version }}
