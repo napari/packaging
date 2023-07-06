@@ -548,6 +548,7 @@ jobs:
               cat "$shortcut_path"
           else
               echo "$shortcut_path does not exist"
+              ls -al "$HOME/.local/share/applications"
               exit 1
           fi
 
@@ -574,6 +575,7 @@ jobs:
               cat $shortcut_path/Contents/Info.plist
           else
               echo "$shortcut_path does not exist!"
+              ls -al "$HOME/Applications"
               exit 1
           fi
 
@@ -594,5 +596,7 @@ jobs:
           set "shortcut_path=%USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\napari\napari-${{ env.version }}.lnk"
           if not exist "%shortcut_path%" (
               echo "%shortcut_path% does not exist!"
+              dir "%USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs"
+              dir "%USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\napari"
               EXIT /B 1
           )
