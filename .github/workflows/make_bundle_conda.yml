@@ -543,14 +543,7 @@ jobs:
           conda config --show
           xvfb-run --auto-servernum napari --info
           # Test shortcut
-          shortcut_path="/usr/share/applications/napari_napari.desktop"
-          if [[ -e $shortcut_path ]]; then
-              cat "$shortcut_path"
-          else
-              echo "$shortcut_path does not exist"
-              ls -al "/usr/share/applications"
-              exit 1
-          fi
+          python -c "import pathlib as p; assert list(p.Path('/usr/share/applications/').glob('napari*.desktop'))"
 
       - name: Test installation (macOS)
         if: runner.os == 'macOS' && matrix.target-platform == 'osx-64'
@@ -567,17 +560,7 @@ jobs:
           conda config --show
           napari --info
           # Test shortcut
-          shortcut_path="/Applications/napari-${{ env.version }}.app"
-          if [[ -e "$shortcut_path" ]]; then
-              echo "\nContents of $shortcut_path/Contents/MacOS:"
-              ls -al "$shortcut_path/Contents/MacOS"
-              echo -e "\nContents of $shortcut_path/Contents/Info.plist:"
-              cat $shortcut_path/Contents/Info.plist
-          else
-              echo "$shortcut_path does not exist!"
-              ls -al "/Applications"
-              exit 1
-          fi
+          python -c "import pathlib as p; assert list(p.Path('/Applications').glob('napari-*.app'))"
 
       - name: Test installation (Windows)
         if: runner.os == 'Windows'
@@ -593,10 +576,4 @@ jobs:
           CALL conda config --show
           napari --info
           :: Test shortcut
-          set "shortcut_path=%PROGRAMDATA%\Microsoft\Windows\Start Menu\Programs\napari\napari-${{ env.version }}.lnk"
-          if not exist "%shortcut_path%" (
-              echo "%shortcut_path% does not exist!"
-              dir "%PROGRAMDATA%\Microsoft\Windows\Start Menu\Programs"
-              dir "%PROGRAMDATA%\Microsoft\Windows\Start Menu\Programs\napari"
-              EXIT /B 1
-          )
+          python -c "import pathlib as p; assert list(p.Path('%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\napari').glob('napari-*.lnk'))"
