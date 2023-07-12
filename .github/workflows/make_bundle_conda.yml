@@ -560,7 +560,7 @@ jobs:
           conda config --show
           napari --info
           # Test shortcut
-          python -c "import pathlib as p; assert list(p.Path('/Applications').glob('napari-*.app'))"
+          python -c "import pathlib as p; assert list(p.Path('/Applications').glob('napari*.app'))"
 
       - name: Test installation (Windows)
         if: runner.os == 'Windows'
@@ -576,4 +576,4 @@ jobs:
           CALL conda config --show
           napari --info
           :: Test shortcut
-          python -c "import pathlib as p; assert list(p.Path('%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\napari').glob('napari-*.lnk'))"
+          python -c "import pathlib as p; assert list(p.Path('%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs').glob('napari*\\napari*.lnk'))"
