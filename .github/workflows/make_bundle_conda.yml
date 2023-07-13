@@ -543,7 +543,7 @@ jobs:
           conda config --show
           xvfb-run --auto-servernum napari --info
           # Test shortcut
-          python -c "import pathlib as p; assert list(p.Path('/usr/share/applications/').glob('napari*.desktop'))"
+          python -c "import pathlib as p; assert list(p.Path('~/.local/share/applications/').expanduser().glob('napari*.desktop'))"
 
       - name: Test installation (macOS)
         if: runner.os == 'macOS' && matrix.target-platform == 'osx-64'
@@ -560,7 +560,7 @@ jobs:
           conda config --show
           napari --info
           # Test shortcut
-          python -c "import pathlib as p; assert list(p.Path('/Applications').glob('napari*.app'))"
+          python -c "import pathlib as p; assert list(p.Path('~/Applications').expanduser().glob('napari*.app'))"
 
       - name: Test installation (Windows)
         if: runner.os == 'Windows'
