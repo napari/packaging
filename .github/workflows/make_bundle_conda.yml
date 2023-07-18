@@ -114,24 +114,12 @@ jobs:
           git diff
           mv ${GITHUB_WORKSPACE}/napari-source .
 
-      - name: Run build scripts (PyQt)
+      - name: Run build scripts
         shell: bash -el {0}
         working-directory: napari-feedstock
         env:
           DOCKER_IMAGE: quay.io/condaforge/linux-anvil-comp7
-          CONFIG: linux_64_qt_bindingspyqt # filename under feedstock's .ci_support/
-          CI: github_actions
-          CONDA_BLD_PATH: "${{ github.workspace }}${{ env.conda_bld_suffix }}"
-        run: |
-          export
-          ./.scripts/run_docker_build.sh
-
-      - name: Run build scripts (PySide)
-        shell: bash -el {0}
-        working-directory: napari-feedstock
-        env:
-          DOCKER_IMAGE: quay.io/condaforge/linux-anvil-comp7
-          CONFIG: linux_64_qt_bindingspyside2 # filename under feedstock's .ci_support/
+          CONFIG: linux_64_  # filename under feedstock's .ci_support/
           CI: github_actions
           CONDA_BLD_PATH: "${{ github.workspace }}${{ env.conda_bld_suffix }}"
         run: |
@@ -217,7 +205,9 @@ jobs:
               "target-platform": "win-64",
             },
           ]
-          platforms_str = "${{ inputs.installer_platforms || 'linux-64,win-64,osx-64,osx-arm64' }}"
+          # TEMPORARY for 0.4.18 only
+          # platforms_str = "${{ inputs.installer_platforms || 'linux-64,win-64,osx-64,osx-arm64' }}"
+          platforms_str = 'linux-64,win-64,osx-64,osx-arm64'
           platforms = {p.strip() for p in platforms_str.split(",")}
 
           matrix = {"include": []}
@@ -327,7 +317,7 @@ jobs:
           if [[ "$host_platform" != "$CONSTRUCTOR_TARGET_PLATFORM" ]]; then
             prefix="${RUNNER_TEMP}/conda-exe-${CONSTRUCTOR_TARGET_PLATFORM}"
             CONDA_SUBDIR=$CONSTRUCTOR_TARGET_PLATFORM \
-              conda create -yq -p "${prefix}" -c napari/label/bundle_tools_2 conda-standalone
+              conda create -yq -p "${prefix}" -c napari/label/bundle_tools_3 conda-standalone
             echo "CONSTRUCTOR_CONDA_EXE=${prefix}/standalone_conda/conda.exe" >> $GITHUB_ENV
           fi
 
@@ -544,6 +534,7 @@ jobs:
         working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
+          MENUINST_DEBUG: 1
         run: |
           bash napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} -bfp "${{ runner.temp }}/napari-${{ env.version }}"
           . "${{ runner.temp }}/napari-${{ env.version }}/etc/profile.d/conda.sh"
@@ -551,12 +542,15 @@ jobs:
           conda config --show-sources
           conda config --show
           xvfb-run --auto-servernum napari --info
+          # Test shortcut
+          python -c "import pathlib as p; assert list(p.Path('~/.local/share/applications/').expanduser().glob('napari*.desktop'))"
 
       - name: Test installation (macOS)
         if: runner.os == 'macOS' && matrix.target-platform == 'osx-64'
         working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
+          MENUINST_DEBUG: 1
         run: |
           set -x
           installer -pkg napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} -target CurrentUserHomeDirectory -dumplog
@@ -565,6 +559,8 @@ jobs:
           conda config --show-sources
           conda config --show
           napari --info
+          # Test shortcut
+          python -c "import pathlib as p; assert list(p.Path('~/Applications').expanduser().glob('napari*.app'))"
 
       - name: Test installation (Windows)
         if: runner.os == 'Windows'
@@ -572,9 +568,12 @@ jobs:
         working-directory: napari-packaging/_work
         env:
           CONDA_EXPERIMENTAL_SOLVER: classic
+          MENUINST_DEBUG: 1
         run: |
           cmd.exe /c start /wait napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} /S /D=${{ runner.temp }}\napari-${{ env.version }}
           CALL ${{ runner.temp }}\napari-${{ env.version }}\Scripts\activate ${{ runner.temp }}\napari-${{ env.version }}\envs\napari-${{ env.version }}
           CALL conda config --show-sources
           CALL conda config --show
           napari --info
+          :: Test shortcut
+          python -c "import pathlib as p; assert list(p.Path('%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs').glob('napari*\\napari*.lnk'))"

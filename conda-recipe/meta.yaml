@@ -19,13 +19,9 @@ outputs:
     build:
       noarch: python
       number: {{ build }}
-      string: pyh{{ PKG_HASH }}_{{ build }}_{{ qt_bindings }}
       script: PIP_NO_INDEX=True PIP_NO_DEPENDENCIES=True PIP_NO_BUILD_ISOLATION=False PIP_IGNORE_INSTALLED=True PYTHONDONTWRITEBYTECODE=True {{ PREFIX }}/bin/python -m pip install . -vv
       entry_points:
         - napari = napari.__main__:main
-      # de-prioritize pyside so pyqt gets installed by default if unspecified
-      track_features:   # [qt_bindings == 'pyside2']
-        - napari_pyside2  # [qt_bindings == 'pyside2']
 
     requirements:
       build:
@@ -39,34 +35,34 @@ outputs:
         - python >=3.8
 
         # dependencies matched to setup.cfg
-        - app-model >=0.1.2,<0.3.0
+        - app-model >=0.1.0,<0.3.0a
         - appdirs >=1.4.4
         - cachey >=0.2.1
         - certifi >=2020.6.20
         - dask >=2.15.0,!=2.28.0
-        - imageio >=2.5.0,!=2.11.0,!=2.22.1
+        - imageio >=2.20,!=2.22.1
         - jsonschema >=3.2.0
-        - lazy_loader>=0.2
+        - lazy_loader >=0.2
         - magicgui >=0.3.6
         - napari-console >=0.0.6
         - napari-plugin-engine >=0.1.9
         - napari-svg >=0.1.7
         - npe2 >=0.5.2
-        - numpy >=1.20
+        - numpy >=1.21
         - numpydoc >=0.9.2
         - pandas >=1.3.0
         - pillow !=7.1.0,!=7.1.1
         - pint >=0.17
         - psutil >=5.0
         - psygnal>=0.3.4
-        - pydantic >=1.9.0
-        - pygments >=2.4.0
+        - pydantic >=1.9.0,<2.0a0
+        - pygments >=2.6.0
         - pyopengl >=3.1.0
         - pyyaml >=5.1
         - qtpy >=1.10.0
         - scikit-image >=0.19.1
         - scipy >=1.5.4
-        - sphinx <5
+        - sphinx >=4.3.0,<5
         - superqt >=0.4.1
         - tifffile >=2020.2.16
         - toolz >=0.10.0
@@ -80,9 +76,9 @@ outputs:
         - pooch >=1.3.0
         - zarr
 
-        # variants
-        - pyside2 >=5.13.2,!=5.15.0  # [qt_bindings == 'pyside2']
-        - pyqt >=5.12.3,!=5.15.0  # [qt_bindings == 'pyqt']
+      run_constrained:
+        - pyside2 >=5.14.2,!=5.15.0
+        - pyqt >=5.12.3,!=5.15.0
 
     test:
       requires:
@@ -125,11 +121,12 @@ outputs:
     version: {{ version }}
     build:
       noarch: python
-      skip: true  # [qt_bindings == 'pyside2']
       number: {{ build }}
       script:
         - mkdir -p "${PREFIX}/Menu"
-        - sed "s/__PKG_VERSION__/{{ PKG_VERSION }}/" "{{ SRC_DIR }}/resources/conda_menu_config.json" > "{{ PREFIX }}/Menu/napari-menu.json"
+        # - sed "s/__PKG_VERSION__/{{ PKG_VERSION }}/" "{{ SRC_DIR }}/resources/conda_menu_config.json" > "{{ PREFIX }}/Menu/napari-menu.json"
+        # TEMPORARY, revert after 0.4.18
+        - sed "s/__PKG_VERSION__/{{ PKG_VERSION }}/" "{{ RECIPE_DIR }}/conda_menu_config.json" > "{{ PREFIX }}/Menu/napari-menu.json"
         - cp "{{ SRC_DIR }}/napari/resources/logo.png" "{{ PREFIX }}/Menu/napari.png"
         - cp "{{ SRC_DIR }}/napari/resources/icon.icns" "{{ PREFIX }}/Menu/napari.icns"
         - cp "{{ SRC_DIR }}/napari/resources/icon.ico" "{{ PREFIX }}/Menu/napari.ico"
