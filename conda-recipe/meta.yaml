@@ -125,7 +125,7 @@ outputs:
       script:
         - mkdir -p "${PREFIX}/Menu"
         # - sed "s/__PKG_VERSION__/{{ PKG_VERSION }}/" "{{ SRC_DIR }}/resources/conda_menu_config.json" > "{{ PREFIX }}/Menu/napari-menu.json"
-        # TEMPORARY:
+        # TEMPORARY, revert after 0.4.18
         - sed "s/__PKG_VERSION__/{{ PKG_VERSION }}/" "{{ RECIPE_DIR }}/conda_menu_config.json" > "{{ PREFIX }}/Menu/napari-menu.json"
         - cp "{{ SRC_DIR }}/napari/resources/logo.png" "{{ PREFIX }}/Menu/napari.png"
         - cp "{{ SRC_DIR }}/napari/resources/icon.icns" "{{ PREFIX }}/Menu/napari.icns"
