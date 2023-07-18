@@ -76,9 +76,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          # repository: conda-forge/napari-feedstock
-          repository: jaimergp/napari-feedstock
-          ref: change-outputs
+          repository: conda-forge/napari-feedstock
           path: napari-feedstock
 
       - name: install micromamba
