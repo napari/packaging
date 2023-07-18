@@ -253,6 +253,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         "channels": base_env["channels"],
         "conda_default_channels": ["conda-forge"],
         "installer_filename": OUTPUT_FILENAME,
+        "initialize_conda": False,
         "initialize_by_default": False,
         "license_file": os.path.join(resources, "bundle_license.rtf"),
         "specs": base_env["specs"],
@@ -315,6 +316,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
                 "icon_image": os.path.join(
                     napari_repo, "napari", "resources", "icon.ico"
                 ),
+                "register_python": False,
                 "register_python_default": False,
                 "default_prefix": os.path.join(
                     "%LOCALAPPDATA%", INSTALLER_DEFAULT_PATH_STEM
