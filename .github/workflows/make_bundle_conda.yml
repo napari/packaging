@@ -201,7 +201,7 @@ jobs:
             },
             {
               "os": "windows-latest",
-              "python-version": "3.8",
+              "python-version": "3.9",
               "target-platform": "win-64",
             },
           ]
