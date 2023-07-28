@@ -73,7 +73,6 @@ class SpinnerWidget(QWidget):
 
 
 class UpdateWidget(QWidget):
-
     install_version = Signal(str)
     skip_version = Signal(str)
 
