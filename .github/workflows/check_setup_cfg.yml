@@ -28,6 +28,7 @@ jobs:
             echo 'SETUP_CFG_CHANGES<<EOF${{ github.run_id }}' >> $GITHUB_ENV
             echo "$changes" >> $GITHUB_ENV
             echo 'EOF${{ github.run_id }}' >> $GITHUB_ENV
+            echo "SETUP_CFG_TODAY=$(date -I)" >> $GITHUB_ENV
           fi
 
       - name: Checkout packaging code

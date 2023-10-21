@@ -1,5 +1,5 @@
 ---
-title: "`setup.cfg` was updated"
+title: "`setup.cfg` was updated ({{ env.SETUP_CFG_TODAY }})"
 assignees: jaimergp
 ---
 
