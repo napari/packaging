@@ -219,6 +219,8 @@ jobs:
             f.write(f"matrix={json.dumps(matrix)}\n")
 
   installers:
+    permissions:
+      contents: write
     name: Bundle ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
     needs: [packages, prepare_matrix]
