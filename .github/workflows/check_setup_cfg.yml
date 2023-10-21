@@ -9,6 +9,9 @@ on:
 
 jobs:
   check_setup_cfg:
+    permissions:
+      contents: read
+      issues: write
     name: Report setup.cfg changes
     runs-on: ubuntu-latest
     steps:
