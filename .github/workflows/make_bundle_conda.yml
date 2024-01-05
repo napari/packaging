@@ -230,7 +230,6 @@ jobs:
       CONDA_BLD_PATH: ${{ github.workspace }}/conda-bld
       CONSTRUCTOR_TARGET_PLATFORM: ${{ matrix.target-platform }}
       CONDA_NUMBER_CHANNEL_NOTICES: 0
-      CONDA_EXPERIMENTAL_SOLVER: libmamba
 
     outputs:
       licenses-artifact: ${{ steps.licenses.outputs.licenses_artifact }}

@@ -261,11 +261,9 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         "extra_envs": {
             napari_env["name"]: {
                 "specs": napari_env["specs"],
+                "menu_packages": ["napari-menu"],
             },
         },
-        "menu_packages": [
-            "napari-menu",
-        ],
         "extra_files": [
             {os.path.join(resources, "bundle_readme.md"): "README.txt"},
             {empty_file.name: ".napari_is_bundled_constructor"},
