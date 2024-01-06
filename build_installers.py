@@ -202,7 +202,6 @@ def _base_env(python_version=PY_VER):
     return {
         "name": "base",
         "channels": [
-            "napari/label/bundle_tools_3",
             "conda-forge",
         ],
         "specs": [
