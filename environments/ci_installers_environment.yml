@@ -4,10 +4,10 @@ channels:
 dependencies:
   - python
   - pip
-  - conda-canary/label/dev::constructor
+  - constructor >=3.6.0
   - conda-build >=3.28
   - ruamel.yaml
-  - conda-canary/label/dev::conda-standalone >=23.11.0
+  - conda-standalone >=23.11.0
   - conda >=23.11.0
   - conda-libmamba-solver
   # only needed to import napari and get the path to the logo.png file
