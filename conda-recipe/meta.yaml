@@ -99,6 +99,7 @@ outputs:
       #   - xarray
       #   - pandas
       #   - pytest-timeout
+      #   - py-triangle
       #   - numba >=0.57.1  # https://github.com/napari/napari/pull/6467#issuecomment-1819038165
       imports:
         - napari
