@@ -195,7 +195,7 @@ jobs:
               "target-platform": "osx-64",
             },
             {
-              "os": "macos-latest",
+              "os": "macos-14",
               "python-version": "3.9",
               "target-platform": "osx-arm64",
             },
@@ -230,7 +230,6 @@ jobs:
       GITHUB_TOKEN: ${{ github.token }}
       DISPLAY: ":99.0"
       CONDA_BLD_PATH: ${{ github.workspace }}/conda-bld
-      CONSTRUCTOR_TARGET_PLATFORM: ${{ matrix.target-platform }}
       CONDA_NUMBER_CHANNEL_NOTICES: 0
 
     outputs:
@@ -311,14 +310,6 @@ jobs:
           ARTIFACT_NAME=$(python build_installers.py --artifact-name)
           echo "artifact-name=${ARTIFACT_NAME}" >> $GITHUB_ENV
           echo "Expected artifact name: ${ARTIFACT_NAME}"
-
-          host_platform=$(conda info --json | jq -r .platform)
-          if [[ "$host_platform" != "$CONSTRUCTOR_TARGET_PLATFORM" ]]; then
-            prefix="${RUNNER_TEMP}/conda-exe-${CONSTRUCTOR_TARGET_PLATFORM}"
-            CONDA_SUBDIR=$CONSTRUCTOR_TARGET_PLATFORM \
-              conda create -yq -p "${prefix}" -c napari/label/bundle_tools_3 conda-standalone
-            echo "CONSTRUCTOR_CONDA_EXE=${prefix}/standalone_conda/conda.exe" >> $GITHUB_ENV
-          fi
 
       - name: Check secrets availability
         shell: bash

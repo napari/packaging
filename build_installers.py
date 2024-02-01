@@ -74,11 +74,19 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 WINDOWS = os.name == "nt"
 MACOS = sys.platform == "darwin"
 LINUX = sys.platform.startswith("linux")
-if os.environ.get("CONSTRUCTOR_TARGET_PLATFORM") == "osx-arm64":
-    ARCH = "arm64"
+CONDA_EXE = os.environ.get("CONSTRUCTOR_CONDA_EXE")
+TARGET_PLATFORM = os.environ.get("CONSTRUCTOR_TARGET_PLATFORM")
+if TARGET_PLATFORM:
+    if not CONDA_EXE:
+        raise RuntimeError(
+            "CONSTRUCTOR_CONDA_EXE must be set when CONSTRUCTOR_TARGET_PLATFORM is set"
+        )
+    os, arch = TARGET_PLATFORM.split("-")
+    if arch == "64":
+        arch = "x86_64"
+    ARCH = arch
 else:
     ARCH = (platform.machine() or "generic").lower().replace("amd64", "x86_64")
-TARGET_PLATFORM = os.environ.get("CONSTRUCTOR_TARGET_PLATFORM")
 PY_VER = f"{sys.version_info.major}.{sys.version_info.minor}"
 PYSIDE_VER = os.environ.get("CONSTRUCTOR_PYSIDE_VER", "*")
 if WINDOWS:
@@ -382,9 +390,9 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     )
 
     args = [constructor, "-v", "."]
-    conda_exe = os.environ.get("CONSTRUCTOR_CONDA_EXE")
-    if TARGET_PLATFORM and conda_exe:
-        args += ["--platform", TARGET_PLATFORM, "--conda-exe", conda_exe]
+    
+    if TARGET_PLATFORM and CONDA_EXE:
+        args += ["--platform", TARGET_PLATFORM, "--conda-exe", CONDA_EXE]
     env = os.environ.copy()
     env["CONDA_CHANNEL_PRIORITY"] = "strict"
 
