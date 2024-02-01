@@ -523,7 +523,6 @@ jobs:
         if: runner.os == 'Linux'
         working-directory: napari-packaging/_work
         env:
-          CONDA_EXPERIMENTAL_SOLVER: classic
           MENUINST_DEBUG: 1
         run: |
           bash napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} -bfp "${{ runner.temp }}/napari-${{ env.version }}"
@@ -539,7 +538,6 @@ jobs:
         if: runner.os == 'macOS'
         working-directory: napari-packaging/_work
         env:
-          CONDA_EXPERIMENTAL_SOLVER: classic
           MENUINST_DEBUG: 1
         run: |
           set -x
@@ -557,7 +555,6 @@ jobs:
         shell: cmd /C call {0}
         working-directory: napari-packaging/_work
         env:
-          CONDA_EXPERIMENTAL_SOLVER: classic
           MENUINST_DEBUG: 1
         run: |
           cmd.exe /c start /wait napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} /S /D=${{ runner.temp }}\napari-${{ env.version }}
