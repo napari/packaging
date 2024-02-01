@@ -227,6 +227,7 @@ def _napari_env(
             f"python={python_version}.*=*_cpython",
             f"napari={napari_version}",
             f"napari-menu={napari_version}",
+            "napari-plugin-manager",
             f"pyside2={pyside_version}",
             "conda",
             "mamba",
