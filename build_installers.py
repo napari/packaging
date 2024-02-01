@@ -390,7 +390,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     )
 
     args = [constructor, "-v", "."]
-    
+
     if TARGET_PLATFORM and CONDA_EXE:
         args += ["--platform", TARGET_PLATFORM, "--conda-exe", CONDA_EXE]
     env = os.environ.copy()
