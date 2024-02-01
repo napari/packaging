@@ -186,22 +186,22 @@ jobs:
           elements = [
             {
               "os": "ubuntu-latest",
-              "python-version": "3.11",
+              "python-version": "3.9",
               "target-platform": "linux-64",
             },
             {
               "os": "macos-latest",
-              "python-version": "3.11",
+              "python-version": "3.9",
               "target-platform": "osx-64",
             },
             {
               "os": "macos-latest",
-              "python-version": "3.11",
+              "python-version": "3.9",
               "target-platform": "osx-arm64",
             },
             {
               "os": "windows-latest",
-              "python-version": "3.11",
+              "python-version": "3.9",
               "target-platform": "win-64",
             },
           ]
