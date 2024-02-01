@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: check-docstring-first
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
@@ -9,31 +9,31 @@ repos:
       - id: trailing-whitespace
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.2.2
+    rev: v3.15.0
     hooks:
       - id: pyupgrade
         args: [--py38-plus, --keep-runtime-typing]
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
-  - repo: https://github.com/myint/autoflake
-    rev: v2.0.0
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.2.1
     hooks:
       - id: autoflake
         args: ["--in-place", "--remove-all-unused-imports"]
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
   - repo: https://github.com/psf/black
-    rev: 22.10.0
+    rev: 23.12.1
     hooks:
       - id: black
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
   - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+    rev: 6.1.0
     hooks:
       - id: flake8
         additional_dependencies: [flake8-typing-imports>=1.9.0]
         args: ["-j8", "--ignore=TYP001,E501,W503"]
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.143
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
     hooks:
       - id: ruff
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
