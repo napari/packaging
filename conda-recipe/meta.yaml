@@ -85,7 +85,9 @@ outputs:
         - pyside2 >=5.14.2,!=5.15.0
         - pyqt >=5.12.3,!=5.15.0
         - pyside6 <6.3.2
-        - numba >=0.57.1  # https://github.com/napari/napari/pull/6467#issuecomment-1819038165
+        # Nice for performance, but optional. Inclusion under discussion.
+        # - py-triangle
+        # - numba >=0.57.1  # https://github.com/napari/napari/pull/6467#issuecomment-1819038165
     test:
       requires:
         - pip
