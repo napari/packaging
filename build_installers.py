@@ -81,7 +81,7 @@ if TARGET_PLATFORM:
         raise RuntimeError(
             "CONSTRUCTOR_CONDA_EXE must be set when CONSTRUCTOR_TARGET_PLATFORM is set"
         )
-    os, arch = TARGET_PLATFORM.split("-")
+    _, arch = TARGET_PLATFORM.split("-")
     if arch == "64":
         arch = "x86_64"
     ARCH = arch
