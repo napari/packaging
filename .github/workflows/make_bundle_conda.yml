@@ -195,19 +195,17 @@ jobs:
               "target-platform": "osx-64",
             },
             {
-              "os": "macos-latest",
+              "os": "macos-14",
               "python-version": "3.9",
               "target-platform": "osx-arm64",
             },
             {
               "os": "windows-latest",
-              "python-version": "3.8",
+              "python-version": "3.9",
               "target-platform": "win-64",
             },
           ]
-          # TEMPORARY for 0.4.18 only
-          # platforms_str = "${{ inputs.installer_platforms || 'linux-64,win-64,osx-64,osx-arm64' }}"
-          platforms_str = 'linux-64,win-64,osx-64,osx-arm64'
+          platforms_str = "${{ inputs.installer_platforms || 'linux-64,win-64,osx-64,osx-arm64' }}"
           platforms = {p.strip() for p in platforms_str.split(",")}
 
           matrix = {"include": []}
@@ -232,9 +230,7 @@ jobs:
       GITHUB_TOKEN: ${{ github.token }}
       DISPLAY: ":99.0"
       CONDA_BLD_PATH: ${{ github.workspace }}/conda-bld
-      CONSTRUCTOR_TARGET_PLATFORM: ${{ matrix.target-platform }}
       CONDA_NUMBER_CHANNEL_NOTICES: 0
-      CONDA_EXPERIMENTAL_SOLVER: libmamba
 
     outputs:
       licenses-artifact: ${{ steps.licenses.outputs.licenses_artifact }}
@@ -314,14 +310,6 @@ jobs:
           ARTIFACT_NAME=$(python build_installers.py --artifact-name)
           echo "artifact-name=${ARTIFACT_NAME}" >> $GITHUB_ENV
           echo "Expected artifact name: ${ARTIFACT_NAME}"
-
-          host_platform=$(conda info --json | jq -r .platform)
-          if [[ "$host_platform" != "$CONSTRUCTOR_TARGET_PLATFORM" ]]; then
-            prefix="${RUNNER_TEMP}/conda-exe-${CONSTRUCTOR_TARGET_PLATFORM}"
-            CONDA_SUBDIR=$CONSTRUCTOR_TARGET_PLATFORM \
-              conda create -yq -p "${prefix}" -c napari/label/bundle_tools_3 conda-standalone
-            echo "CONSTRUCTOR_CONDA_EXE=${prefix}/standalone_conda/conda.exe" >> $GITHUB_ENV
-          fi
 
       - name: Check secrets availability
         shell: bash
@@ -535,7 +523,6 @@ jobs:
         if: runner.os == 'Linux'
         working-directory: napari-packaging/_work
         env:
-          CONDA_EXPERIMENTAL_SOLVER: classic
           MENUINST_DEBUG: 1
         run: |
           bash napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} -bfp "${{ runner.temp }}/napari-${{ env.version }}"
@@ -548,10 +535,9 @@ jobs:
           python -c "import pathlib as p; assert list(p.Path('~/.local/share/applications/').expanduser().glob('napari*.desktop'))"
 
       - name: Test installation (macOS)
-        if: runner.os == 'macOS' && matrix.target-platform == 'osx-64'
+        if: runner.os == 'macOS'
         working-directory: napari-packaging/_work
         env:
-          CONDA_EXPERIMENTAL_SOLVER: classic
           MENUINST_DEBUG: 1
         run: |
           set -x
@@ -569,7 +555,6 @@ jobs:
         shell: cmd /C call {0}
         working-directory: napari-packaging/_work
         env:
-          CONDA_EXPERIMENTAL_SOLVER: classic
           MENUINST_DEBUG: 1
         run: |
           cmd.exe /c start /wait napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} /S /D=${{ runner.temp }}\napari-${{ env.version }}

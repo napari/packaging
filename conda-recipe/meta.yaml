@@ -35,17 +35,23 @@ outputs:
         - python >=3.8
 
         # dependencies matched to setup.cfg
-        - app-model >=0.1.2,<0.3.0a
+        - app-model >=0.2.2,<0.3.0a
         - appdirs >=1.4.4
         - cachey >=0.2.1
         - certifi >=2020.6.20
-        - dask >=2.15.0,!=2.28.0
+        # Do not depend on base "dask" package since it pulls
+        # in the distributed dependency
+        # conda-forge doesn't have the dask-array subpackage
+        # so depend on cytoolz and numpy manually
+        - dask-core>=2.15.0,!=2.28.0
+        - cytoolz >=0.11.0
         - imageio >=2.20,!=2.22.1
         - jsonschema >=3.2.0
         - lazy_loader >=0.2
-        - magicgui >=0.3.6
-        - napari-console >=0.0.6
+        - magicgui >=0.7.0
+        - napari-console >=0.0.9
         - napari-plugin-engine >=0.1.9
+        - napari-plugin-manager >=0.1.0a2, <0.2.0a0
         - napari-svg >=0.1.8
         - npe2 >=0.7.2
         - numpy >=1.21,<2.0a0
@@ -54,16 +60,15 @@ outputs:
         - pillow !=7.1.0,!=7.1.1
         - pint >=0.17
         - psutil >=5.0
-        - psygnal>=0.3.4
-        - pydantic >=1.9.0,<2.0a0
+        - psygnal>=0.5.0
+        - pydantic >=1.9.0
         - pygments >=2.6.0
         - pyopengl >=3.1.0
         - pyyaml >=5.1
         - qtpy >=1.10.0
         - scikit-image >=0.19.1
         - scipy >=1.5.4
-        - sphinx >=4.3.0,<5.0a0
-        - superqt >=0.4.1
+        - superqt >=0.5.0
         - tifffile >=2020.2.16
         - toolz >=0.10.0
         - tqdm >=4.56.0
@@ -80,7 +85,9 @@ outputs:
         - pyside2 >=5.14.2,!=5.15.0
         - pyqt >=5.12.3,!=5.15.0
         - pyside6 <6.3.2
-
+        # Nice for performance, but optional. Inclusion under discussion.
+        # - py-triangle
+        # - numba >=0.57.1  # https://github.com/napari/napari/pull/6467#issuecomment-1819038165
     test:
       requires:
         - pip
@@ -92,6 +99,8 @@ outputs:
       #   - xarray
       #   - pandas
       #   - pytest-timeout
+      #   - py-triangle
+      #   - numba >=0.57.1  # https://github.com/napari/napari/pull/6467#issuecomment-1819038165
       imports:
         - napari
       commands:
@@ -125,9 +134,7 @@ outputs:
       number: {{ build }}
       script:
         - mkdir -p "${PREFIX}/Menu"
-        # - sed "s/__PKG_VERSION__/{{ PKG_VERSION }}/" "{{ SRC_DIR }}/resources/conda_menu_config.json" > "{{ PREFIX }}/Menu/napari-menu.json"
-        # TEMPORARY, revert after 0.4.18
-        - sed "s/__PKG_VERSION__/{{ PKG_VERSION }}/" "{{ RECIPE_DIR }}/conda_menu_config.json" > "{{ PREFIX }}/Menu/napari-menu.json"
+        - sed "s/__PKG_VERSION__/{{ PKG_VERSION }}/" "{{ SRC_DIR }}/resources/conda_menu_config.json" > "{{ PREFIX }}/Menu/napari-menu.json"
         - cp "{{ SRC_DIR }}/napari/resources/logo.png" "{{ PREFIX }}/Menu/napari.png"
         - cp "{{ SRC_DIR }}/napari/resources/icon.icns" "{{ PREFIX }}/Menu/napari.icns"
         - cp "{{ SRC_DIR }}/napari/resources/icon.ico" "{{ PREFIX }}/Menu/napari.ico"
