@@ -74,11 +74,19 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 WINDOWS = os.name == "nt"
 MACOS = sys.platform == "darwin"
 LINUX = sys.platform.startswith("linux")
-if os.environ.get("CONSTRUCTOR_TARGET_PLATFORM") == "osx-arm64":
-    ARCH = "arm64"
+CONDA_EXE = os.environ.get("CONSTRUCTOR_CONDA_EXE")
+TARGET_PLATFORM = os.environ.get("CONSTRUCTOR_TARGET_PLATFORM")
+if TARGET_PLATFORM:
+    if not CONDA_EXE:
+        raise RuntimeError(
+            "CONSTRUCTOR_CONDA_EXE must be set when CONSTRUCTOR_TARGET_PLATFORM is set"
+        )
+    _, arch = TARGET_PLATFORM.split("-")
+    if arch == "64":
+        arch = "x86_64"
+    ARCH = arch
 else:
     ARCH = (platform.machine() or "generic").lower().replace("amd64", "x86_64")
-TARGET_PLATFORM = os.environ.get("CONSTRUCTOR_TARGET_PLATFORM")
 PY_VER = f"{sys.version_info.major}.{sys.version_info.minor}"
 PYSIDE_VER = os.environ.get("CONSTRUCTOR_PYSIDE_VER", "*")
 if WINDOWS:
@@ -202,7 +210,6 @@ def _base_env(python_version=PY_VER):
     return {
         "name": "base",
         "channels": [
-            "napari/label/bundle_tools_3",
             "conda-forge",
         ],
         "specs": [
@@ -261,11 +268,10 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         "extra_envs": {
             napari_env["name"]: {
                 "specs": napari_env["specs"],
+                "menu_packages": ["napari-menu"],
             },
         },
-        "menu_packages": [
-            "napari-menu",
-        ],
+        "register_envs": False,
         "extra_files": [
             {os.path.join(resources, "bundle_readme.md"): "README.txt"},
             {empty_file.name: ".napari_is_bundled_constructor"},
@@ -384,9 +390,9 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     )
 
     args = [constructor, "-v", "."]
-    conda_exe = os.environ.get("CONSTRUCTOR_CONDA_EXE")
-    if TARGET_PLATFORM and conda_exe:
-        args += ["--platform", TARGET_PLATFORM, "--conda-exe", conda_exe]
+
+    if TARGET_PLATFORM and CONDA_EXE:
+        args += ["--platform", TARGET_PLATFORM, "--conda-exe", CONDA_EXE]
     env = os.environ.copy()
     env["CONDA_CHANNEL_PRIORITY"] = "strict"
 

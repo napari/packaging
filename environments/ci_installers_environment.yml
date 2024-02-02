@@ -1,16 +1,14 @@
 name: build-bundle
 channels:
-  - napari/label/bundle_tools_3
   - conda-forge
 dependencies:
   - python
   - pip
-  - constructor
-  - conda-build
+  - constructor >=3.6.0
+  - conda-build >=3.28
   - ruamel.yaml
-  - conda-standalone
-  - conda
+  - conda-standalone >=23.11.0
+  - conda >=23.11.0
   - conda-libmamba-solver
   # only needed to import napari and get the path to the logo.png file
   - lazy_loader >=0.2
-  - importlib_resources  # needed for py38 on windows; can be dropped when we use py39 there
