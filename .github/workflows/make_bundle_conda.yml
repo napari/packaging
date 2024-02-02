@@ -53,7 +53,7 @@ jobs:
 
     steps:
       - name: Checkout packaging code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           repository: napari/packaging
@@ -64,7 +64,7 @@ jobs:
           # ref: some-ref
 
       - name: Checkout napari source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           repository: napari/napari
@@ -73,7 +73,7 @@ jobs:
           ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: Checkout conda-forge feedstock
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           repository: conda-forge/napari-feedstock
@@ -173,7 +173,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.9"
       - name: Prepare matrix
@@ -238,14 +238,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           repository: napari/packaging
           path: napari-packaging
 
       - name: Checkout napari/napari
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           repository: napari/napari
