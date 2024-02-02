@@ -23281,7 +23281,8 @@ qt_resource_struct_v2 = b"\
 \x00\x00\x01\x84\xbb\xb5\x66\x00\
 "
 
-qt_version = [int(v) for v in QtCore.qVersion().split('.')]
+# "6" as a fallback value so we use rcc_version 2
+qt_version = [int(v) for v in (QtCore.qVersion() or "6").split('.')]
 if qt_version < [5, 8, 0]:
     rcc_version = 1
     qt_resource_struct = qt_resource_struct_v1

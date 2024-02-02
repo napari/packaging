@@ -38,6 +38,7 @@ CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD:
     Password to unlock the PFX certificate. This is not used here but
     it might be needed by constructor.
 """
+
 import atexit
 import importlib.metadata
 import json
