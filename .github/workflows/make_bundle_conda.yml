@@ -45,7 +45,7 @@ jobs:
   packages:
     name: Create packages
     runs-on: ubuntu-latest
-    if: false 
+    if: false
     # startsWith(github.repository, 'napari')
     env:
       conda_bld_suffix: /napari-feedstock/build_artifacts/
