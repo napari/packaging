@@ -45,7 +45,8 @@ jobs:
   packages:
     name: Create packages
     runs-on: ubuntu-latest
-    if: startsWith(github.repository, 'napari')
+    if: false 
+    # startsWith(github.repository, 'napari')
     env:
       conda_bld_suffix: /napari-feedstock/build_artifacts/
     outputs:
@@ -221,7 +222,7 @@ jobs:
       contents: write
     name: Bundle ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
-    needs: [packages, prepare_matrix]
+    needs: [prepare_matrix]
     if: startsWith(github.repository, 'napari')
     strategy:
       fail-fast: false
@@ -272,24 +273,24 @@ jobs:
         run: |
           python -m pip install -e . --no-deps
 
-      - name: Download local build artifacts (napari)
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ needs.packages.outputs.artifact-id }}
-          path: ${{ env.CONDA_BLD_PATH }}/noarch
+      # - name: Download local build artifacts (napari)
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: ${{ needs.packages.outputs.artifact-id }}
+      #     path: ${{ env.CONDA_BLD_PATH }}/noarch
 
-      - name: Index local packages (if any)
-        shell: bash -el {0}
-        working-directory: napari-packaging
-        run: |
-          pkgs=$(shopt -s nullglob dotglob; echo "${CONDA_BLD_PATH}/noarch/*.tar.bz2" "${CONDA_BLD_PATH}/noarch/*.conda")
-          if (( ${#pkgs} )); then
-            conda index "${CONDA_BLD_PATH}"
-            conda search -c local --override-channels
-            echo CONSTRUCTOR_USE_LOCAL=1 >> $GITHUB_ENV
-          else
-            echo "No local packages found, assuming latest release"
-          fi
+      # - name: Index local packages (if any)
+      #   shell: bash -el {0}
+      #   working-directory: napari-packaging
+      #   run: |
+      #     pkgs=$(shopt -s nullglob dotglob; echo "${CONDA_BLD_PATH}/noarch/*.tar.bz2" "${CONDA_BLD_PATH}/noarch/*.conda")
+      #     if (( ${#pkgs} )); then
+      #       conda index "${CONDA_BLD_PATH}"
+      #       conda search -c local --override-channels
+      #       echo CONSTRUCTOR_USE_LOCAL=1 >> $GITHUB_ENV
+      #     else
+      #       echo "No local packages found, assuming latest release"
+      #     fi
 
       - name: get tag / arch-suffix / extension / artifact-name / conda-standalone
         shell: bash -el {0}
