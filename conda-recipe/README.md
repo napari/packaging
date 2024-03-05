@@ -3,11 +3,11 @@ This folder is a patched copy of the conda-forge/napari-feedstock `recipe/` dire
 - The `outputs` section might be different too to accommodate changes happening during development
   (e.g. new dependency was added.)
 
-Use this link to see what happened in `napari/napari:setup.cfg`, compared to last release:
+Use this link to see what happened in `napari/napari:pyproject.toml`, compared to last release:
 
     https://github.com/napari/napari/compare/v${VERSION_HERE}...main
 
-and look for `setup.cfg` in the Files tab.
+and look for `pyproject.toml` in the Files tab.
 
 The point of having a local copy is to be able to update it while developing the next release,
 without needing to publish the changes on conda-forge. On releases, the recipe contents here

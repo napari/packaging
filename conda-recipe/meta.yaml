@@ -34,7 +34,7 @@ outputs:
       run:
         - python >=3.8
 
-        # dependencies matched to setup.cfg
+        # dependencies matched to pyproject.toml
         - app-model >=0.2.2,<0.3.0a
         - appdirs >=1.4.4
         - cachey >=0.2.1
