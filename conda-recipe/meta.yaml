@@ -115,10 +115,7 @@ outputs:
       license: BSD-3-Clause AND MIT
       license_file:
         - LICENSE
-        # - napari/_vendor/cpython/LICENSE
         - napari/_vendor/darkdetect/LICENSE
-        - napari/_vendor/experimental/cachetools/LICENSE
-        - napari/_vendor/experimental/humanize/LICENCE
         - napari/_vendor/qt_json_builder/LICENSE
       summary: a fast n-dimensional image viewer in Python
       description: a fast n-dimensional image viewer in Python
