@@ -190,7 +190,7 @@ jobs:
               "target-platform": "linux-64",
             },
             {
-              "os": "macos-12",
+              "os": "macos-13",
               "python-version": "3.9",
               "target-platform": "osx-64",
             },
