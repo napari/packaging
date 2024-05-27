@@ -21,7 +21,7 @@ repos:
         args: ["--in-place", "--remove-all-unused-imports"]
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
   - repo: https://github.com/psf/black
-    rev: 24.4.0
+    rev: 24.4.2
     hooks:
       - id: black
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
@@ -33,7 +33,7 @@ repos:
         args: ["-j8", "--ignore=TYP001,E501,W503"]
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.1
+    rev: v0.4.5
     hooks:
       - id: ruff
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
