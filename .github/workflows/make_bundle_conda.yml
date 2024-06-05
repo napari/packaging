@@ -339,8 +339,8 @@ jobs:
           KEYCHAIN_PATH="$RUNNER_TEMP/installer-signing.keychain-db"
 
           # import certificate and provisioning profile from secrets
-          echo -n "${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}" | base64 --decode --output $INSTALLER_CERTIFICATE_PATH
-          echo -n "${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}" | base64 --decode --output $APPLICATION_CERTIFICATE_PATH
+          echo -n "${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}" | /usr/bin/base64 --decode --output $INSTALLER_CERTIFICATE_PATH
+          echo -n "${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}" | /usr/bin/base64 --decode --output $APPLICATION_CERTIFICATE_PATH
 
           # create temporary keychain
           security create-keychain -p "${{ secrets.TEMP_KEYCHAIN_PASSWORD }}" $KEYCHAIN_PATH
