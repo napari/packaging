@@ -132,7 +132,7 @@ jobs:
           echo "name=${name}" >> $GITHUB_OUTPUT
 
       - name: Upload packages as artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.artifact-id.outputs.name }}
           path: |
@@ -273,7 +273,7 @@ jobs:
           python -m pip install -e . --no-deps
 
       - name: Download local build artifacts (napari)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ needs.packages.outputs.artifact-id }}
           path: ${{ env.CONDA_BLD_PATH }}/noarch
@@ -414,7 +414,7 @@ jobs:
           echo "licenses_artifact=${licenses_zip_path}" >> $GITHUB_OUTPUT
 
       - name: Upload License Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: ${{ env.LICENSES_ARTIFACT_PATH }}
           name: ${{ env.LICENSES_ARTIFACT_NAME }}
@@ -430,7 +430,7 @@ jobs:
           echo "pkgs_list_artifact=${pkgs_list_zip_path}" >> $GITHUB_OUTPUT
 
       - name: Upload list of packages artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: ${{ env.PKGS_LIST_ARTIFACT_PATH }}
           name: ${{ env.PKGS_LIST_ARTIFACT_NAME }}
@@ -484,7 +484,7 @@ jobs:
           spctl --assess -vv --type install "$INSTALLER_PATH" 2>&1 | tee /dev/stderr | grep accepted
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         # CI artifact uploads only on manual runs
         if: inputs.event_name == 'workflow_dispatch' || github.event_name == 'workflow_dispatch'
         with:
@@ -494,7 +494,7 @@ jobs:
       - name: Get Release
         if: inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         id: get_release
-        uses: bruceadams/get-release@v1.2.3
+        uses: bruceadams/get-release@v1.3.2
 
       - name: Upload Release Asset
         if: inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -507,9 +507,7 @@ jobs:
 
       - name: Upload Nightly Build Asset
         if: ${{ inputs.event_name == 'schedule' }}
-        uses: WebFreak001/deploy-nightly@v2.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: WebFreak001/deploy-nightly@v3.1.0
         with:
           # nightly build release from https://api.github.com/repos/napari/napari/releases
           upload_url: https://uploads.github.com/repos/napari/napari/releases/34273071/assets{?name,label}
