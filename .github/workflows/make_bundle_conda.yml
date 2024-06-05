@@ -508,8 +508,6 @@ jobs:
       - name: Upload Nightly Build Asset
         if: ${{ inputs.event_name == 'schedule' }}
         uses: WebFreak001/deploy-nightly@v3.1.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # nightly build release from https://api.github.com/repos/napari/napari/releases
           upload_url: https://uploads.github.com/repos/napari/napari/releases/34273071/assets{?name,label}
