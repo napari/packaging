@@ -485,11 +485,12 @@ jobs:
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
-        # CI artifact uploads only on manual runs
-        if: inputs.event_name == 'workflow_dispatch' || github.event_name == 'workflow_dispatch'
+        # CI artifact uploads only on manual and scheduled runs
+        if: inputs.event_name == 'workflow_dispatch' || github.event_name == 'workflow_dispatch' || inputs.event_name == 'schedule'
         with:
           name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
+          retention-days: 7
 
       - name: Get Release
         if: inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -504,18 +505,6 @@ jobs:
           asset_path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           asset_name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           asset_content_type: application/octet-stream
-
-      - name: Upload Nightly Build Asset
-        if: ${{ inputs.event_name == 'schedule' }}
-        uses: WebFreak001/deploy-nightly@v3.1.0
-        with:
-          # nightly build release from https://api.github.com/repos/napari/napari/releases
-          upload_url: https://uploads.github.com/repos/napari/napari/releases/34273071/assets{?name,label}
-          release_id: 34273071
-          asset_path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
-          asset_name: napari-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
-          asset_content_type: application/octet-stream
-          max_releases: 1
 
       - name: Test installation (Linux)
         if: runner.os == 'Linux'
