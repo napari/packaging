@@ -170,16 +170,18 @@ def _generate_background_images(installer_type, outpath="./", napari_repo=HERE):
         atexit.register(os.unlink, output)
 
 
-def _get_condarc():
+def _get_base_condarc():
     # we need defaults for tensorflow and others on windows only
     defaults = "- defaults" if WINDOWS else ""
     prompt = "[napari]({default_env}) "
     contents = dedent(
         f"""
         channels:  #!final
-          - napari
           - conda-forge
           {defaults}
+        channel_alias: https://github.com/napari/pins/releases/download #!final
+        custom_channels: #!final
+          - conda-forge: https://conda.anaconda.org
         repodata_fns:  #!final
           - repodata.json
         auto_update_conda: false  #!final
@@ -190,6 +192,20 @@ def _get_condarc():
     )
     # the undocumented #!final comment is explained here
     # https://www.anaconda.com/blog/conda-configuration-engine-power-users
+    with NamedTemporaryFile(delete=False, mode="w+") as f:
+        f.write(contents)
+    return f.name
+
+
+def _get_napari_env_condarc(napari_version):
+    version_components = 3 if napari_version.startswith("0.4.") else 2
+    channel_v = ".".join(napari_version.split(".")[:version_components])
+    contents = dedent(
+        f"""
+        channels:  #!final
+          - napari-v{channel_v}
+        """
+    )
     with NamedTemporaryFile(delete=False, mode="w+") as f:
         f.write(contents)
     return f.name
@@ -228,9 +244,19 @@ def _napari_env(
     pyside_version=PYSIDE_VER,
     extra_specs=None,
 ):
+    version_components = 3 if napari_version.startswith("0.4.") else 2
+    channel_v = ".".join(napari_version.split(".")[:version_components])
     return {
         "name": f"napari-{napari_version}",
-        # "channels": same as _base_env(), omit to inherit :)
+        "channels": [
+            f"https://github.com/napari/pins/releases/download/napari-v{channel_v}",
+        ],
+        "channels_remap": [
+            {
+                "src": f"https://github.com/napari/pins/releases/download/napari-v{channel_v}",
+                "dest": f"napari-v{napari_version}",
+            }
+        ],
         "specs": [
             f"python={python_version}.*=*_cpython",
             f"napari={napari_version}",
@@ -242,6 +268,7 @@ def _napari_env(
             "pip",
         ]
         + (extra_specs or []),
+        "menu_packages": ["napari-menu"],
         # "exclude": exclude, # TODO: not supported yet in constructor
     }
 
@@ -251,9 +278,15 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
     base_env = _base_env()
     napari_env = _napari_env(napari_version=version, extra_specs=extra_specs)
     empty_file = NamedTemporaryFile(delete=False)
-    condarc = _get_condarc()
+    base_condarc = _get_base_condarc()
+    napari_condarc = _get_napari_env_condarc(version)
+    napari_condarc_path = os.path.join("envs", napari_env["name"], ".condarc")
     env_state = _get_conda_meta_state()
     env_state_path = os.path.join("envs", napari_env["name"], "conda-meta", "state")
+    atexit.register(os.unlink, empty_file.name)
+    atexit.register(os.unlink, base_condarc)
+    atexit.register(os.unlink, napari_condarc)
+    atexit.register(os.unlink, env_state)
     definitions = {
         "name": APP,
         "company": "Napari",
@@ -267,16 +300,14 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         "license_file": os.path.join(resources, "bundle_license.rtf"),
         "specs": base_env["specs"],
         "extra_envs": {
-            napari_env["name"]: {
-                "specs": napari_env["specs"],
-                "menu_packages": ["napari-menu"],
-            },
+            napari_env["name"]: {k: v for k, v in napari_env.items() if k != "name"},
         },
         "register_envs": False,
         "extra_files": [
             {os.path.join(resources, "bundle_readme.md"): "README.txt"},
             {empty_file.name: ".napari_is_bundled_constructor"},
-            {condarc: ".condarc"},
+            {base_condarc: ".condarc"},
+            {napari_condarc: napari_condarc_path},
             {env_state: env_state_path},
         ],
         "build_outputs": [
@@ -351,9 +382,6 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         )
 
     atexit.register(os.unlink, "construct.yaml")
-    atexit.register(os.unlink, empty_file.name)
-    atexit.register(os.unlink, condarc)
-    atexit.register(os.unlink, env_state)
 
     return definitions
 
