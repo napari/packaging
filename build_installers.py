@@ -293,7 +293,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         "channels_remap": [
             {
                 "src": f"https://github.com/napari/pins/releases/download/napari-v{channel_v}",
-                "dest": f"napari-v{version}",
+                "dest": f"napari-v{channel_v}",
             }
         ],
         "installer_filename": OUTPUT_FILENAME,
