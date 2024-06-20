@@ -249,11 +249,11 @@ def _napari_env(
     return {
         "name": f"napari-{napari_version}",
         "channels": [
-            f"https://github.com/napari/pins/releases/download/napari-v{channel_v}",
+            f"'https://github.com/napari/pins/releases/download/napari-v{channel_v}'",
         ],
         "channels_remap": [
             {
-                "src": f"https://github.com/napari/pins/releases/download/napari-v{channel_v}",
+                "src": f"'https://github.com/napari/pins/releases/download/napari-v{channel_v}'",
                 "dest": f"napari-v{napari_version}",
             }
         ],
