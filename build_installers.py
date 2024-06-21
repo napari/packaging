@@ -250,6 +250,7 @@ def _napari_env(
         "name": f"napari-{napari_version}",
         "channels": [
             f"https://github.com/napari/pins/releases/download/napari-v{channel_v}",
+            "conda-forge",  # temporary
         ],
         "specs": [
             f"python={python_version}.*=*_cpython",
@@ -277,8 +278,6 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
     napari_condarc_path = os.path.join("envs", napari_env["name"], ".condarc")
     env_state = _get_conda_meta_state()
     env_state_path = os.path.join("envs", napari_env["name"], "conda-meta", "state")
-    version_components = 3 if version.startswith("0.4.") else 2
-    channel_v = ".".join(version.split(".")[:version_components])
     atexit.register(os.unlink, empty_file.name)
     atexit.register(os.unlink, base_condarc)
     atexit.register(os.unlink, napari_condarc)
@@ -290,12 +289,6 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
         "version": version.replace("+", "_"),
         "channels": base_env["channels"],
         "conda_default_channels": ["conda-forge"],
-        "channels_remap": [
-            {
-                "src": f"https://github.com/napari/pins/releases/download/napari-v{channel_v}",
-                "dest": f"napari-v{channel_v}",
-            }
-        ],
         "installer_filename": OUTPUT_FILENAME,
         "initialize_conda": False,
         "initialize_by_default": False,
