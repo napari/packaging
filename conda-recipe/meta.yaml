@@ -82,7 +82,7 @@ outputs:
         - napari-plugin-manager >=0.1.0a2,<0.2.0a0
         - pyside2 >=5.13.2,!=5.15.0
         - pyside6 <6.5,>=6.7
-        - pyqt >=5.12.3,!=5.15.0,!=6.6.1
+        - pyqt >=5.12.3,!=5.15.0,<6.0a0|>=6.5,!=6.6.1
         # Nice for performance, but optional. Inclusion under discussion.
         # - py-triangle
         # - numba >=0.57.1  # https://github.com/napari/napari/pull/6467#issuecomment-1819038165
