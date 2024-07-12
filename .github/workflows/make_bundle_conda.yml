@@ -8,6 +8,8 @@ on:
       - 'build_installers.py'
       - 'conda-recipe/*'
       - '.github/workflows/make_bundle_conda.yml'  # this file
+      - 'environments/ci_installers_environment.yml'
+      - 'environments/ci_packages_environment.yml'
   workflow_call:
     inputs:
       event_name:
