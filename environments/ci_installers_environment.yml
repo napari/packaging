@@ -4,7 +4,7 @@ channels:
 dependencies:
   - python
   - pip
-  - constructor >=3.6.0
+  - constructor >=3.6.0,!=3.8.0
   - conda-build >=3.28
   - ruamel.yaml
   - conda-standalone >=23.11.0
