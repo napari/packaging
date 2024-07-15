@@ -86,7 +86,7 @@ jobs:
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: napari-packaging/environments/ci_packages_environment.yml
-      
+
       - name: Prevent issues with multiple tags
         shell: bash -el {0}
         # if: github.event.inputs.ref || github.ref_type == 'tag'
