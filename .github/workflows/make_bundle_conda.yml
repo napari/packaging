@@ -72,7 +72,8 @@ jobs:
           repository: napari/napari
           path: napari-source
           # if we are not on workflow_dispatch, then inputs is not defined -> use '' in that case
-          ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
+          # ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
+          ref: 157b144d90e0a605a5dac68321dcd34250cd6590
 
       - name: Checkout conda-forge feedstock
         uses: actions/checkout@v4
@@ -88,7 +89,7 @@ jobs:
 
       - name: Prevent issues with multiple tags
         shell: bash -el {0}
-        if: github.event.inputs.ref || github.ref_type == 'tag'
+        # if: github.event.inputs.ref || github.ref_type == 'tag'
         working-directory: napari-source
         run: |
           set -x
