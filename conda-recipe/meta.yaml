@@ -79,7 +79,7 @@ outputs:
         - zarr >=2.12.0
 
       run_constrained:
-        - napari-plugin-manager >=0.1.0a2,<0.2.0a0
+        - napari-plugin-manager >=0.1.0a2,<0.3.0a0
         - pyside2 >=5.13.2,!=5.15.0
         - pyside6 <6.5,>=6.7
         - pyqt >=5.12.3,!=5.15.0,<6.0a0|>=6.5,!=6.6.1
