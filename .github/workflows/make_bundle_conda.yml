@@ -86,6 +86,20 @@ jobs:
         with:
           environment-file: napari-packaging/environments/ci_packages_environment.yml
 
+      - name: Prevent issues with multiple tags
+        shell: bash -el {0}
+        if: github.event.inputs.ref || github.ref_type == 'tag'
+        working-directory: napari-source
+        run: |
+          set -x
+          ref=$(git log -1 --format='%H')
+          last_tag=$(git tag --list --points-at "$ref" --sort creatordate | tail -1)
+          for tag in $(git tag --list --points-at "$ref" --sort creatordate); do
+            if [[ $tag != $last_tag ]]; then
+              git tag --delete $tag
+            fi
+          done
+
       - name: install napari
         shell: bash -el {0}
         working-directory: napari-source
@@ -268,7 +282,21 @@ jobs:
           conda config --show-sources
           mkdir -p ${CONDA_BLD_PATH}/noarch
 
-      - name: set up build dependencies
+      - name: Prevent issues with multiple tags
+        shell: bash -el {0}
+        if: github.event.inputs.ref || github.ref_type == 'tag'
+        working-directory: napari-source
+        run: |
+          set -x
+          ref=$(git log -1 --format='%H')
+          last_tag=$(git tag --list --points-at "$ref" --sort creatordate | tail -1)
+          for tag in $(git tag --list --points-at "$ref" --sort creatordate); do
+            if [[ $tag != $last_tag ]]; then
+              git tag --delete $tag
+            fi
+          done
+
+      - name: Install napari
         shell: bash -el {0}
         working-directory: napari-source
         run: |
