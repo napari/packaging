@@ -93,8 +93,8 @@ jobs:
         run: |
           set -x
           ref=$(git log -1 --format='%H')
-          last_tag=$(git tag --list --points-at "$ref" --sort creatordate | tail -1)
-          for tag in $(git tag --list --points-at "$ref" --sort creatordate); do
+          last_tag=$(git -c 'versionsort.suffix=rc' tag -l --points-at "$ref" --sort version:refname | tail -1)
+          for tag in $(git -c 'versionsort.suffix=rc' tag -l --points-at "$ref" --sort version:refname); do
             if [[ $tag != $last_tag ]]; then
               git tag --delete $tag
             fi
@@ -289,8 +289,8 @@ jobs:
         run: |
           set -x
           ref=$(git log -1 --format='%H')
-          last_tag=$(git tag --list --points-at "$ref" --sort creatordate | tail -1)
-          for tag in $(git tag --list --points-at "$ref" --sort creatordate); do
+          last_tag=$(git -c 'versionsort.suffix=rc' tag -l --points-at "$ref" --sort version:refname | tail -1)
+          for tag in $(git -c 'versionsort.suffix=rc' tag -l --points-at "$ref" --sort version:refname); do
             if [[ $tag != $last_tag ]]; then
               git tag --delete $tag
             fi
