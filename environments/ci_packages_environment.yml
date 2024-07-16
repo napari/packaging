@@ -2,7 +2,7 @@ name: packages
 channels:
   - conda-forge
 dependencies:
-  - conda-smithy
+  - conda-smithy >=3.37.0
   - python 3.9
   - pip
   - tomlkit
