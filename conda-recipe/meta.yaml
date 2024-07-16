@@ -95,7 +95,8 @@ outputs:
         - export QT_API=pyqt5  # [unix]
         - which napari
         - napari --info  # [not linux]
-        - 'QT_DEBUG_PLUGINS=1 LIBGL_DEBUG=verbose xvfb-run --auto-servernum napari --info | grep -C99 "napari: ${PKG_VERSION}"'  # [linux]
+        - 'QT_DEBUG_PLUGINS=1 LIBGL_DEBUG=verbose xvfb-run --auto-servernum napari --info > napari_info.txt || true' # [linux]
+        - 'grep -C99 "napari: ${PKG_VERSION}" napari_info.txt'  # [linux]
         # - pytest --pyargs napari
 
     about:
