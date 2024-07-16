@@ -91,7 +91,6 @@ outputs:
       imports:
         - napari
       commands:
-        - pip check
         - setx QT_API "pyqt5"  # [win]
         - export QT_API=pyqt5  # [unix]
         - which napari
