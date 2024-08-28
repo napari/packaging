@@ -32,7 +32,7 @@ outputs:
         - python >=3.9
 
         # dependencies matched to pyproject.toml
-        - app-model >=0.2.5,<0.3.0a
+        - app-model >=0.2.8,<0.3.0a
         - appdirs >=1.4.4
         - cachey >=0.2.1
         - certifi >=2018.1.18
@@ -74,7 +74,7 @@ outputs:
       run_constrained:
         - pyside2 >=5.13.2,!=5.15.0
         - pyside6 <6.5|>=6.7
-        - pyqt >=5.12.3,!=5.15.0,<6.0a0|>=6.5,!=6.6.1
+        - pyqt >=5.13.2,!=5.15.0,<6.0a0|>=6.5,!=6.6.1
 
     test:
       requires:
