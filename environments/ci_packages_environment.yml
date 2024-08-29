@@ -9,3 +9,4 @@ dependencies:
   - ruamel.yaml
   - anaconda-client
   - setuptools
+  - shyaml

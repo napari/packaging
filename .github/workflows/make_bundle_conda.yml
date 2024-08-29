@@ -50,6 +50,7 @@ jobs:
     if: startsWith(github.repository, 'napari')
     env:
       conda_bld_suffix: /napari-feedstock/build_artifacts/
+      conda_build_config: linux_64_  # filename without extension under feedstock's .ci_support/
     outputs:
       artifact-id: ${{ steps.artifact-id.outputs.name }}
 
@@ -129,13 +130,14 @@ jobs:
           conda-smithy rerender
           git diff
           mv ${GITHUB_WORKSPACE}/napari-source .
+          echo "DOCKER_IMAGE=$(shyaml -y get-value docker_image.0 < .ci_support/${conda_build_config}.yaml)" >> $GITHUB_ENV
 
       - name: Run build scripts
         shell: bash -el {0}
         working-directory: napari-feedstock
         env:
-          DOCKER_IMAGE: quay.io/condaforge/linux-anvil-comp7
-          CONFIG: linux_64_  # filename under feedstock's .ci_support/
+          DOCKER_IMAGE: ${{ env.DOCKER_IMAGE }}
+          CONFIG: ${{ env.conda_build_config }}
           CI: github_actions
           CONDA_BLD_PATH: "${{ github.workspace }}${{ env.conda_bld_suffix }}"
         run: |
