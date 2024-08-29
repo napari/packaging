@@ -12,3 +12,4 @@ dependencies:
   - conda-libmamba-solver
   # only needed to import napari and get the path to the logo.png file
   - lazy_loader >=0.2
+  - numpy >=1.22.2
