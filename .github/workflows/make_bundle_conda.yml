@@ -307,6 +307,8 @@ jobs:
       # TEMPORARY
       - name: Install dev constructor
         shell: bash -el {0}
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: "3.10"
         run: |
           python -m pip install https://github.com/jaimergp/constructor/archive/refs/heads/nsis-log-stdout.zip --no-deps
 
