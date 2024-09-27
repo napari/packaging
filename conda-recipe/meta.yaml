@@ -32,7 +32,7 @@ outputs:
         - python >=3.9
 
         # dependencies matched to pyproject.toml
-        - app-model >=0.2.8,<0.3.0a
+        - app-model >=0.3.0,<0.4.0a
         - appdirs >=1.4.4
         - cachey >=0.2.1
         - certifi >=2018.1.18
