@@ -244,7 +244,7 @@ def _napari_env(
             f"pyside2={pyside_version}",
             *CONDA_TOOL_DEPS,
             *(extra_specs or ()),
-        ]
+        ],
         # "exclude": exclude, # TODO: not supported yet in constructor
     }
 
