@@ -215,8 +215,9 @@ def _base_env(python_version=PY_VER):
         ],
         "specs": [
             f"python={python_version}.*=*_cpython",
-            "conda",
-            "mamba",
+            "conda >=23.10",
+            "conda-libmamba-solver",
+            "mamba <2.0a0",
             "pip",
         ],
     }
