@@ -547,8 +547,11 @@ jobs:
           bash napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} -bfp "${{ runner.temp }}/napari-${{ env.version }}"
           . "${{ runner.temp }}/napari-${{ env.version }}/etc/profile.d/conda.sh"
           conda activate "${{ runner.temp }}/napari-${{ env.version }}/envs/napari-${{ env.version }}"
+          conda info
           conda config --show-sources
           conda config --show
+          conda list -p "${{ runner.temp }}/napari-${{ env.version }}"
+          conda list -p "${{ runner.temp }}/napari-${{ env.version }}/envs/napari-${{ env.version }}"
           xvfb-run --auto-servernum napari --info
           # Test shortcut
           python -c "import pathlib as p; assert list(p.Path('~/.local/share/applications/').expanduser().glob('napari*.desktop'))"
@@ -563,8 +566,11 @@ jobs:
           installer -pkg napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} -target CurrentUserHomeDirectory -dumplog
           . "/Users/runner/Library/napari-${{ env.version }}/etc/profile.d/conda.sh"
           conda activate "/Users/runner/Library/napari-${{ env.version }}/envs/napari-${{ env.version }}"
+          conda info
           conda config --show-sources
           conda config --show
+          conda list -p "/Users/runner/Library/napari-${{ env.version }}"
+          conda list -p "/Users/runner/Library/napari-${{ env.version }}/envs/napari-${{ env.version }}"
           napari --info
           # Test shortcut
           python -c "import pathlib as p; assert list(p.Path('~/Applications').expanduser().glob('napari*.app'))"
@@ -578,8 +584,11 @@ jobs:
         run: |
           cmd.exe /c start /wait napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }} /S /D=${{ runner.temp }}\napari-${{ env.version }}
           CALL ${{ runner.temp }}\napari-${{ env.version }}\Scripts\activate ${{ runner.temp }}\napari-${{ env.version }}\envs\napari-${{ env.version }}
+          CALL conda info
           CALL conda config --show-sources
           CALL conda config --show
+          CALL conda list -p ${{ runner.temp }}\napari-${{ env.version }}
+          CALL conda list -p ${{ runner.temp }}\napari-${{ env.version }}\envs\napari-${{ env.version }}
           napari --info
           :: Test shortcut
           python -c "import pathlib as p; assert list(p.Path('%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs').glob('napari*\\napari*.lnk'))"
