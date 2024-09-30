@@ -550,8 +550,8 @@ jobs:
           conda info
           conda config --show-sources
           conda config --show
-          conda list -p "${{ runner.temp }}/napari-${{ env.version }}/envs/napari-${{ env.version }}"
           conda list -p "${{ runner.temp }}/napari-${{ env.version }}"
+          conda list -p "${{ runner.temp }}/napari-${{ env.version }}/envs/napari-${{ env.version }}"
           xvfb-run --auto-servernum napari --info
           # Test shortcut
           python -c "import pathlib as p; assert list(p.Path('~/.local/share/applications/').expanduser().glob('napari*.desktop'))"

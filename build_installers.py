@@ -99,6 +99,13 @@ elif MACOS:
 else:
     raise RuntimeError(f"Unrecognized OS: {sys.platform}")
 
+CONDA_TOOL_DEPS = (
+    "conda >=23.10",
+    "conda-libmamba-solver",
+    "mamba <2.0a0",
+    "pip",
+)
+
 
 def _use_local():
     """
@@ -215,10 +222,7 @@ def _base_env(python_version=PY_VER):
         ],
         "specs": [
             f"python={python_version}.*=*_cpython",
-            "conda >=23.10",
-            "conda-libmamba-solver",
-            "mamba <2.0a0",
-            "pip",
+            *CONDA_TOOL_DEPS,
         ],
     }
 
@@ -238,11 +242,9 @@ def _napari_env(
             f"napari-menu={napari_version}",
             "napari-plugin-manager",
             f"pyside2={pyside_version}",
-            "conda",
-            "mamba",
-            "pip",
+            *CONDA_TOOL_DEPS,
+            *(extra_specs or ()),
         ]
-        + (extra_specs or []),
         # "exclude": exclude, # TODO: not supported yet in constructor
     }
 
