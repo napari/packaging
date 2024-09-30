@@ -102,7 +102,7 @@ else:
 CONDA_TOOL_DEPS = (
     "conda >=23.10",
     "conda-libmamba-solver",
-    "mamba <2.0a0",
+    "mamba",
     "pip",
 )
 
