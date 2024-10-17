@@ -193,10 +193,14 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.11"
       - name: Prepare matrix
         id: set-matrix
         shell: python
+        # The Python versions chosen below will determine which
+        # Python versions the installers will bundle. The general
+        # principle is to follow the SPEC-0 recommendation:
+        # https://scientific-python.org/specs/spec-0000/
         run: |
           import os
           import json
@@ -204,22 +208,22 @@ jobs:
           elements = [
             {
               "os": "ubuntu-latest",
-              "python-version": "3.9",
+              "python-version": "3.11",
               "target-platform": "linux-64",
             },
             {
               "os": "macos-13",
-              "python-version": "3.9",
+              "python-version": "3.11",
               "target-platform": "osx-64",
             },
             {
               "os": "macos-14",
-              "python-version": "3.9",
+              "python-version": "3.11",
               "target-platform": "osx-arm64",
             },
             {
               "os": "windows-latest",
-              "python-version": "3.9",
+              "python-version": "3.11",
               "target-platform": "win-64",
             },
           ]
