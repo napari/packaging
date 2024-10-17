@@ -193,10 +193,14 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.11"
       - name: Prepare matrix
         id: set-matrix
         shell: python
+        # The Python versions chosen below will determine which
+        # Python versions the installers will bundle. The general
+        # principle is to follow the SPEC-0 recommendation:
+        # https://scientific-python.org/specs/spec-0000/
         run: |
           import os
           import json
