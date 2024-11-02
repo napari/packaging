@@ -20,6 +20,8 @@ You can find more information in the following resources:
 * [Napari docs about creating installers using this repo and the constructor tool](https://napari.org/0.4.17/developers/packaging.html#constructor-based-installers)
 * [NAP-2: Distributing napari with conda-based packaging](https://napari.org/dev/naps/2-conda-based-packaging.html)
 
+<!---
 ## Usage
 
 TODO: add basics
+-->
