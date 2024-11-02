@@ -4,7 +4,9 @@ TODO: add badges here
 
 ## Description
 
-This repository stores the tools (CI pipelines and helper scripts) needed to create **conda-based** napari installers for Linux, macOS and Windows.
+This repository stores the tools (CI pipelines and helper scripts) needed to create **conda-based**
+napari installers for Linux, macOS and Windows. It uses the [constructor](https://github.com/conda/constructor)
+tool which allows constructing an installer for a collection of conda packages.
 
 ## Documentation
 
