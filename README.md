@@ -1,6 +1,6 @@
 # packaging - conda-based napari installers
 
-TODO: add badges here
+**Important: This repo is used by napari core maintainers.**
 
 ## Description
 
