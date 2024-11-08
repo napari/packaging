@@ -46,7 +46,7 @@ outputs:
         - jsonschema >=3.2.0
         - lazy_loader >=0.2
         - magicgui >=0.7.0
-        - napari-console >=0.0.9
+        - napari-console >=0.1.1
         - napari-plugin-engine >=0.1.9
         - npe2 >=0.7.6
         - numpy >=1.22.2
@@ -59,6 +59,7 @@ outputs:
         - pydantic >=1.9.0
         - pygments >=2.6.0
         - pyopengl >=3.1.0
+        - pywin32  # this is Windows only, but the package is no-op on Unix
         - pyyaml >=5.1
         - qtpy >=1.10.0
         - scikit-image >=0.19.1
