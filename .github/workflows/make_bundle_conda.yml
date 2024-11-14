@@ -470,7 +470,7 @@ jobs:
           path: ${{ env.LICENSES_ARTIFACT_PATH }}
           name: ${{ env.LICENSES_ARTIFACT_NAME }}
 
-      - name: Collect list of packages
+      - name: Collect lockfiles
         id: pkgs-list
         shell: bash -el {0}
         working-directory: napari-packaging

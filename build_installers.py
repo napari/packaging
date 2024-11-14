@@ -437,15 +437,15 @@ def licenses():
     return zipname.resolve()
 
 
-def packages_list():
-    txtfile = next(Path("_work").glob("pkg-list.napari-*.txt"), None)
+def lockfiles():
+    txtfile = next(Path("_work").glob("lockfile.napari-*.txt"), None)
     if not txtfile or not txtfile.is_file():
         sys.exit(
-            "!! pkg-list.napari-*.txt not found."
+            "!! lockfile.napari-*.txt not found. "
             "Ensure 'construct.yaml' has a 'build_outputs' "
-            "key configured with 'pkgs_list'.",
+            "key configured with 'lockfile'.",
         )
-    zipname = Path("_work") / f"pkg-list.{OS}-{ARCH}.zip"
+    zipname = Path("_work") / f"lockfile.{OS}-{ARCH}.zip"
     with zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED) as ozip:
         ozip.write(txtfile)
     return zipname.resolve()
@@ -503,9 +503,9 @@ def cli(argv=None):
         "This must be run as a separate step.",
     )
     p.add_argument(
-        "--pkgs-list",
+        "--lockfile",
         action="store_true",
-        help="Generate the list of packages used to build the napari environment."
+        help="Collect the installer-equivalent lockfiles. Run AFTER building the installer. "
         "This must be run as a separate step.",
     )
     p.add_argument(
@@ -542,8 +542,8 @@ if __name__ == "__main__":
     if args.licenses:
         print(licenses())
         sys.exit()
-    if args.pkgs_list:
-        print(packages_list())
+    if args.lockfile:
+        print(lockfiles())
         sys.exit()
     if args.images:
         _generate_background_images(napari_repo=args.location)
