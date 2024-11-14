@@ -187,6 +187,7 @@ jobs:
   prepare_matrix:
     # See this SO answer for details on conditional matrices
     # https://stackoverflow.com/a/65434401/3407590
+    name: Prepare matrix
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -256,7 +257,7 @@ jobs:
 
     outputs:
       licenses-artifact: ${{ steps.licenses.outputs.licenses_artifact }}
-      pkgs-list-artifact: ${{ steps.pkgs-list.outputs.pkgs_list_artifact }}
+      lockfile-artifact: ${{ steps.pkgs-list.outputs.lockfile_artifact }}
 
     steps:
       - name: Checkout code
@@ -475,16 +476,16 @@ jobs:
         shell: bash -el {0}
         working-directory: napari-packaging
         run: |
-          pkgs_list_zip_path=$(python build_installers.py --pkgs-list)
-          echo "PKGS_LIST_ARTIFACT_PATH=$pkgs_list_zip_path" >> $GITHUB_ENV
-          echo "PKGS_LIST_ARTIFACT_NAME=$(basename ${pkgs_list_zip_path})" >> $GITHUB_ENV
-          echo "pkgs_list_artifact=${pkgs_list_zip_path}" >> $GITHUB_OUTPUT
+          lockfile_zip_path=$(python build_installers.py --lockfile)
+          echo "LOCKFILE_ARTIFACT_PATH=$lockfile_zip_path" >> $GITHUB_ENV
+          echo "LOCKFILE_ARTIFACT_NAME=$(basename ${lockfile_zip_path})" >> $GITHUB_ENV
+          echo "lockfile_artifact=${lockfile_zip_path}" >> $GITHUB_OUTPUT
 
-      - name: Upload list of packages artifact
+      - name: Upload lockfile artifact
         uses: actions/upload-artifact@v4
         with:
-          path: ${{ env.PKGS_LIST_ARTIFACT_PATH }}
-          name: ${{ env.PKGS_LIST_ARTIFACT_NAME }}
+          path: ${{ env.LOCKFILE_ARTIFACT_PATH }}
+          name: ${{ env.LOCKFILE_ARTIFACT_NAME }}
 
       - name: Notarize & staple PKG Installer (macOS)
         # We only sign pushes to main, nightlies, RCs and final releases
