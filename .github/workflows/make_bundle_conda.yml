@@ -316,7 +316,7 @@ jobs:
         run: |
           conda remove --force constructor
           python -m pip install https://github.com/jaimergp/constructor/archive/lockfiles.tar.gz --no-deps -vv
-      
+
       - name: Debug stuff
         shell: bash -exl {0}
         run: |
