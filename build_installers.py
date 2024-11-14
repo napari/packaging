@@ -285,7 +285,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             {env_state: env_state_path},
         ],
         "build_outputs": [
-            {"pkgs_list": {"env": napari_env["name"]}},
+            {"lockfile": {"env": napari_env["name"]}},
             {"licenses": {"include_text": True, "text_errors": "replace"}},
         ],
     }
