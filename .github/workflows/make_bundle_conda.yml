@@ -311,6 +311,8 @@ jobs:
       - name: Overwrite constructor (temporary!)  # REMOVE BEFORE MERGE
         shell: bash -el {0}
         working-directory: napari-source
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: "3.10"
         run: |
           python -m pip install https://github.com/jaimergp/constructor/archive/lockfiles.tar.gz --no-deps
 
