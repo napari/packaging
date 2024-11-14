@@ -47,9 +47,9 @@ import platform
 import sys
 import zipfile
 from argparse import ArgumentParser
-from distutils.spawn import find_executable
 from functools import lru_cache, partial
 from pathlib import Path
+from shutil import which
 from subprocess import check_call, check_output
 from tempfile import NamedTemporaryFile
 from textwrap import dedent, indent
@@ -380,7 +380,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     napari_repo: str
         location where the napari/napari repository was cloned
     """
-    constructor = find_executable("constructor")
+    constructor = which("constructor")
     if not constructor:
         raise RuntimeError("Constructor must be installed and in PATH.")
 
