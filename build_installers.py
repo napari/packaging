@@ -445,10 +445,7 @@ def lockfiles():
             "Ensure 'construct.yaml' has a 'build_outputs' "
             "key configured with 'lockfile'.",
         )
-    zipname = Path("_work") / f"lockfile.{OS}-{ARCH}.zip"
-    with zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED) as ozip:
-        ozip.write(txtfile)
-    return zipname.resolve()
+    return txtfile.resolve()
 
 
 def main(extra_specs=None, napari_repo=HERE):
