@@ -47,9 +47,9 @@ import platform
 import sys
 import zipfile
 from argparse import ArgumentParser
-from distutils.spawn import find_executable
 from functools import lru_cache, partial
 from pathlib import Path
+from shutil import which
 from subprocess import check_call, check_output
 from tempfile import NamedTemporaryFile
 from textwrap import dedent, indent
@@ -285,7 +285,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             {env_state: env_state_path},
         ],
         "build_outputs": [
-            {"pkgs_list": {"env": napari_env["name"]}},
+            {"lockfile": {"env": napari_env["name"]}},
             {"licenses": {"include_text": True, "text_errors": "replace"}},
         ],
     }
@@ -380,7 +380,7 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     napari_repo: str
         location where the napari/napari repository was cloned
     """
-    constructor = find_executable("constructor")
+    constructor = which("constructor")
     if not constructor:
         raise RuntimeError("Constructor must be installed and in PATH.")
 
@@ -437,18 +437,32 @@ def licenses():
     return zipname.resolve()
 
 
-def packages_list():
-    txtfile = next(Path("_work").glob("pkg-list.napari-*.txt"), None)
+def lockfiles():
+    txtfile = next(Path("_work").glob("lockfile.napari-*.txt"), None)
     if not txtfile or not txtfile.is_file():
         sys.exit(
-            "!! pkg-list.napari-*.txt not found."
+            "!! lockfile.napari-*.txt not found. "
             "Ensure 'construct.yaml' has a 'build_outputs' "
-            "key configured with 'pkgs_list'.",
+            "key configured with 'lockfile'.",
         )
-    zipname = Path("_work") / f"pkg-list.{OS}-{ARCH}.zip"
-    with zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED) as ozip:
-        ozip.write(txtfile)
-    return zipname.resolve()
+    if _use_local():
+        # With local builds, the lockfile will have a file:// path that can't be used
+        # remotely. Fortunately, we have uploaded that package to anaconda.org/napari too.
+        from conda.base.context import context
+
+        if WINDOWS:
+            local_channel = context.croot.replace("\\", "/")
+            local_channel = f"file:///{local_channel}"
+        else:
+            local_channel = f"file://{context.croot}"
+        if not local_channel.endswith("/"):
+            local_channel += "/"
+        remote_channel = "https://conda.anaconda.org/napari/"
+        if "rc" in _version() or "dev" in _version():
+            remote_channel += "label/nightly/"
+        contents = txtfile.read_text().replace(local_channel, remote_channel)
+        txtfile.write_text(contents)
+    return txtfile.resolve()
 
 
 def main(extra_specs=None, napari_repo=HERE):
@@ -503,9 +517,9 @@ def cli(argv=None):
         "This must be run as a separate step.",
     )
     p.add_argument(
-        "--pkgs-list",
+        "--lockfile",
         action="store_true",
-        help="Generate the list of packages used to build the napari environment."
+        help="Collect the installer-equivalent lockfiles. Run AFTER building the installer. "
         "This must be run as a separate step.",
     )
     p.add_argument(
@@ -542,8 +556,8 @@ if __name__ == "__main__":
     if args.licenses:
         print(licenses())
         sys.exit()
-    if args.pkgs_list:
-        print(packages_list())
+    if args.lockfile:
+        print(lockfiles())
         sys.exit()
     if args.images:
         _generate_background_images(napari_repo=args.location)
