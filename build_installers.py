@@ -451,7 +451,7 @@ def lockfiles():
         from conda.base.context import context
 
         if WINDOWS:
-            local_channel = context.croot.replace('\\', '/')
+            local_channel = context.croot.replace("\\", "/")
             local_channel = f"file:///{local_channel}"
         else:
             local_channel = f"file://{context.croot}"
