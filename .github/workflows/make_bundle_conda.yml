@@ -467,6 +467,9 @@ jobs:
 
       - name: Upload lockfile artifact
         uses: actions/upload-artifact@v4
+        # NOTE: These lockfiles will only provide functional installations if the
+        # napari packages in the 'packages' job above has been uploaded to anaconda.org/napari
+        # and this only happens in scheduled jobs @ main and tagged releases.
         with:
           path: ${{ env.LOCKFILE_ARTIFACT_PATH }}
           name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.lockfile.txt
