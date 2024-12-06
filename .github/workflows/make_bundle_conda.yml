@@ -463,14 +463,13 @@ jobs:
         run: |
           lockfile_path=$(python build_installers.py --lockfile)
           echo "LOCKFILE_ARTIFACT_PATH=$lockfile_path" >> $GITHUB_ENV
-          echo "LOCKFILE_ARTIFACT_NAME=$(basename ${lockfile_path})" >> $GITHUB_ENV
           echo "lockfile_artifact=${lockfile_path}" >> $GITHUB_OUTPUT
 
       - name: Upload lockfile artifact
         uses: actions/upload-artifact@v4
         with:
           path: ${{ env.LOCKFILE_ARTIFACT_PATH }}
-          name: ${{ env.LOCKFILE_ARTIFACT_NAME }}
+          name: napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.lockfile.txt
 
       - name: Notarize & staple PKG Installer (macOS)
         # We only sign pushes to main, nightlies, RCs and final releases
