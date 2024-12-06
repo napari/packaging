@@ -445,6 +445,22 @@ def lockfiles():
             "Ensure 'construct.yaml' has a 'build_outputs' "
             "key configured with 'lockfile'.",
         )
+    if _use_local():
+        # With local builds, the lockfile will have a file:// path that can't be used
+        # remotely. Fortunately, we have uploaded that package to anaconda.org/napari too.
+        from conda.base.context import context
+
+        if WINDOWS:
+            local_channel = f"file:///{context.croot.replace('\\', '/')}"
+        else:
+            local_channel = f"file://{context.croot}"
+        if not local_channel.endswith("/"):
+            local_channel += "/"
+        remote_channel = "https://conda.anaconda.org/napari/"
+        if "rc" in _version() or "dev" in _version():
+            remote_channel += "label/nightly/"
+        contents = txtfile.read_text().replace(local_channel, remote_channel) 
+        txtfile.write_text(contents)
     return txtfile.resolve()
 
 
