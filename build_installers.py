@@ -459,7 +459,7 @@ def lockfiles():
         remote_channel = "https://conda.anaconda.org/napari/"
         if "rc" in _version() or "dev" in _version():
             remote_channel += "label/nightly/"
-        contents = txtfile.read_text().replace(local_channel, remote_channel) 
+        contents = txtfile.read_text().replace(local_channel, remote_channel)
         txtfile.write_text(contents)
     return txtfile.resolve()
 
