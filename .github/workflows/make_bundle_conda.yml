@@ -83,7 +83,7 @@ jobs:
           path: napari-feedstock
 
       - name: install micromamba
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: napari-packaging/environments/ci_packages_environment.yml
 
@@ -276,7 +276,7 @@ jobs:
           ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: install micromamba
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: napari-packaging/environments/ci_installers_environment.yml
           create-args: python=${{ matrix.python-version }}
