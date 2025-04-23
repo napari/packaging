@@ -127,6 +127,9 @@ def _version():
             # we just want the version tag, number of commits after tag,
             # and git hash;  so we discard the date
             pre, post = version.split("+", 1)
+            # Workaround for https://github.com/mamba-org/mamba/issues/3904
+            if post[0].isalpha():
+                post = f"0{post}"
             version = f"{pre}+{post.split('.')[0]}"
         if ".dev" in version and "rc" not in version:
             # workaround for https://github.com/conda/conda/issues/12568
