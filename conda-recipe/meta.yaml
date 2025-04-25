@@ -58,7 +58,7 @@ outputs:
         - psygnal >=0.5.0
         - pydantic >=2.2.0
         - pygments >=2.6.0
-        - pyopengl ==3.1.6    # see napari/napari issue 7671 
+        - pyopengl ==3.1.6    # see napari/napari issue 7671
         - pywin32  # this is Windows only, but the package is no-op on Unix
         - pyyaml >=6.0
         - qtpy >=1.10.0
