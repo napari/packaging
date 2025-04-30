@@ -180,15 +180,12 @@ def _generate_background_images(installer_type, outpath="./", napari_repo=HERE):
 
 
 def _get_condarc():
-    # we need defaults for tensorflow and others on windows only
-    defaults = "- defaults" if WINDOWS else ""
     prompt = "[napari]({default_env}) "
     contents = dedent(
         f"""
         channels:  #!final
           - napari
           - conda-forge
-          {defaults}
         repodata_fns:  #!final
           - repodata.json
         auto_update_conda: false  #!final
@@ -321,7 +318,6 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             definitions["notarization_identity_name"] = notarization_identity
 
     if WINDOWS:
-        definitions["conda_default_channels"].append("defaults")
         definitions.update(
             {
                 "welcome_image": os.path.join(resources, "napari_164x314.png"),
