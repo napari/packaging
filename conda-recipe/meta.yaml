@@ -52,6 +52,7 @@ outputs:
         - numpy >=1.24.2
         - numpydoc >=1.0.0
         - pandas >=1.3.3
+        - partsegcore-compiled-backend >=0.15.11
         - pillow >=9.0
         - pint >=0.17
         - psutil >=5.9.0
