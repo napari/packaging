@@ -70,7 +70,7 @@ outputs:
         - toolz >=0.11.0
         - tqdm >=4.56.0
         - typing_extensions >=4.6.1
-        - vispy >=0.15.1,<0.16.0a0
+        - vispy >=0.15.0,<0.16.0a0
         - wrapt >=1.13.3
 
       run_constrained:
