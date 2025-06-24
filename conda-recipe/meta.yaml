@@ -105,8 +105,8 @@ outputs:
       license: BSD-3-Clause AND MIT
       license_file:
         - LICENSE
-        - napari/_vendor/darkdetect/LICENSE
-        - napari/_vendor/qt_json_builder/LICENSE
+        - src/napari/_vendor/darkdetect/LICENSE
+        - src/napari/_vendor/qt_json_builder/LICENSE
       summary: a fast n-dimensional image viewer in Python, with only the required dependencies
       doc_url: http://napari.org
       dev_url: https://github.com/napari/napari
