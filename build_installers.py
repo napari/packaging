@@ -128,7 +128,12 @@ def _version():
             # and git hash;  so we discard the date
             pre, post = version.split("+", 1)
             version = f"{pre}+{post.split('.')[0]}"
-        if ".dev" in version and "rc" not in version and "a" not in version and "b" not in version:
+        if (
+            ".dev" in version
+            and "rc" not in version
+            and "a" not in version
+            and "b" not in version
+        ):
             # workaround for https://github.com/conda/conda/issues/12568
             version = version.replace(".dev", "dev")
         return version
