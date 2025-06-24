@@ -323,7 +323,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
                 "welcome_image": os.path.join(resources, "napari_164x314.png"),
                 "header_image": os.path.join(resources, "napari_150x57.png"),
                 "icon_image": os.path.join(
-                    napari_repo, "napari", "resources", "icon.ico"
+                    napari_repo, "src", "napari", "resources", "icon.ico"
                 ),
                 "register_python": False,
                 "register_python_default": False,
