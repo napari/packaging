@@ -128,7 +128,12 @@ def _version():
             # and git hash;  so we discard the date
             pre, post = version.split("+", 1)
             version = f"{pre}+{post.split('.')[0]}"
-        if ".dev" in version and "rc" not in version:
+        if (
+            ".dev" in version
+            and "rc" not in version
+            and "a" not in version
+            and "b" not in version
+        ):
             # workaround for https://github.com/conda/conda/issues/12568
             version = version.replace(".dev", "dev")
         return version
@@ -323,7 +328,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
                 "welcome_image": os.path.join(resources, "napari_164x314.png"),
                 "header_image": os.path.join(resources, "napari_150x57.png"),
                 "icon_image": os.path.join(
-                    napari_repo, "napari", "resources", "icon.ico"
+                    napari_repo, "src", "napari", "resources", "icon.ico"
                 ),
                 "register_python": False,
                 "register_python_default": False,
