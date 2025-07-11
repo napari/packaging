@@ -2,7 +2,7 @@ context:
   name: napari
   version: "REPLACE_ME"
   python_min: "3.10"
-  build_number: 1
+  build_number: 0
 
 recipe:
   name: ${{ name|lower }}
