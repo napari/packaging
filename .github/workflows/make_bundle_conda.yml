@@ -121,8 +121,8 @@ jobs:
           rm -rf recipe/
           cp -r ../napari-packaging/conda-recipe recipe
 
-          sed -i -e "s|version = \".*\"|version = \"${NAPARI_VERSION}\"|" \
-                 -e "s|build = [0-9]+|build = 0|" \
+          sed -i -e "s|^  version: \".*\"|  version: \"${NAPARI_VERSION}\"|" \
+                 -e "s|^  build: [0-9]+|  build = 0|" \
                  recipe/recipe.yaml
           # make sure the recipe.yaml points to the local source, in case we break
           # this when updating from upstream
