@@ -1,21 +1,23 @@
 """Mock data for the installation manager dialog UI."""
 
-from typing import Dict, List, NamedTuple, Optional
+from __future__ import annotations
+
+from typing import NamedTuple
 
 # Types
-VersionInfo = Dict[str, str]
+VersionInfo = dict[str, str]
 
 
 class PackageData(NamedTuple):
     name: str
     version: str
     source: str
-    build: Optional[str]
+    build: str | None
     plugin: bool
 
 
 PACKAGE_NAME: str = 'napari'
-INSTALL_INFORMATION: Dict[str, VersionInfo] = {
+INSTALL_INFORMATION: dict[str, VersionInfo] = {
     'current_version': {
         'version': 'v0.4.16',
         'last_modified': 'July 27, 2022',
@@ -26,7 +28,7 @@ INSTALL_INFORMATION: Dict[str, VersionInfo] = {
     },
 }
 UPDATE_AVAILABLE_VERSION: str = 'v0.4.17'
-PACKAGES: List[PackageData] = [
+PACKAGES: list[PackageData] = [
     # Package:
     # Name - Version - Source - Build - Related package (plugin or package itself)
     PackageData('napari', '0.4.16', 'pip', None, True),

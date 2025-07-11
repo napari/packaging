@@ -58,7 +58,9 @@ select = [
     "LOG", # flake8-logging
     "SLOT", # flake8-slots
     "PT", # flake8-pytest-style
-    "T20", # flake8-print
+    # Disable for now, we do print here and there
+    # TODO: Remove all print() usage and re-enable
+    # "T20", # flake8-print
 ]
 ignore = [
     "E501", "TC001", "TC002", "TC003",
@@ -79,6 +81,7 @@ ignore = [
 
 [lint.per-file-ignores]
 "**/_tests/*.py" = ["B011", "INP001", "TRY301", "B018", "RUF012"]
+"build_installers.py" = ["B008", "SIM115"]
 
 [lint.flake8-builtins]
 builtins-allowed-modules = ["io", "types", "threading"]

@@ -115,6 +115,9 @@ def _use_local():
     return os.environ.get('CONSTRUCTOR_USE_LOCAL')
 
 
+# ignore: B008
+
+
 @lru_cache
 def _version():
     if _use_local():
