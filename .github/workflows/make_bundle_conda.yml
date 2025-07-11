@@ -43,6 +43,15 @@ on:
         description: "`napari/napari` will be checked out using this commit hash or git reference."
         required: false
 
+concurrency:
+  # Concurrency group that uses the workflow name and PR number if available
+  # or commit SHA as a fallback. If a new build is triggered under that
+  # concurrency group while a previous build is running it will be canceled.
+  # Repeated pushes to a PR will cancel all previous builds, while multiple
+  # merges to main will not cancel.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   packages:
     name: Create packages
@@ -79,7 +88,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          repository: conda-forge/napari-feedstock
+          repository: jaimergp/napari-feedstock  # REVERT to conda-forge
+          ref: rattler
           path: napari-feedstock
 
       - name: install micromamba
@@ -120,12 +130,12 @@ jobs:
           rm -rf recipe/
           cp -r ../napari-packaging/conda-recipe recipe
 
-          sed -i -e "s|{% set version = \".*\" %}|{% set version = \"${NAPARI_VERSION}\" %}|" \
-                 -e "s|{% set build = [0-9]+ %}|{% set build = 0 %}|" \
-                 recipe/meta.yaml
-          # make sure the meta.yaml points to the local source, in case we break
+          sed -i -e "s|^  version: \".*\"|  version: \"${NAPARI_VERSION}\"|" \
+                 -e "s|^  build_number: [0-9]+|  build_number: 0|" \
+                 recipe/recipe.yaml
+          # make sure the recipe.yaml points to the local source, in case we break
           # this when updating from upstream
-          grep -e "path: /home/conda" recipe/meta.yaml
+          grep -e "path: /home/conda" recipe/recipe.yaml
 
           conda-smithy rerender
           git diff
