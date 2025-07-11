@@ -8,32 +8,13 @@ repos:
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
       - id: trailing-whitespace
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.1
-    hooks:
-      - id: pyupgrade
-        args: [--py38-plus, --keep-runtime-typing]
-        exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
-  - repo: https://github.com/PyCQA/autoflake
-    rev: v2.3.1
-    hooks:
-      - id: autoflake
-        args: ["--in-place", "--remove-all-unused-imports"]
-        exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
-  - repo: https://github.com/psf/black
-    rev: 24.10.0
-    hooks:
-      - id: black
-        exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.1
-    hooks:
-      - id: flake8
-        additional_dependencies: [flake8-typing-imports>=1.9.0]
-        args: ["-j8", "--ignore=TYP001,E501,W503"]
-        exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    rev: v0.12.2
     hooks:
+      # lint & attempt to correct failures (e.g. pyupgrade)
       - id: ruff
+        args: [--fix]
+        exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
+      # compatible replacement for black
+      - id: ruff-format
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
