@@ -65,45 +65,45 @@ from ruamel.yaml import YAML
 
 yaml = YAML()
 yaml.indent(mapping=2)
-indent4 = partial(indent, prefix="    ")
+indent4 = partial(indent, prefix='    ')
 
-APP = os.environ.get("CONSTRUCTOR_APP_NAME", "napari")
+APP = os.environ.get('CONSTRUCTOR_APP_NAME', 'napari')
 # bump this when something in the installer infrastructure changes
 # note that this will affect the default installation path across platforms!
-INSTALLER_VERSION = os.environ.get("CONSTRUCTOR_INSTALLER_VERSION", "0.1")
+INSTALLER_VERSION = os.environ.get('CONSTRUCTOR_INSTALLER_VERSION', '0.1')
 HERE = os.path.abspath(os.path.dirname(__file__))
-WINDOWS = os.name == "nt"
-MACOS = sys.platform == "darwin"
-LINUX = sys.platform.startswith("linux")
-CONDA_EXE = os.environ.get("CONSTRUCTOR_CONDA_EXE")
-TARGET_PLATFORM = os.environ.get("CONSTRUCTOR_TARGET_PLATFORM")
+WINDOWS = os.name == 'nt'
+MACOS = sys.platform == 'darwin'
+LINUX = sys.platform.startswith('linux')
+CONDA_EXE = os.environ.get('CONSTRUCTOR_CONDA_EXE')
+TARGET_PLATFORM = os.environ.get('CONSTRUCTOR_TARGET_PLATFORM')
 if TARGET_PLATFORM:
     if not CONDA_EXE:
         raise RuntimeError(
-            "CONSTRUCTOR_CONDA_EXE must be set when CONSTRUCTOR_TARGET_PLATFORM is set"
+            'CONSTRUCTOR_CONDA_EXE must be set when CONSTRUCTOR_TARGET_PLATFORM is set'
         )
-    _, arch = TARGET_PLATFORM.split("-")
-    if arch == "64":
-        arch = "x86_64"
+    _, arch = TARGET_PLATFORM.split('-')
+    if arch == '64':
+        arch = 'x86_64'
     ARCH = arch
 else:
-    ARCH = (platform.machine() or "generic").lower().replace("amd64", "x86_64")
-PY_VER = f"{sys.version_info.major}.{sys.version_info.minor}"
-PYSIDE_VER = os.environ.get("CONSTRUCTOR_PYSIDE_VER", "*")
+    ARCH = (platform.machine() or 'generic').lower().replace('amd64', 'x86_64')
+PY_VER = f'{sys.version_info.major}.{sys.version_info.minor}'
+PYSIDE_VER = os.environ.get('CONSTRUCTOR_PYSIDE_VER', '*')
 if WINDOWS:
-    EXT, OS = "exe", "Windows"
+    EXT, OS = 'exe', 'Windows'
 elif LINUX:
-    EXT, OS = "sh", "Linux"
+    EXT, OS = 'sh', 'Linux'
 elif MACOS:
-    EXT, OS = "pkg", "macOS"
+    EXT, OS = 'pkg', 'macOS'
 else:
-    raise RuntimeError(f"Unrecognized OS: {sys.platform}")
+    raise RuntimeError(f'Unrecognized OS: {sys.platform}')
 
 CONDA_TOOL_DEPS = (
-    "conda >=23.10",
-    "conda-libmamba-solver",
-    "mamba",
-    "pip",
+    'conda >=23.10',
+    'conda-libmamba-solver',
+    'mamba',
+    'pip',
 )
 
 
@@ -112,80 +112,83 @@ def _use_local():
     Detect whether we need to build Napari locally
     (dev snapshots). This env var is set in the GHA workflow.
     """
-    return os.environ.get("CONSTRUCTOR_USE_LOCAL")
+    return os.environ.get('CONSTRUCTOR_USE_LOCAL')
 
 
 @lru_cache
 def _version():
     if _use_local():
-        version = importlib.metadata.version("napari")
+        version = importlib.metadata.version('napari')
         if version is None:
-            raise RuntimeError("Could not get napari version! Is it installed?")
-        if "+" in version:
+            raise RuntimeError(
+                'Could not get napari version! Is it installed?'
+            )
+        if '+' in version:
             # a version string can be something like:
             # 0.4.16rc2.dev252+gf6bdd623.d20220827
             # we just want the version tag, number of commits after tag,
             # and git hash;  so we discard the date
-            pre, post = version.split("+", 1)
-            version = f"{pre}+{post.split('.')[0]}"
+            pre, post = version.split('+', 1)
+            version = f'{pre}+{post.split(".")[0]}'
         if (
-            ".dev" in version
-            and "rc" not in version
-            and "a" not in version
-            and "b" not in version
+            '.dev' in version
+            and 'rc' not in version
+            and 'a' not in version
+            and 'b' not in version
         ):
             # workaround for https://github.com/conda/conda/issues/12568
-            version = version.replace(".dev", "dev")
+            version = version.replace('.dev', 'dev')
         return version
-    else:
-        # get latest published on conda-forge
-        r = requests.get("https://api.anaconda.org/package/conda-forge/napari")
-        r.raise_for_status()
-        return r.json()["latest_version"]
+    # get latest published on conda-forge
+    r = requests.get('https://api.anaconda.org/package/conda-forge/napari')
+    r.raise_for_status()
+    return r.json()['latest_version']
 
 
-OUTPUT_FILENAME = f"{APP}-{_version()}-{OS}-{ARCH}.{EXT}"
+OUTPUT_FILENAME = f'{APP}-{_version()}-{OS}-{ARCH}.{EXT}'
 INSTALLER_DEFAULT_PATH_STEM = os.environ.get(
-    "CONSTRUCTOR_INSTALLER_DEFAULT_PATH_STEM", f"{APP}-{_version()}"
+    'CONSTRUCTOR_INSTALLER_DEFAULT_PATH_STEM', f'{APP}-{_version()}'
 )
 
 
-def _generate_background_images(installer_type, outpath="./", napari_repo=HERE):
+def _generate_background_images(
+    installer_type, outpath='./', napari_repo=HERE
+):
     """Requires pillow"""
-    if installer_type == "sh":
+    if installer_type == 'sh':
         # shell installers are text-based, no graphics
         return
 
     from PIL import Image
 
-    logo_path = resources_files("napari") / "resources/logo.png"
-    logo = Image.open(logo_path, "r")
+    logo_path = resources_files('napari') / 'resources/logo.png'
+    logo = Image.open(logo_path, 'r')
 
     global clean_these_files
 
-    if installer_type in ("exe", "all"):
-        sidebar = Image.new("RGBA", (164, 314), (0, 0, 0, 0))
+    if installer_type in ('exe', 'all'):
+        sidebar = Image.new('RGBA', (164, 314), (0, 0, 0, 0))
         sidebar.paste(logo.resize((101, 101)), (32, 180))
-        output = Path(outpath, "napari_164x314.png")
-        sidebar.save(output, format="png")
+        output = Path(outpath, 'napari_164x314.png')
+        sidebar.save(output, format='png')
         atexit.register(os.unlink, output)
 
-        banner = Image.new("RGBA", (150, 57), (0, 0, 0, 0))
+        banner = Image.new('RGBA', (150, 57), (0, 0, 0, 0))
         banner.paste(logo.resize((44, 44)), (8, 6))
-        output = Path(outpath, "napari_150x57.png")
-        banner.save(output, format="png")
+        output = Path(outpath, 'napari_150x57.png')
+        banner.save(output, format='png')
         atexit.register(os.unlink, output)
 
-    if installer_type in ("pkg", "all"):
-        background = Image.new("RGBA", (1227, 600), (0, 0, 0, 0))
+    if installer_type in ('pkg', 'all'):
+        background = Image.new('RGBA', (1227, 600), (0, 0, 0, 0))
         background.paste(logo.resize((148, 148)), (95, 418))
-        output = Path(outpath, "napari_1227x600.png")
-        background.save(output, format="png")
+        output = Path(outpath, 'napari_1227x600.png')
+        background.save(output, format='png')
         atexit.register(os.unlink, output)
 
 
 def _get_condarc():
-    prompt = "[napari]({default_env}) "
+    prompt = '[napari]({default_env}) '
     contents = dedent(
         f"""
         channels:  #!final
@@ -201,18 +204,18 @@ def _get_condarc():
     )
     # the undocumented #!final comment is explained here
     # https://www.anaconda.com/blog/conda-configuration-engine-power-users
-    with NamedTemporaryFile(delete=False, mode="w+") as f:
+    with NamedTemporaryFile(delete=False, mode='w+') as f:
         f.write(contents)
     return f.name
 
 
 def _get_conda_meta_state():
     data = {
-        "env_vars": {
-            "QT_API": "pyside2",
+        'env_vars': {
+            'QT_API': 'pyside2',
         }
     }
-    with NamedTemporaryFile(delete=False, mode="w+") as f:
+    with NamedTemporaryFile(delete=False, mode='w+') as f:
         json.dump(data, f)
     atexit.register(os.unlink, f.name)
     return f.name
@@ -220,12 +223,12 @@ def _get_conda_meta_state():
 
 def _base_env(python_version=PY_VER):
     return {
-        "name": "base",
-        "channels": [
-            "conda-forge",
+        'name': 'base',
+        'channels': [
+            'conda-forge',
         ],
-        "specs": [
-            f"python={python_version}.*=*_cpython",
+        'specs': [
+            f'python={python_version}.*=*_cpython',
             *CONDA_TOOL_DEPS,
         ],
     }
@@ -238,14 +241,14 @@ def _napari_env(
     extra_specs=None,
 ):
     return {
-        "name": f"napari-{napari_version}",
+        'name': f'napari-{napari_version}',
         # "channels": same as _base_env(), omit to inherit :)
-        "specs": [
-            f"python={python_version}.*=*_cpython",
-            f"napari={napari_version}",
-            f"napari-menu={napari_version}",
-            "napari-plugin-manager",
-            f"pyside2={pyside_version}",
+        'specs': [
+            f'python={python_version}.*=*_cpython',
+            f'napari={napari_version}',
+            f'napari-menu={napari_version}',
+            'napari-plugin-manager',
+            f'pyside2={pyside_version}',
             *CONDA_TOOL_DEPS,
             *(extra_specs or ()),
         ],
@@ -254,109 +257,121 @@ def _napari_env(
 
 
 def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
-    resources = os.path.join(napari_repo, "resources")
+    resources = os.path.join(napari_repo, 'resources')
     base_env = _base_env()
     napari_env = _napari_env(napari_version=version, extra_specs=extra_specs)
     empty_file = NamedTemporaryFile(delete=False)
     condarc = _get_condarc()
     env_state = _get_conda_meta_state()
-    env_state_path = os.path.join("envs", napari_env["name"], "conda-meta", "state")
+    env_state_path = os.path.join(
+        'envs', napari_env['name'], 'conda-meta', 'state'
+    )
     definitions = {
-        "name": APP,
-        "company": "Napari",
-        "reverse_domain_identifier": "org.napari",
-        "version": version.replace("+", "_"),
-        "channels": base_env["channels"],
-        "conda_default_channels": ["conda-forge"],
-        "installer_filename": OUTPUT_FILENAME,
-        "initialize_conda": False,
-        "initialize_by_default": False,
-        "license_file": os.path.join(resources, "bundle_license.rtf"),
-        "specs": base_env["specs"],
-        "extra_envs": {
-            napari_env["name"]: {
-                "specs": napari_env["specs"],
-                "menu_packages": ["napari-menu"],
+        'name': APP,
+        'company': 'Napari',
+        'reverse_domain_identifier': 'org.napari',
+        'version': version.replace('+', '_'),
+        'channels': base_env['channels'],
+        'conda_default_channels': ['conda-forge'],
+        'installer_filename': OUTPUT_FILENAME,
+        'initialize_conda': False,
+        'initialize_by_default': False,
+        'license_file': os.path.join(resources, 'bundle_license.rtf'),
+        'specs': base_env['specs'],
+        'extra_envs': {
+            napari_env['name']: {
+                'specs': napari_env['specs'],
+                'menu_packages': ['napari-menu'],
             },
         },
-        "register_envs": False,
-        "extra_files": [
-            {os.path.join(resources, "bundle_readme.md"): "README.txt"},
-            {empty_file.name: ".napari_is_bundled_constructor"},
-            {condarc: ".condarc"},
+        'register_envs': False,
+        'extra_files': [
+            {os.path.join(resources, 'bundle_readme.md'): 'README.txt'},
+            {empty_file.name: '.napari_is_bundled_constructor'},
+            {condarc: '.condarc'},
             {env_state: env_state_path},
         ],
-        "build_outputs": [
-            {"lockfile": {"env": napari_env["name"]}},
-            {"licenses": {"include_text": True, "text_errors": "replace"}},
+        'build_outputs': [
+            {'lockfile': {'env': napari_env['name']}},
+            {'licenses': {'include_text': True, 'text_errors': 'replace'}},
         ],
     }
     if _use_local():
-        definitions["channels"].insert(0, "local")
+        definitions['channels'].insert(0, 'local')
     if LINUX:
-        definitions["default_prefix"] = os.path.join(
-            "$HOME", ".local", INSTALLER_DEFAULT_PATH_STEM
+        definitions['default_prefix'] = os.path.join(
+            '$HOME', '.local', INSTALLER_DEFAULT_PATH_STEM
         )
-        definitions["license_file"] = os.path.join(resources, "bundle_license.txt")
-        definitions["installer_type"] = "sh"
+        definitions['license_file'] = os.path.join(
+            resources, 'bundle_license.txt'
+        )
+        definitions['installer_type'] = 'sh'
 
     if MACOS:
         # These two options control the default install location:
         # ~/<default_location_pkg>/<pkg_name>
-        definitions["pkg_name"] = INSTALLER_DEFAULT_PATH_STEM
-        definitions["default_location_pkg"] = "Library"
-        definitions["installer_type"] = "pkg"
-        definitions["progress_notifications"] = True
-        definitions["welcome_image"] = os.path.join(resources, "napari_1227x600.png")
-        welcome_text_tmpl = (Path(resources) / "osx_pkg_welcome.rtf.tmpl").read_text()
-        welcome_file = Path(resources) / "osx_pkg_welcome.rtf"
+        definitions['pkg_name'] = INSTALLER_DEFAULT_PATH_STEM
+        definitions['default_location_pkg'] = 'Library'
+        definitions['installer_type'] = 'pkg'
+        definitions['progress_notifications'] = True
+        definitions['welcome_image'] = os.path.join(
+            resources, 'napari_1227x600.png'
+        )
+        welcome_text_tmpl = (
+            Path(resources) / 'osx_pkg_welcome.rtf.tmpl'
+        ).read_text()
+        welcome_file = Path(resources) / 'osx_pkg_welcome.rtf'
         atexit.register(os.unlink, welcome_file)
-        welcome_file.write_text(welcome_text_tmpl.replace("__VERSION__", version))
-        definitions["welcome_file"] = str(welcome_file)
-        definitions["conclusion_text"] = ""
-        definitions["readme_text"] = ""
-        signing_identity = os.environ.get("CONSTRUCTOR_SIGNING_IDENTITY")
+        welcome_file.write_text(
+            welcome_text_tmpl.replace('__VERSION__', version)
+        )
+        definitions['welcome_file'] = str(welcome_file)
+        definitions['conclusion_text'] = ''
+        definitions['readme_text'] = ''
+        signing_identity = os.environ.get('CONSTRUCTOR_SIGNING_IDENTITY')
         if signing_identity:
-            definitions["signing_identity_name"] = signing_identity
-        notarization_identity = os.environ.get("CONSTRUCTOR_NOTARIZATION_IDENTITY")
+            definitions['signing_identity_name'] = signing_identity
+        notarization_identity = os.environ.get(
+            'CONSTRUCTOR_NOTARIZATION_IDENTITY'
+        )
         if notarization_identity:
-            definitions["notarization_identity_name"] = notarization_identity
+            definitions['notarization_identity_name'] = notarization_identity
 
     if WINDOWS:
         definitions.update(
             {
-                "welcome_image": os.path.join(resources, "napari_164x314.png"),
-                "header_image": os.path.join(resources, "napari_150x57.png"),
-                "icon_image": os.path.join(
-                    napari_repo, "src", "napari", "resources", "icon.ico"
+                'welcome_image': os.path.join(resources, 'napari_164x314.png'),
+                'header_image': os.path.join(resources, 'napari_150x57.png'),
+                'icon_image': os.path.join(
+                    napari_repo, 'src', 'napari', 'resources', 'icon.ico'
                 ),
-                "register_python": False,
-                "register_python_default": False,
-                "default_prefix": os.path.join(
-                    "%LOCALAPPDATA%", INSTALLER_DEFAULT_PATH_STEM
+                'register_python': False,
+                'register_python_default': False,
+                'default_prefix': os.path.join(
+                    '%LOCALAPPDATA%', INSTALLER_DEFAULT_PATH_STEM
                 ),
-                "default_prefix_domain_user": os.path.join(
-                    "%LOCALAPPDATA%", INSTALLER_DEFAULT_PATH_STEM
+                'default_prefix_domain_user': os.path.join(
+                    '%LOCALAPPDATA%', INSTALLER_DEFAULT_PATH_STEM
                 ),
-                "default_prefix_all_users": os.path.join(
-                    "%ALLUSERSPROFILE%", INSTALLER_DEFAULT_PATH_STEM
+                'default_prefix_all_users': os.path.join(
+                    '%ALLUSERSPROFILE%', INSTALLER_DEFAULT_PATH_STEM
                 ),
-                "check_path_length": False,
-                "installer_type": "exe",
+                'check_path_length': False,
+                'installer_type': 'exe',
             }
         )
-        signing_certificate = os.environ.get("CONSTRUCTOR_SIGNING_CERTIFICATE")
+        signing_certificate = os.environ.get('CONSTRUCTOR_SIGNING_CERTIFICATE')
         if signing_certificate:
-            definitions["signing_certificate"] = signing_certificate
+            definitions['signing_certificate'] = signing_certificate
 
-    if definitions.get("welcome_image") or definitions.get("header_image"):
+    if definitions.get('welcome_image') or definitions.get('header_image'):
         _generate_background_images(
-            definitions.get("installer_type", "all"),
+            definitions.get('installer_type', 'all'),
             outpath=resources,
             napari_repo=napari_repo,
         )
 
-    atexit.register(os.unlink, "construct.yaml")
+    atexit.register(os.unlink, 'construct.yaml')
     atexit.register(os.unlink, empty_file.name)
     atexit.register(os.unlink, condarc)
     atexit.register(os.unlink, env_state)
@@ -381,41 +396,47 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
     napari_repo: str
         location where the napari/napari repository was cloned
     """
-    constructor = which("constructor")
+    constructor = which('constructor')
     if not constructor:
-        raise RuntimeError("Constructor must be installed and in PATH.")
+        raise RuntimeError('Constructor must be installed and in PATH.')
 
     # TODO: temporarily patching password - remove block when the secret has been fixed
     # (I think it contains an ending newline or something like that,
     # copypaste artifact?)
-    pfx_password = os.environ.get("CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD")
+    pfx_password = os.environ.get('CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD')
     if pfx_password:
-        os.environ["CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD"] = pfx_password.strip()
+        os.environ['CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD'] = (
+            pfx_password.strip()
+        )
 
     definitions = _definitions(
         version=version, extra_specs=extra_specs, napari_repo=napari_repo
     )
 
-    args = [constructor, "-v", "."]
+    args = [constructor, '-v', '.']
 
     if TARGET_PLATFORM and CONDA_EXE:
-        args += ["--platform", TARGET_PLATFORM, "--conda-exe", CONDA_EXE]
+        args += ['--platform', TARGET_PLATFORM, '--conda-exe', CONDA_EXE]
     env = os.environ.copy()
-    env["CONDA_CHANNEL_PRIORITY"] = "strict"
+    env['CONDA_CHANNEL_PRIORITY'] = 'strict'
 
-    print("+++++++++++++++++")
-    print("Command:", " ".join(args))
-    print("Configuration:")
+    print('+++++++++++++++++')
+    print('Command:', ' '.join(args))
+    print('Configuration:')
     yaml.dump(definitions, sys.stdout, transform=indent4)
-    print("\nConda config:\n")
+    print('\nConda config:\n')
     print(
-        indent4(check_output(["conda", "config", "--show-sources"], text=True, env=env))
+        indent4(
+            check_output(
+                ['conda', 'config', '--show-sources'], text=True, env=env
+            )
+        )
     )
-    print("Conda info:")
-    print(indent4(check_output(["conda", "info"], text=True, env=env)))
-    print("+++++++++++++++++")
+    print('Conda info:')
+    print(indent4(check_output(['conda', 'info'], text=True, env=env)))
+    print('+++++++++++++++++')
 
-    with open("construct.yaml", "w") as fin:
+    with open('construct.yaml', 'w') as fin:
         yaml.dump(definitions, fin)
 
     check_call(args, env=env)
@@ -424,25 +445,27 @@ def _constructor(version=_version(), extra_specs=None, napari_repo=HERE):
 
 
 def licenses():
-    info_path = Path("_work") / "licenses.json"
+    info_path = Path('_work') / 'licenses.json'
     if not info_path.is_file():
         sys.exit(
-            "!! licenses.json not found."
+            '!! licenses.json not found.'
             "Ensure 'construct.yaml' has a 'build_outputs' "
             "key configured with 'licenses'.",
         )
 
-    zipname = Path("_work") / f"licenses.{OS}-{ARCH}.zip"
-    with zipfile.ZipFile(zipname, mode="w", compression=zipfile.ZIP_DEFLATED) as ozip:
+    zipname = Path('_work') / f'licenses.{OS}-{ARCH}.zip'
+    with zipfile.ZipFile(
+        zipname, mode='w', compression=zipfile.ZIP_DEFLATED
+    ) as ozip:
         ozip.write(info_path)
     return zipname.resolve()
 
 
 def lockfiles():
-    txtfile = next(Path("_work").glob("lockfile.napari-*.txt"), None)
+    txtfile = next(Path('_work').glob('lockfile.napari-*.txt'), None)
     if not txtfile or not txtfile.is_file():
         sys.exit(
-            "!! lockfile.napari-*.txt not found. "
+            '!! lockfile.napari-*.txt not found. '
             "Ensure 'construct.yaml' has a 'build_outputs' "
             "key configured with 'lockfile'.",
         )
@@ -452,15 +475,15 @@ def lockfiles():
         from conda.base.context import context
 
         if WINDOWS:
-            local_channel = context.croot.replace("\\", "/")
-            local_channel = f"file:///{local_channel}"
+            local_channel = context.croot.replace('\\', '/')
+            local_channel = f'file:///{local_channel}'
         else:
-            local_channel = f"file://{context.croot}"
-        if not local_channel.endswith("/"):
-            local_channel += "/"
-        remote_channel = "https://conda.anaconda.org/napari/"
-        if "rc" in _version() or "dev" in _version():
-            remote_channel += "label/nightly/"
+            local_channel = f'file://{context.croot}'
+        if not local_channel.endswith('/'):
+            local_channel += '/'
+        remote_channel = 'https://conda.anaconda.org/napari/'
+        if 'rc' in _version() or 'dev' in _version():
+            remote_channel += 'label/nightly/'
         contents = txtfile.read_text().replace(local_channel, remote_channel)
         txtfile.write_text(contents)
     return txtfile.resolve()
@@ -469,11 +492,13 @@ def lockfiles():
 def main(extra_specs=None, napari_repo=HERE):
     try:
         cwd = os.getcwd()
-        workdir = Path("_work")
+        workdir = Path('_work')
         workdir.mkdir(exist_ok=True)
         os.chdir(workdir)
         _constructor(extra_specs=extra_specs, napari_repo=napari_repo)
-        assert Path(OUTPUT_FILENAME).exists(), f"{OUTPUT_FILENAME} was not created!"
+        assert Path(OUTPUT_FILENAME).exists(), (
+            f'{OUTPUT_FILENAME} was not created!'
+        )
     finally:
         os.chdir(cwd)
     return workdir / OUTPUT_FILENAME
@@ -482,62 +507,62 @@ def main(extra_specs=None, napari_repo=HERE):
 def cli(argv=None):
     p = ArgumentParser(argv)
     p.add_argument(
-        "--version",
-        action="store_true",
-        help="Print local napari version and exit.",
+        '--version',
+        action='store_true',
+        help='Print local napari version and exit.',
     )
     p.add_argument(
-        "--installer-version",
-        action="store_true",
-        help="Print installer version and exit.",
+        '--installer-version',
+        action='store_true',
+        help='Print installer version and exit.',
     )
     p.add_argument(
-        "--arch",
-        action="store_true",
-        help="Print machine architecture tag and exit.",
+        '--arch',
+        action='store_true',
+        help='Print machine architecture tag and exit.',
     )
     p.add_argument(
-        "--ext",
-        action="store_true",
-        help="Print installer extension for this platform and exit.",
+        '--ext',
+        action='store_true',
+        help='Print installer extension for this platform and exit.',
     )
     p.add_argument(
-        "--artifact-name",
-        action="store_true",
-        help="Print computed artifact name and exit.",
+        '--artifact-name',
+        action='store_true',
+        help='Print computed artifact name and exit.',
     )
     p.add_argument(
-        "--extra-specs",
-        nargs="+",
-        help="One or more extra conda specs to add to the installer",
+        '--extra-specs',
+        nargs='+',
+        help='One or more extra conda specs to add to the installer',
     )
     p.add_argument(
-        "--licenses",
-        action="store_true",
-        help="Post-process licenses AFTER having built the installer. "
-        "This must be run as a separate step.",
+        '--licenses',
+        action='store_true',
+        help='Post-process licenses AFTER having built the installer. '
+        'This must be run as a separate step.',
     )
     p.add_argument(
-        "--lockfile",
-        action="store_true",
-        help="Collect the installer-equivalent lockfiles. Run AFTER building the installer. "
-        "This must be run as a separate step.",
+        '--lockfile',
+        action='store_true',
+        help='Collect the installer-equivalent lockfiles. Run AFTER building the installer. '
+        'This must be run as a separate step.',
     )
     p.add_argument(
-        "--images",
-        action="store_true",
-        help="Generate background images from the logo (test only)",
+        '--images',
+        action='store_true',
+        help='Generate background images from the logo (test only)',
     )
     p.add_argument(
-        "--location",
+        '--location',
         default=HERE,
-        help="Path to napari source repository",
+        help='Path to napari source repository',
         type=os.path.abspath,
     )
     return p.parse_args()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     args = cli()
     if args.version:
         print(_version())
@@ -564,4 +589,7 @@ if __name__ == "__main__":
         _generate_background_images(napari_repo=args.location)
         sys.exit()
 
-    print("Created", main(extra_specs=args.extra_specs, napari_repo=args.location))
+    print(
+        'Created',
+        main(extra_specs=args.extra_specs, napari_repo=args.location),
+    )
