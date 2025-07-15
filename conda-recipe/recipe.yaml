@@ -89,7 +89,7 @@ outputs:
           - ${{ 'setx QT_API pyqt5' if win else 'export QT_API=pyqt5' }}
           - ${{ 'where napari' if win else 'which napari' }}
           - if: unix
-            then: 
+            then:
               - napari --version
               - napari --version | grep "$(echo ${PKG_VERSION} | sed s/dev/.dev/)"
             else:
