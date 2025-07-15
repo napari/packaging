@@ -93,6 +93,7 @@ outputs:
               - 'QT_DEBUG_PLUGINS=1 LIBGL_DEBUG=verbose xvfb-run --auto-servernum napari --info | grep -C99 "napari: ${PKG_VERSION}"'
             else:
               - napari --info
+          # If the following line is uncommented, also uncomment requirements.
           # - pytest --pyargs napari
         requirements:
           run:
