@@ -88,7 +88,8 @@ outputs:
       - script:
           - ${{ 'setx QT_API pyqt5' if win else 'export QT_API=pyqt5' }}
           - ${{ 'where napari' if win else 'which napari' }}
-          - 'napari --version | grep "napari version ${PKG_VERSION}"'
+          - napari --version
+          - napari --version | grep "${PKG_VERSION}"
           # If the following line is uncommented, also uncomment requirements.
           # - pytest --pyargs napari
         requirements:
