@@ -114,11 +114,12 @@ jobs:
       - name: install napari
         shell: bash -el {0}
         working-directory: napari-source
+        env:
+          CONSTRUCTOR_USE_LOCAL: 1
         run: |
           set -x
           pip install -e . --no-deps -vvv
-          napari_version=$(python -c 'from importlib.metadata import version; print(version("napari"))')
-          echo "NAPARI_VERSION=$napari_version" >> $GITHUB_ENV
+          echo "NAPARI_VERSION=$(python ../napari-packaging/build_installers.py --version)" >> $GITHUB_ENV
           echo "NAPARI_ARCH=$(python ../napari-packaging/build_installers.py --arch)" >> $GITHUB_ENV
 
       - name: Patch and rerender feedstock
