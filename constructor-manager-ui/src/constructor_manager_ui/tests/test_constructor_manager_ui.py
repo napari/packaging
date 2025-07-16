@@ -19,10 +19,12 @@ def installation_manager_dlg(qtbot):
         INSTALL_INFORMATION,
     )
     qtbot.addWidget(installation_manager_dlg)
-    yield installation_manager_dlg
+    return installation_manager_dlg
 
 
 def test_installation_manager_dialog(installation_manager_dlg):
     installation_manager_dlg.show()
     installation_manager_dlg.set_packages(PACKAGES)
-    installation_manager_dlg.show_update_available_message(UPDATE_AVAILABLE_VERSION)
+    installation_manager_dlg.show_update_available_message(
+        UPDATE_AVAILABLE_VERSION
+    )

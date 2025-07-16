@@ -47,7 +47,7 @@ class SpinnerWidget(QWidget):
         # Widgets for text and loading gif
         self.text_label = QLabel(text)
         spinner_label = QLabel()
-        self.spinner_movie = QMovie(":/images/loading.gif")
+        self.spinner_movie = QMovie(':/images/loading.gif')
         self.spinner_movie.setScaledSize(QSize(18, 18))
         spinner_label.setMovie(self.spinner_movie)
 
@@ -83,7 +83,7 @@ class UpdateWidget(QWidget):
 
         # Setup widgets
         self.checking_update_widget = SpinnerWidget(
-            "Checking for updates...", parent=self
+            'Checking for updates...', parent=self
         )
         self.up_to_date_widget = QWidget(self)
         self._initialize_up_to_date_widget()
@@ -104,7 +104,7 @@ class UpdateWidget(QWidget):
 
     def _initialize_up_to_date_widget(self):
         up_to_date_layout = QVBoxLayout()
-        update_msg_label = QLabel(f"Your {self.package_name} is up to date.")
+        update_msg_label = QLabel(f'Your {self.package_name} is up to date.')
         up_to_date_layout.addWidget(update_msg_label)
 
         self.up_to_date_widget.setLayout(up_to_date_layout)
@@ -113,16 +113,16 @@ class UpdateWidget(QWidget):
         new_version_layout = QVBoxLayout()
         update_msg_label_layout = QHBoxLayout()
         update_msg_label = QLabel(
-            f"A newer version of {self.package_name} is available!"
+            f'A newer version of {self.package_name} is available!'
         )
         update_msg_label_layout.addSpacing(15)
         update_msg_label_layout.addWidget(update_msg_label)
 
         update_actions_layout = QHBoxLayout()
         new_version_label = QLabel(self.update_available_version)
-        skip_version_button = QPushButton("Skip This Version")
-        install_version_button = QPushButton("Install This Version")
-        install_version_button.setObjectName("install_button")
+        skip_version_button = QPushButton('Skip This Version')
+        install_version_button = QPushButton('Install This Version')
+        install_version_button.setObjectName('install_button')
         update_actions_layout.addSpacing(20)
         update_actions_layout.addWidget(new_version_label)
         update_actions_layout.addSpacing(20)
@@ -137,10 +137,14 @@ class UpdateWidget(QWidget):
 
         # Connect buttons signals to parent class signals
         skip_version_button.clicked.connect(
-            lambda checked: self.skip_version.emit(self.update_available_version)
+            lambda checked: self.skip_version.emit(
+                self.update_available_version
+            )
         )
         install_version_button.clicked.connect(
-            lambda checked: self.install_version.emit(self.update_available_version)
+            lambda checked: self.install_version.emit(
+                self.update_available_version
+            )
         )
 
     def show_checking_updates_message(self):
@@ -156,7 +160,9 @@ class UpdateWidget(QWidget):
 
 
 class PackagesTable(QTableWidget):
-    def __init__(self, packages, visible_packages=RELATED_PACKAGES, parent=None):
+    def __init__(
+        self, packages, visible_packages=RELATED_PACKAGES, parent=None
+    ):
         super().__init__(parent=parent)
         self.packages = packages
         self.visible_packages = visible_packages
@@ -177,11 +183,13 @@ class PackagesTable(QTableWidget):
     def setup(self):
         # Set columns number and headers
         self.setColumnCount(4)
-        self.setHorizontalHeaderLabels(["Name", "Version", "Source", "Build"])
+        self.setHorizontalHeaderLabels(['Name', 'Version', 'Source', 'Build'])
         self.verticalHeader().setVisible(False)
 
         # Set horizontal headers alignment and config
-        self.horizontalHeader().setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.horizontalHeader().setDefaultAlignment(
+            Qt.AlignLeft | Qt.AlignVCenter
+        )
         self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
@@ -198,11 +206,22 @@ class PackagesTable(QTableWidget):
         for name, version, source, build, related_package in self.packages:
             self.insertRow(self.rowCount())
             package_row = self.rowCount() - 1
-            self.setItem(package_row, 0, self._create_item(name, related_package))
-            self.setItem(package_row, 1, self._create_item(version, related_package))
-            self.setItem(package_row, 2, self._create_item(source, related_package))
-            self.setItem(package_row, 3, self._create_item(build, related_package))
-            if self.visible_packages == RELATED_PACKAGES and not related_package:
+            self.setItem(
+                package_row, 0, self._create_item(name, related_package)
+            )
+            self.setItem(
+                package_row, 1, self._create_item(version, related_package)
+            )
+            self.setItem(
+                package_row, 2, self._create_item(source, related_package)
+            )
+            self.setItem(
+                package_row, 3, self._create_item(build, related_package)
+            )
+            if (
+                self.visible_packages == RELATED_PACKAGES
+                and not related_package
+            ):
                 self.hideRow(package_row)
 
     def change_visible_packages(self, toggled_option):
@@ -239,28 +258,28 @@ class InstallationManagerDialog(QDialog):
     ):
         super().__init__(parent=parent)
         self.package_name = package_name
-        self.current_version = install_information["current_version"]
-        self.snapshot_version = install_information["snapshot_version"]
+        self.current_version = install_information['current_version']
+        self.snapshot_version = install_information['snapshot_version']
         self.updates_widget = None
         self.packages_tablewidget = None
-        self.setWindowTitle(f"{package_name} installation manager")
+        self.setWindowTitle(f'{package_name} installation manager')
         self.setMinimumSize(QSize(500, 500))
         self.setup_layout()
 
     def _create_install_information_group(self):
-        install_information_group = QGroupBox("Install information")
+        install_information_group = QGroupBox('Install information')
         install_information_layout = QVBoxLayout()
         current_version_layout = QHBoxLayout()
 
         # Current version labels and button
         current_version_label = QLabel(
-            f"{self.package_name} {self.current_version['version']}"
+            f'{self.package_name} {self.current_version["version"]}'
         )
         last_modified_version_label = QLabel(
-            f"Last modified {self.current_version['last_modified']}"
+            f'Last modified {self.current_version["last_modified"]}'
         )
-        current_version_open_button = QPushButton("Open")
-        current_version_open_button.setObjectName("open_button")
+        current_version_open_button = QPushButton('Open')
+        current_version_open_button.setObjectName('open_button')
         current_version_layout.addWidget(current_version_label)
         current_version_layout.addSpacing(10)
         current_version_layout.addWidget(last_modified_version_label)
@@ -271,7 +290,7 @@ class InstallationManagerDialog(QDialog):
 
         # Line to divide current section and update section
         install_version_line = QFrame()
-        install_version_line.setObjectName("separator")
+        install_version_line.setObjectName('separator')
         install_version_line.setFrameShape(QFrame.HLine)
         install_version_line.setFrameShadow(QFrame.Sunken)
         install_version_line.setLineWidth(1)
@@ -292,13 +311,15 @@ class InstallationManagerDialog(QDialog):
         return install_information_group
 
     def _create_packages_group(self):
-        packages_group = QGroupBox("Packages")
+        packages_group = QGroupBox('Packages')
         packages_layout = QVBoxLayout()
 
         packages_filter_layout = QHBoxLayout()
-        packages_filter_label = QLabel("Show:")
-        self.packages_spinner_label = SpinnerWidget("Loading packages...", parent=self)
-        show_detailed_view_checkbox = QCheckBox("Detailed view")
+        packages_filter_label = QLabel('Show:')
+        self.packages_spinner_label = SpinnerWidget(
+            'Loading packages...', parent=self
+        )
+        show_detailed_view_checkbox = QCheckBox('Detailed view')
         show_detailed_view_checkbox.setChecked(False)
 
         packages_filter_layout.addWidget(packages_filter_label)
@@ -321,34 +342,34 @@ class InstallationManagerDialog(QDialog):
         return packages_group
 
     def _create_installation_actions_group(self):
-        installation_actions_group = QGroupBox("Installation Actions")
+        installation_actions_group = QGroupBox('Installation Actions')
         installation_actions_layout = QGridLayout()
 
         # Revert action
-        revert_button = QPushButton("Revert Installation")
+        revert_button = QPushButton('Revert Installation')
         revert_label = QLabel(
-            "Rollback installation to the latest snapshot: "
-            f"{self.snapshot_version['version']} "
-            f"({self.snapshot_version['last_modified']})"
+            'Rollback installation to the latest snapshot: '
+            f'{self.snapshot_version["version"]} '
+            f'({self.snapshot_version["last_modified"]})'
         )
         installation_actions_layout.addWidget(revert_button, 0, 0)
         installation_actions_layout.addWidget(revert_label, 0, 1)
 
         # Reset action
-        reset_button = QPushButton("Reset Installation")
+        reset_button = QPushButton('Reset Installation')
         reset_label = QLabel(
-            "Reset the installation to clear "
-            "preferences, plugins, and other packages"
+            'Reset the installation to clear '
+            'preferences, plugins, and other packages'
         )
         installation_actions_layout.addWidget(reset_button, 1, 0)
         installation_actions_layout.addWidget(reset_label, 1, 1)
 
         # Uninstall action
-        uninstall_button = QPushButton("Uninstall")
-        uninstall_button.setObjectName("uninstall_button")
+        uninstall_button = QPushButton('Uninstall')
+        uninstall_button.setObjectName('uninstall_button')
         uninstall_label = QLabel(
-            f"Remove the {self.package_name} Bundled App "
-            "and Installation Manager from your computer"
+            f'Remove the {self.package_name} Bundled App '
+            'and Installation Manager from your computer'
         )
         installation_actions_layout.addWidget(uninstall_button, 2, 0)
         installation_actions_layout.addWidget(uninstall_label, 2, 1)
@@ -392,7 +413,9 @@ class InstallationManagerDialog(QDialog):
         self.updates_widget.show_up_to_date_message()
 
     def show_update_available_message(self, update_available_version):
-        self.updates_widget.show_update_available_message(update_available_version)
+        self.updates_widget.show_update_available_message(
+            update_available_version
+        )
 
     def install_version(self, update_version):
         # TODO: To be handled with the backend.
@@ -414,17 +437,17 @@ class InstallationManagerDialog(QDialog):
     def revert_installation(self):
         # TODO: To be handled with the backend.
         #       Maybe this needs to be a signal
-        print("Revert installation")
+        print('Revert installation')
 
     def reset_installation(self):
         # TODO: To be handled with the backend.
         #       Maybe this needs to be a signal
-        print("Reset installation")
+        print('Reset installation')
 
     def uninstall(self):
         # TODO: To be handled with the backend.
         #       Maybe this needs to be a signal
-        print("Uninstall")
+        print('Uninstall')
 
 
 def main(package_name: str):
@@ -449,7 +472,9 @@ def main(package_name: str):
     # Change commented lines to check different UI update widget states
     def data_initialization():
         installation_manager_dlg.set_packages(PACKAGES)
-        installation_manager_dlg.show_update_available_message(UPDATE_AVAILABLE_VERSION)
+        installation_manager_dlg.show_update_available_message(
+            UPDATE_AVAILABLE_VERSION
+        )
         # installation_manager_dlg.show_up_to_date_message()
 
     QTimer.singleShot(5000, data_initialization)
