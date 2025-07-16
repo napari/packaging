@@ -144,7 +144,7 @@ outputs:
           - python -c "import napari"
     about:
       homepage: http://napari.org
-      summary: a fast n-dimensional image viewer in Python, with only the required dependencies
+      summary: a fast n-dimensional image viewer in Python
       license: BSD-3-Clause AND MIT
       license_file:
         - LICENSE
@@ -184,7 +184,7 @@ outputs:
             - Menu/napari-menu.json
     about:
       homepage: http://napari.org
-      summary: a fast n-dimensional image viewer in Python, with only the required dependencies
+      summary: Shortcut to open napari from the desktop environment menus
       license: BSD-3-Clause AND MIT
       license_file:
         - LICENSE
@@ -193,7 +193,7 @@ outputs:
 
 about:
   homepage: http://napari.org
-  summary: a fast n-dimensional image viewer in Python, with only the required dependencies
+  summary: a fast n-dimensional image viewer in Python
   license: BSD-3-Clause AND MIT
   license_file:
     - LICENSE
