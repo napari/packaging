@@ -56,7 +56,7 @@ jobs:
 
     steps:
       - name: Checkout packaging code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           repository: napari/packaging
@@ -67,7 +67,7 @@ jobs:
           # ref: some-ref
 
       - name: Checkout napari source
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           repository: napari/napari
@@ -76,14 +76,14 @@ jobs:
           ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: Checkout conda-forge feedstock
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           repository: conda-forge/napari-feedstock
           path: napari-feedstock
 
       - name: install micromamba
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@b09ef9b599704322748535812ca03efb2625677b # v2
         with:
           environment-file: napari-packaging/environments/ci_packages_environment.yml
 
@@ -150,7 +150,7 @@ jobs:
           echo "name=${name}" >> $GITHUB_OUTPUT
 
       - name: Upload packages as artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ steps.artifact-id.outputs.name }}
           path: |
@@ -192,7 +192,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.11"
       - name: Prepare matrix
@@ -261,14 +261,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           repository: napari/packaging
           path: napari-packaging
 
       - name: Checkout napari/napari
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           repository: napari/napari
@@ -276,7 +276,7 @@ jobs:
           ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: install micromamba
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@b09ef9b599704322748535812ca03efb2625677b # v2.0.5
         with:
           environment-file: napari-packaging/environments/ci_installers_environment.yml
           create-args: python=${{ matrix.python-version }}
@@ -310,7 +310,7 @@ jobs:
           python -m pip install -e . --no-deps
 
       - name: Download local build artifacts (napari)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: ${{ needs.packages.outputs.artifact-id }}
           path: ${{ env.CONDA_BLD_PATH }}/noarch
@@ -451,7 +451,7 @@ jobs:
           echo "licenses_artifact=${licenses_zip_path}" >> $GITHUB_OUTPUT
 
       - name: Upload License Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           path: ${{ env.LICENSES_ARTIFACT_PATH }}
           name: ${{ env.LICENSES_ARTIFACT_NAME }}
@@ -466,7 +466,7 @@ jobs:
           echo "lockfile_artifact=${lockfile_path}" >> $GITHUB_OUTPUT
 
       - name: Upload lockfile artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         # NOTE: These lockfiles will only provide functional installations if the
         # napari packages in the 'packages' job above has been uploaded to anaconda.org/napari
         # and this only happens in scheduled jobs @ main and tagged releases.
@@ -523,7 +523,7 @@ jobs:
           spctl --assess -vv --type install "$INSTALLER_PATH" 2>&1 | tee /dev/stderr | grep accepted
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         # CI artifact uploads only on manual and scheduled runs
         if: inputs.event_name == 'workflow_dispatch' || github.event_name == 'workflow_dispatch' || inputs.event_name == 'schedule'
         with:
@@ -534,11 +534,11 @@ jobs:
       - name: Get Release
         if: inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         id: get_release
-        uses: bruceadams/get-release@v1.3.2
+        uses: bruceadams/get-release@74c3d60f5a28f358ccf241a00c9021ea16f0569f # v1.3.2
 
       - name: Upload Release Asset (Installer)
         if: inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
           asset_path: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
@@ -547,7 +547,7 @@ jobs:
 
       - name: Upload Release Asset (Lockfile)
         if: inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
           asset_path: ${{ env.LOCKFILE_ARTIFACT_PATH }}
