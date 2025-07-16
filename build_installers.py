@@ -125,14 +125,14 @@ def _version():
             # a version string can be something like:
             # 0.4.16rc2.dev252+gf6bdd623.d20220827
             # we just want the version tag, number of commits after tag,
-            # and git hash;  so we discard the date
+            # and git hash; so we discard the date
             pre, post = version.split("+", 1)
             version = f"{pre}+{post.split('.')[0]}"
         if (
-            ".dev" in version
-            and "rc" not in version
-            and "a" not in version
-            and "b" not in version
+            ".dev" in pre
+            and "rc" not in pre
+            and "a" not in pre
+            and "b" not in pre
         ):
             # workaround for https://github.com/conda/conda/issues/12568
             version = version.replace(".dev", "dev")
