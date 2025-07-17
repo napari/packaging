@@ -134,10 +134,10 @@ def _version():
             pre, post = version.split('+', 1)
             version = f'{pre}+{post.split(".")[0]}'
         if (
-            '.dev' in version
-            and 'rc' not in version
-            and 'a' not in version
-            and 'b' not in version
+            '.dev' in pre
+            and 'rc' not in pre
+            and 'a' not in pre
+            and 'b' not in pre
         ):
             # workaround for https://github.com/conda/conda/issues/12568
             version = version.replace('.dev', 'dev')
