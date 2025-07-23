@@ -133,6 +133,8 @@ def _version():
             # and git hash;  so we discard the date
             pre, post = version.split('+', 1)
             version = f'{pre}+{post.split(".")[0]}'
+        else:
+            pre, post = version, ""
         if (
             '.dev' in pre
             and 'rc' not in pre
