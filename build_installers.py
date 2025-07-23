@@ -134,7 +134,7 @@ def _version():
             pre, post = version.split('+', 1)
             version = f'{pre}+{post.split(".")[0]}'
         else:
-            pre, post = version, ""
+            pre, post = version, ''
         if (
             '.dev' in pre
             and 'rc' not in pre
