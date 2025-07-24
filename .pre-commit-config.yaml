@@ -18,3 +18,8 @@ repos:
       # compatible replacement for black
       - id: ruff-format
         exclude: ^constructor-manager-ui/src/constructor_manager_ui/style/images.py
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.11.0
+    hooks:
+    - id: zizmor
+      args: [--min-severity=high]
