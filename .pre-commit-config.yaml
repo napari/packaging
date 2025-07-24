@@ -22,4 +22,4 @@ repos:
     rev: v1.11.0
     hooks:
     - id: zizmor
-      args: [--min-severity=high, --quiet, --no-progress]
+      args: [--min-severity=medium, --quiet, --no-progress]
