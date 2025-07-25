@@ -68,7 +68,7 @@ outputs:
         - qtpy >=1.10.0
         - scikit-image >=0.19.1
         - scipy >=1.10.1
-        - superqt >=0.7.3
+        - superqt >=0.7.4
         - tifffile >=2022.7.28
         - toolz >=0.11.0
         - tqdm >=4.56.0
@@ -77,7 +77,7 @@ outputs:
         - wrapt >=1.13.3
       run_constraints:
         - pyside2 >=5.15.1
-        - pyside6 <6.5|>=6.7
+        - pyside6 >=6.7
         - pyqt >=5.15.8,<6.0a0|>=6.5,!=6.6.1
     tests:
       - python:
@@ -91,7 +91,7 @@ outputs:
           - if: unix
             then:
               - napari --version
-              - napari --version | grep "$(echo ${PKG_VERSION} | sed s/dev/.dev/)"
+              - napari --version | grep "$(echo ${PKG_VERSION} | sed -re 's/(\.[0-9]+)\.dev/\1dev/')"
             else:
               - napari --version
           # If the following line is uncommented, also uncomment requirements.
