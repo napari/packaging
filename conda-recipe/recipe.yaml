@@ -77,7 +77,7 @@ outputs:
         - wrapt >=1.13.3
       run_constraints:
         - pyside2 >=5.15.1
-        - pyside6 >=6.7
+        - pyside6 >=6.7.1
         - pyqt >=5.15.8,<6.0a0|>=6.5,!=6.6.1
     tests:
       - python:
