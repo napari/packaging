@@ -184,14 +184,18 @@ class PackagesTable(QTableWidget):
         # Set columns number and headers
         self.setColumnCount(4)
         self.setHorizontalHeaderLabels(['Name', 'Version', 'Source', 'Build'])
-        self.verticalHeader().setVisible(False)
+        vertical_header = self.verticalHeader()
+        if vertical_header is not None:
+            vertical_header.setVisible(False)
 
         # Set horizontal headers alignment and config
-        self.horizontalHeader().setDefaultAlignment(
-            Qt.AlignLeft | Qt.AlignVCenter
-        )
-        self.horizontalHeader().setStretchLastSection(True)
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        horizontal_header = self.horizontalHeader()
+        if horizontal_header is not None:
+            horizontal_header.setDefaultAlignment(
+                Qt.Alignment.AlignLeft | Qt.Alignment.AlignVCenter
+            )
+            horizontal_header.setStretchLastSection(True)
+            horizontal_header.setSectionResizeMode(QHeaderView.Stretch)
 
         # Hide table items borders
         self.setShowGrid(False)
@@ -239,7 +243,7 @@ class PackagesTable(QTableWidget):
             self.visible_packages = toggled_option
 
     def change_detailed_info_visibility(self, state):
-        if state > Qt.Unchecked:
+        if state > Qt.CheckState.Unchecked:
             self.showColumn(2)
             self.showColumn(3)
             self.change_visible_packages(ALL_PACKAGES)
@@ -260,8 +264,8 @@ class InstallationManagerDialog(QDialog):
         self.package_name = package_name
         self.current_version = install_information['current_version']
         self.snapshot_version = install_information['snapshot_version']
-        self.updates_widget = None
-        self.packages_tablewidget = None
+        self.updates_widget: UpdateWidget | None = None
+        self.packages_tablewidget: PackagesTable | None = None
         self.setWindowTitle(f'{package_name} installation manager')
         self.setMinimumSize(QSize(500, 500))
         self.setup_layout()
@@ -407,15 +411,18 @@ class InstallationManagerDialog(QDialog):
         print(self.current_version)
 
     def show_checking_updates_message(self):
-        self.updates_widget.show_checking_updates_message()
+        if self.updates_widget is not None:
+            self.updates_widget.show_checking_updates_message()
 
     def show_up_to_date_message(self):
-        self.updates_widget.show_up_to_date_message()
+        if self.updates_widget is not None:
+            self.updates_widget.show_up_to_date_message()
 
     def show_update_available_message(self, update_available_version):
-        self.updates_widget.show_update_available_message(
-            update_available_version
-        )
+        if self.updates_widget is not None:
+            self.updates_widget.show_update_available_message(
+                update_available_version
+            )
 
     def install_version(self, update_version):
         # TODO: To be handled with the backend.
