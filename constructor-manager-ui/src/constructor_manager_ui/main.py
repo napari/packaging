@@ -192,7 +192,7 @@ class PackagesTable(QTableWidget):
         horizontal_header = self.horizontalHeader()
         if horizontal_header is not None:
             horizontal_header.setDefaultAlignment(
-                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter  # type: ignore
             )
             horizontal_header.setStretchLastSection(True)
             horizontal_header.setSectionResizeMode(QHeaderView.Stretch)
