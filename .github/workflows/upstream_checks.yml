@@ -26,6 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          persist-credentials: false
           repository: napari/napari
           fetch-depth: 0
 
@@ -44,6 +45,7 @@ jobs:
         if: env.PYPROJECT_TOML_CHANGES && github.event_name == 'schedule'
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          persist-credentials: false
           repository: napari/packaging
 
       - name: Create issue
