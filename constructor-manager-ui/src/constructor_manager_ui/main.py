@@ -192,6 +192,7 @@ class PackagesTable(QTableWidget):
         horizontal_header = self.horizontalHeader()
         if horizontal_header is not None:
             horizontal_header.setDefaultAlignment(
+                # See https://github.com/napari/packaging/pull/275#discussion_r2237559314 for the ignore
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter  # type: ignore
             )
             horizontal_header.setStretchLastSection(True)
