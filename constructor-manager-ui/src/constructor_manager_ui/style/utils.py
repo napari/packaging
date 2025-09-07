@@ -3,7 +3,7 @@
 from pathlib import Path
 from subprocess import check_call
 
-from qtpy.QtWidgets import QApplication  # type: ignore
+from qtpy.QtWidgets import QApplication
 
 # UI style constant
 CWD = Path(__file__).parent
@@ -51,7 +51,7 @@ def generate_resource_file():
 
     if current_data != new_data:
         with open(IMAGES_QRC, 'w') as fh:
-            fh.write()
+            fh.write(new_data)
 
     # Generate resources file from QRC file
     print('Generating resources file from QRC file...')
