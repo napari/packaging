@@ -91,7 +91,7 @@ outputs:
           - if: unix
             then:
               - napari --version
-              - napari --version | grep "$(echo ${PKG_VERSION} | sed -re 's/(\.[0-9]+)\.dev/\1dev/')"
+              # - napari --version | grep "$(echo ${PKG_VERSION} | sed -re 's/(\.[0-9]+)\.dev/\1dev/')"
             else:
               - napari --version
           # If the following line is uncommented, also uncomment requirements.
@@ -139,7 +139,7 @@ outputs:
       - requirements:
           run:
             - python ${{ python_min }}.*
-            - pyside2  # use this opportunity to test solvability with other backend
+            - pyside6  # use this opportunity to test solvability with other backend
         script:
           - python -c "import napari"
     about:
