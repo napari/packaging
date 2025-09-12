@@ -1,0 +1,137 @@
+{
+    "$schema": "https://schemas.conda.org/menuinst/menuinst-1-1-0.schema.json",
+    "$id": "https://schemas.conda.org/menuinst/menuinst-1-1-0.schema.json",
+    "menu_name": "napari (__PKG_VERSION__)",
+    "menu_items": [
+        {
+            "name": "napari (__PKG_VERSION__)",
+            "description": "a fast n-dimensional image viewer in Python",
+            "icon": "{{ MENU_DIR }}/napari.{{ ICON_EXT }}",
+            "precommand": "unset PYTHONHOME && unset PYTHONPATH",
+            "command": [
+                "{{ PYTHON }}",
+                "-m",
+                "napari"
+            ],
+            "activate": true,
+            "terminal": false,
+            "platforms": {
+                "win": {
+                    "precommand": "set \"PYTHONHOME=\" & set \"PYTHONPATH=\"",
+                    "desktop": true,
+                    "app_user_model_id": "napari.napari.viewer.__PKG_VERSION__",
+                    "file_extensions": [
+                        ".bmp",
+                        ".gif",
+                        ".jpeg",
+                        ".jpg",
+                        ".npy",
+                        ".npz",
+                        ".png",
+                        ".tif",
+                        ".tiff",
+                        ".zarr"
+                    ]
+                },
+                "linux": {
+                    "Categories": [
+                        "Graphics",
+                        "Science"
+                    ],
+                    "StartupWMClass": "napari",
+                    "MimeType": [
+                        "image/bmp",
+                        "image/gif",
+                        "image/jpeg",
+                        "image/png",
+                        "image/tiff",
+                        "application/x-napari-npy",
+                        "application/x-napari-npz",
+                        "application/x-napari-zarr"
+                    ],
+                    "glob_patterns": {
+                        "application/x-napari-npy": "*.npy",
+                        "application/x-napari-npz": "*.npz",
+                        "application/x-napari-zarr": "*.zarr"
+                    }
+                },
+                "osx": {
+                    "link_in_bundle": {
+                        "{{ PREFIX }}/bin/python": "{{ MENU_ITEM_LOCATION }}/Contents/Resources/python"
+                    },
+                    "command": [
+                        "{{ MENU_ITEM_LOCATION }}/Contents/Resources/python",
+                        "-m",
+                        "napari"
+                    ],
+                    "CFBundleName": "napari",
+                    "CFBundleDisplayName": "napari",
+                    "CFBundleVersion": "__PKG_VERSION__",
+                    "entitlements": [
+                        "com.apple.security.files.user-selected.read-write",
+                        "com.apple.security.files.downloads.read-write",
+                        "com.apple.security.assets.pictures.read-write",
+                        "com.apple.security.assets.music.read-write",
+                        "com.apple.security.assets.movies.read-write"
+                    ],
+                    "event_handler": "{{ MENU_ITEM_LOCATION }}/Contents/Resources/python -m napari $*",
+                    "CFBundleDocumentTypes": [
+                        {
+                            "CFBundleTypeName": "org.napari.napari",
+                            "CFBundleTypeRole": "Viewer",
+                            "LSItemContentTypes": [
+                                "com.microsoft.bmp",
+                                "com.compuserve.gif",
+                                "public.jpeg",
+                                "public.png",
+                                "public.tiff",
+                                "org.napari.napari.npy",
+                                "org.napari.napari.npz",
+                                "org.napari.napari.zarr"
+                            ],
+                            "LSHandlerRank": "Alternate"
+                        }
+                    ],
+                    "UTExportedTypeDeclarations": [
+                        {
+                            "UTTypeConformsTo": [
+                                "public.data",
+                                "public.content"
+                            ],
+                            "UTTypeIdentifier": "org.napari.napari.npy",
+                            "UTTypeTagSpecification": {
+                                "public.filename-extension": [
+                                    "npy"
+                                ]
+                            }
+                        },
+                        {
+                            "UTTypeConformsTo": [
+                                "org.napari.napari.npy",
+                                "com.pkware.zip-archive"
+                            ],
+                            "UTTypeIdentifier": "org.napari.napari.npz",
+                            "UTTypeTagSpecification": {
+                                "public.filename-extension": [
+                                    "npz"
+                                ]
+                            }
+                        },
+                        {
+                            "UTTypeConformsTo": [
+                                "public.data",
+                                "public.content"
+                            ],
+                            "UTTypeIdentifier": "org.napari.napari.zarr",
+                            "UTTypeTagSpecification": {
+                                "public.filename-extension": [
+                                    "zarr"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
