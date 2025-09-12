@@ -18,6 +18,12 @@
             "platforms": {
                 "win": {
                     "precommand": "set \"PYTHONHOME=\" & set \"PYTHONPATH=\"",
+                    "command": [
+                        "{{ PYTHON }}",
+                        "-m",
+                        "napari",
+                        "%*"
+                    ],
                     "desktop": true,
                     "app_user_model_id": "napari.napari.viewer.__PKG_VERSION__",
                     "file_extensions": [
@@ -37,6 +43,12 @@
                     "Categories": [
                         "Graphics",
                         "Science"
+                    ],
+                    "command": [
+                        "{{ PYTHON }}",
+                        "-m",
+                        "napari",
+                        "%F"
                     ],
                     "StartupWMClass": "napari",
                     "MimeType": [
