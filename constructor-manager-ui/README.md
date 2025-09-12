@@ -13,10 +13,10 @@ Install for development with PyQt5:
 pip install -e .[pyqt5]
 ```
 
-Install for development with PySide2:
+Install for development with PySide6:
 
 ```bash
-pip install -e .[pyside2]
+pip install -e .[pyside6]
 ```
 
 Install testing dependencies:

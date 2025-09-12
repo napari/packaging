@@ -217,7 +217,7 @@ def _get_condarc():
 def _get_conda_meta_state():
     data = {
         'env_vars': {
-            'QT_API': 'pyside2',
+            'QT_API': 'pyside6',
         }
     }
     with NamedTemporaryFile(delete=False, mode='w+') as f:
@@ -253,7 +253,7 @@ def _napari_env(
             f'napari={napari_version}',
             f'napari-menu={napari_version}',
             'napari-plugin-manager',
-            f'pyside2={pyside_version}',
+            f'pyside6={pyside_version}',
             *CONDA_TOOL_DEPS,
             *(extra_specs or ()),
         ],
