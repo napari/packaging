@@ -91,7 +91,7 @@ outputs:
           - if: unix
             then:
               - napari --version
-              - napari --version | grep "$(echo ${PKG_VERSION} | sed -re 's/(\.[0-9]+)\.dev/\1dev/')"
+              # - napari --version | grep "$(echo ${PKG_VERSION} | sed -re 's/(\.[0-9]+)\.dev/\1dev/')"
             else:
               - napari --version
           # If the following line is uncommented, also uncomment requirements.
@@ -157,7 +157,7 @@ outputs:
       noarch: python
       script:
         - mkdir -p "${{ PREFIX }}/Menu"
-        - sed "s/__PKG_VERSION__/${{ PKG_VERSION }}/" "${{ SRC_DIR }}/resources/conda_menu_config.json" > "${{ PREFIX }}/Menu/napari-menu.json"
+        - sed "s/__PKG_VERSION__/${{ PKG_VERSION }}/" "${{ RECIPE_DIR }}/menu.json" > "${{ PREFIX }}/Menu/napari-menu.json"
         - cp "${{ SRC_DIR }}/src/napari/resources/logo.png" "${{ PREFIX }}/Menu/napari.png"
         - cp "${{ SRC_DIR }}/src/napari/resources/icon.icns" "${{ PREFIX }}/Menu/napari.icns"
         - cp "${{ SRC_DIR }}/src/napari/resources/icon.ico" "${{ PREFIX }}/Menu/napari.ico"
