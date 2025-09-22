@@ -40,7 +40,7 @@ CONSTRUCTOR_PYTHON_VERSION="3.11" python build_installers.py --location ../napar
 # Installers will be generated under `_work/`.
 ```
 
-For any other versions, it's probably easier to [run a `workflow_dispatch` trigger on `.github/workflows/make_bundle_conda.yml`](https://github.com/napari/packaging/actions/workflows/make_bundle_conda.yml). 
+For any other versions, it's probably easier to [run a `workflow_dispatch` trigger on `.github/workflows/make_bundle_conda.yml`](https://github.com/napari/packaging/actions/workflows/make_bundle_conda.yml).
 
 ### Locally built packages
 
@@ -63,11 +63,11 @@ Now, let's edit the `recipe.yaml` file so it points to our cloned version:
 +  version: "0.6.5dev18+gc9111b7bb"
    python_min: "3.10"
    build_number: 0
- 
+
  recipe:
    name: ${{ name|lower }}
    version: ${{ version }}
- 
+
  source:
 -  # This section has been patched from the original conda-forge feedstock
 -  # so it uses the mounted volume of the cloned repo in a Docker image
