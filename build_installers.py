@@ -19,7 +19,11 @@ CONSTRUCTOR_INSTALLER_VERSION:
     This will have an effect on the default install locations in future
     releases.
 CONSTRUCTOR_TARGET_PLATFORM:
-    conda-style platform (as in `platform` in `conda info -a` output)
+    conda-style platform (as in `platform` in `conda info -a` output;
+    e.g. `linux-64` or `osx-arm64`).
+CONSTRUCTOR_PYTHON_VERSION:
+    Python version that will be shipped in the installer. Defaults to
+    the version of the interpreter running this script.
 CONSTRUCTOR_USE_LOCAL:
     whether to use the local channel (populated by `conda-build` actions)
 CONSTRUCTOR_CONDA_EXE:
@@ -88,7 +92,10 @@ if TARGET_PLATFORM:
     ARCH = arch
 else:
     ARCH = (platform.machine() or 'generic').lower().replace('amd64', 'x86_64')
-PY_VER = f'{sys.version_info.major}.{sys.version_info.minor}'
+PY_VER = os.environ.get(
+    'CONSTRUCTOR_PYTHON_VERSION',
+    f'{sys.version_info.major}.{sys.version_info.minor}',
+)
 PYSIDE_VER = os.environ.get('CONSTRUCTOR_PYSIDE_VER', '*')
 if WINDOWS:
     EXT, OS = 'exe', 'Windows'
@@ -233,7 +240,7 @@ def _base_env(python_version=PY_VER):
             'conda-forge',
         ],
         'specs': [
-            f'python={python_version}.*=*_cpython',
+            f'python={python_version}.*',
             *CONDA_TOOL_DEPS,
         ],
     }
@@ -249,7 +256,7 @@ def _napari_env(
         'name': f'napari-{napari_version}',
         # "channels": same as _base_env(), omit to inherit :)
         'specs': [
-            f'python={python_version}.*=*_cpython',
+            f'python={python_version}.*',
             f'napari={napari_version}',
             f'napari-menu={napari_version}',
             'napari-plugin-manager',
@@ -560,7 +567,6 @@ def cli(argv=None):
     )
     p.add_argument(
         '--location',
-        default=HERE,
         help='Path to napari source repository',
         type=os.path.abspath,
     )
@@ -593,7 +599,10 @@ if __name__ == '__main__':
     if args.images:
         _generate_background_images(napari_repo=args.location)
         sys.exit()
-
+    if not args.location:
+        sys.exit(
+            'Must provide --location pointing to a cloned napari/napari repository.'
+        )
     print(
         'Created',
         main(extra_specs=args.extra_specs, napari_repo=args.location),
