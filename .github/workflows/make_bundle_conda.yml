@@ -140,6 +140,7 @@ jobs:
                  recipe/recipe.yaml
           # make sure the recipe.yaml points to the local source, in case we break
           # this when updating from upstream
+          git diff
           grep -e "path: /home/conda" recipe/recipe.yaml
 
           conda-smithy rerender
