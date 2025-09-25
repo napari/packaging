@@ -254,9 +254,6 @@ def _napari_env(
             f'napari-menu={napari_version}',
             'napari-plugin-manager',
             f'pyside2={pyside_version}',
-            # Support extra file formats
-            'imagecodecs',
-            'ffmpeg',
             *CONDA_TOOL_DEPS,
             *(extra_specs or ()),
         ],
