@@ -91,7 +91,7 @@ outputs:
           - if: unix
             then:
               - napari --version
-              # - napari --version | grep "$(echo ${PKG_VERSION} | sed -re 's/(\.[0-9]+)\.dev/\1dev/')"
+              - echo $(napari --version | sed -re 's/(\.[0-9]+)\.dev/\1dev/') | grep "$(echo ${PKG_VERSION} | sed -re 's/(\.[0-9]+)\.dev/\1dev/')"
             else:
               - napari --version
           # If the following line is uncommented, also uncomment requirements.
