@@ -545,7 +545,7 @@
                                 "public.tiff",
                                 "org.napari.napari.3fr",
                                 "org.napari.napari.arw",
-                                "org.napari.napari.avi",
+                                "public.avi",
                                 "org.napari.napari.avs",
                                 "org.napari.napari.bay",
                                 "org.napari.napari.bif",
@@ -575,7 +575,7 @@
                                 "org.napari.napari.ecw",
                                 "org.napari.napari.eer",
                                 "org.napari.napari.emf",
-                                "org.napari.napari.eps",
+                                "com.adobe.encapsulated-postscript",
                                 "org.napari.napari.erf",
                                 "org.napari.napari.exr",
                                 "org.napari.napari.fff",
@@ -583,7 +583,7 @@
                                 "org.napari.napari.fits",
                                 "org.napari.napari.flc",
                                 "org.napari.napari.fli",
-                                "org.napari.napari.fpx",
+                                "com.kodak.flashpix.image",
                                 "org.napari.napari.ftc",
                                 "org.napari.napari.fts",
                                 "org.napari.napari.ftu",
@@ -601,8 +601,8 @@
                                 "org.napari.napari.hdp",
                                 "org.napari.napari.hdr",
                                 "org.napari.napari.ia",
-                                "org.napari.napari.icns",
-                                "org.napari.napari.ico",
+                                "com.apple.icns",
+                                "com.microsoft.ico",
                                 "org.napari.napari.iff",
                                 "org.napari.napari.iim",
                                 "org.napari.napari.iiq",
@@ -612,12 +612,9 @@
                                 "org.napari.napari.ipl",
                                 "org.napari.napari.j2c",
                                 "org.napari.napari.j2k",
-                                "org.napari.napari.jfif",
-                                "org.napari.napari.jif",
                                 "org.napari.napari.jng",
-                                "org.napari.napari.jp2",
+                                "public.jpeg-2000",
                                 "org.napari.napari.jpc",
-                                "org.napari.napari.jpe",
                                 "org.napari.napari.jpf",
                                 "org.napari.napari.jpx",
                                 "org.napari.napari.jxr",
@@ -639,10 +636,9 @@
                                 "org.napari.napari.mnc",
                                 "org.napari.napari.mnc2",
                                 "org.napari.napari.mos",
-                                "org.napari.napari.mov",
-                                "org.napari.napari.mp4",
-                                "org.napari.napari.mpeg",
-                                "org.napari.napari.mpg",
+                                "com.apple.quicktime-movie",
+                                "public.mpeg",
+                                "public.mpeg-4",
                                 "org.napari.napari.mpo",
                                 "org.napari.napari.mri",
                                 "org.napari.napari.mrw",
@@ -662,16 +658,14 @@
                                 "org.napari.napari.pbm",
                                 "org.napari.napari.pcd",
                                 "org.napari.napari.pcoraw",
-                                "org.napari.napari.pct",
                                 "org.napari.napari.pcx",
                                 "org.napari.napari.pef",
                                 "org.napari.napari.pfm",
                                 "org.napari.napari.pgm",
-                                "org.napari.napari.pic",
-                                "org.napari.napari.pict",
+                                "com.apple.pict",
                                 "org.napari.napari.ppm",
-                                "org.napari.napari.ps",
-                                "org.napari.napari.psd",
+                                "com.adobe.postscript",
+                                "com.adobe.photoshop-image",
                                 "org.napari.napari.ptif",
                                 "org.napari.napari.ptiff",
                                 "org.napari.napari.ptx",
@@ -702,17 +696,17 @@
                                 "org.napari.napari.targa",
                                 "org.napari.napari.tf2",
                                 "org.napari.napari.tf8",
-                                "org.napari.napari.tga",
+                                "com.truevision.tga-image",
                                 "org.napari.napari.vtk",
                                 "org.napari.napari.wap",
                                 "org.napari.napari.wbm",
                                 "org.napari.napari.wbmp",
                                 "org.napari.napari.wdp",
                                 "org.napari.napari.webm",
-                                "org.napari.napari.webp",
+                                "image/webp",
                                 "org.napari.napari.wmf",
-                                "org.napari.napari.wmv",
-                                "org.napari.napari.xbm",
+                                "com.microsoft.windows-media-wmv",
+                                "public.xbitmap-image",
                                 "org.napari.napari.xpm",
                                 "org.napari.napari.zarr",
                                 "org.napari.napari.zif"
@@ -742,18 +736,6 @@
                             "UTTypeTagSpecification": {
                                 "public.filename-extension": [
                                     "arw"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.avi",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "avi"
                                 ]
                             }
                         },
@@ -1110,18 +1092,6 @@
                                 "public.data",
                                 "public.content"
                             ],
-                            "UTTypeIdentifier": "org.napari.napari.eps",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "eps"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
                             "UTTypeIdentifier": "org.napari.napari.erf",
                             "UTTypeTagSpecification": {
                                 "public.filename-extension": [
@@ -1198,18 +1168,6 @@
                             "UTTypeTagSpecification": {
                                 "public.filename-extension": [
                                     "fli"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.fpx",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "fpx"
                                 ]
                             }
                         },
@@ -1422,30 +1380,6 @@
                                 "public.data",
                                 "public.content"
                             ],
-                            "UTTypeIdentifier": "org.napari.napari.icns",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "icns"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.ico",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "ico"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
                             "UTTypeIdentifier": "org.napari.napari.iff",
                             "UTTypeTagSpecification": {
                                 "public.filename-extension": [
@@ -1554,30 +1488,6 @@
                                 "public.data",
                                 "public.content"
                             ],
-                            "UTTypeIdentifier": "org.napari.napari.jfif",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "jfif"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.jif",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "jif"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
                             "UTTypeIdentifier": "org.napari.napari.jng",
                             "UTTypeTagSpecification": {
                                 "public.filename-extension": [
@@ -1590,34 +1500,10 @@
                                 "public.data",
                                 "public.content"
                             ],
-                            "UTTypeIdentifier": "org.napari.napari.jp2",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "jp2"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
                             "UTTypeIdentifier": "org.napari.napari.jpc",
                             "UTTypeTagSpecification": {
                                 "public.filename-extension": [
                                     "jpc"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.jpe",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "jpe"
                                 ]
                             }
                         },
@@ -1878,54 +1764,6 @@
                                 "public.data",
                                 "public.content"
                             ],
-                            "UTTypeIdentifier": "org.napari.napari.mov",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "mov"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.mp4",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "mp4"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.mpeg",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "mpeg"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.mpg",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "mpg"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
                             "UTTypeIdentifier": "org.napari.napari.mpo",
                             "UTTypeTagSpecification": {
                                 "public.filename-extension": [
@@ -2154,18 +1992,6 @@
                                 "public.data",
                                 "public.content"
                             ],
-                            "UTTypeIdentifier": "org.napari.napari.pct",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "pct"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
                             "UTTypeIdentifier": "org.napari.napari.pcx",
                             "UTTypeTagSpecification": {
                                 "public.filename-extension": [
@@ -2214,58 +2040,10 @@
                                 "public.data",
                                 "public.content"
                             ],
-                            "UTTypeIdentifier": "org.napari.napari.pic",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "pic"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.pict",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "pict"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
                             "UTTypeIdentifier": "org.napari.napari.ppm",
                             "UTTypeTagSpecification": {
                                 "public.filename-extension": [
                                     "ppm"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.ps",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "ps"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.psd",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "psd"
                                 ]
                             }
                         },
@@ -2634,18 +2412,6 @@
                                 "public.data",
                                 "public.content"
                             ],
-                            "UTTypeIdentifier": "org.napari.napari.tga",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "tga"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
                             "UTTypeIdentifier": "org.napari.napari.vtk",
                             "UTTypeTagSpecification": {
                                 "public.filename-extension": [
@@ -2734,30 +2500,6 @@
                             "UTTypeTagSpecification": {
                                 "public.filename-extension": [
                                     "wmf"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.wmv",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "wmv"
-                                ]
-                            }
-                        },
-                        {
-                            "UTTypeConformsTo": [
-                                "public.data",
-                                "public.content"
-                            ],
-                            "UTTypeIdentifier": "org.napari.napari.xbm",
-                            "UTTypeTagSpecification": {
-                                "public.filename-extension": [
-                                    "xbm"
                                 ]
                             }
                         },
