@@ -418,6 +418,13 @@ jobs:
             mv "${_codesign}" "${_codesign}.in_conda_env"
           fi
 
+      - name: Check signtool (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          test -f "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe"
+          echo "CONSTRUCTOR_SIGNTOOL_PATH=C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe" >> $GITHUB_ENV
+
       - name: Load signing certificate (Windows)
         # We only sign pushes to main, nightlies, RCs and final releases
         if: >
@@ -433,7 +440,6 @@ jobs:
 
           echo "CONSTRUCTOR_SIGNING_CERTIFICATE=${{ runner.temp }}/certificate.pfx" >> $Env:GITHUB_ENV
           echo "CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD=${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}" >> $Env:GITHUB_ENV
-          echo "CONSTRUCTOR_SIGNTOOL_PATH=C:/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x86/signtool.exe" >> $Env:GITHUB_ENV
 
       # TODO: Consider a refactor here; maybe an org action we can reuse or at least a script
       - name: Make Bundle (Linux)
