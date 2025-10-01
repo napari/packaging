@@ -223,22 +223,22 @@ jobs:
 
           elements = [
             {
-              "os": "ubuntu-latest",
+              "os": "ubuntu-2024",
               "python-version": "3.11",
               "target-platform": "linux-64",
             },
             {
-              "os": "macos-13",
+              "os": "macos-15-intel",
               "python-version": "3.11",
               "target-platform": "osx-64",
             },
             {
-              "os": "macos-14",
+              "os": "macos-15",
               "python-version": "3.11",
               "target-platform": "osx-arm64",
             },
             {
-              "os": "windows-2022",
+              "os": "windows-2025",
               "python-version": "3.11",
               "target-platform": "win-64",
             },
