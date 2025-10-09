@@ -142,6 +142,7 @@ jobs:
                  recipe/recipe.yaml
           # make sure the recipe.yaml points to the local source, in case we break
           # this when updating from upstream
+          cat recipe/recipe.yaml
           grep -e "sdist_path: /home/conda" recipe/recipe.yaml
 
           conda-smithy rerender
