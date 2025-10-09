@@ -225,7 +225,7 @@ jobs:
 
           elements = [
             {
-              "os": "ubuntu-2024",
+              "os": "ubuntu-20.24",
               "python-version": "3.11",
               "target-platform": "linux-64",
             },
