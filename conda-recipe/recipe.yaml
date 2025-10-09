@@ -3,7 +3,7 @@ context:
   version: "REPLACE_ME"
   python_min: "3.10"
   build_number: 0
-  sdist_path: "/home/conda/feedstock_root/napari-source"
+  sdist_path: /home/conda/feedstock_root/napari-source
 
 recipe:
   name: ${{ name|lower }}

@@ -138,11 +138,10 @@ jobs:
 
           sed -i -e "s|^  version: \".*\"|  version: \"${NAPARI_VERSION}\"|" \
                  -e "s|^  build_number: [0-9]+|  build_number: 0|" \
-                 -e "s|^  sdist_path: \".*\"|  sdist_path: \"${SDIST_TARGET}\"|" \
+                 -e "s|^  sdist_path: .*|  sdist_path: ${SDIST_TARGET}|" \
                  recipe/recipe.yaml
           # make sure the recipe.yaml points to the local source, in case we break
           # this when updating from upstream
-          cat recipe/recipe.yaml
           grep -e "sdist_path: /home/conda" recipe/recipe.yaml
 
           conda-smithy rerender
