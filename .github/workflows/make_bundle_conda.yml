@@ -126,10 +126,10 @@ jobs:
             exit 1
           fi
 
-          mapfile -t SDIST_FILES < <(find ../napari-source/dist -maxdepth 1 -type f -name 'napari-*.tar.gz' | sort)
+          mapfile -t SDIST_FILES < <(find "${GITHUB_WORKSPACE}/napari-source/dist" -maxdepth 1 -type f -name 'napari-*.tar.gz' | sort)
           if (( ${#SDIST_FILES[@]} == 0 )); then
-            echo "No napari sdist found under ../napari-source/dist"
-            ls -R ../napari-source || true
+            echo "No napari sdist found under ${GITHUB_WORKSPACE}/napari-source/dist"
+            ls -R "${GITHUB_WORKSPACE}/napari-source" || true
             exit 1
           fi
           SDIST_FILE="${SDIST_FILES[${#SDIST_FILES[@]}-1]}"
