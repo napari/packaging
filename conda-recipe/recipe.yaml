@@ -3,6 +3,7 @@ context:
   version: "REPLACE_ME"
   python_min: "3.10"
   build_number: 0
+  sdist_path: "/home/conda/feedstock_root/napari-source"
 
 recipe:
   name: ${{ name|lower }}
@@ -11,7 +12,7 @@ recipe:
 source:
   # This section has been patched from the original conda-forge feedstock
   # so it uses the mounted volume of the cloned repo in a Docker image
-  - path: /home/conda/feedstock_root/napari-source
+  - path: ${{ sdist_path }}
 
 build:
   number: ${{ build_number }}
