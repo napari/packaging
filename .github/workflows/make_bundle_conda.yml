@@ -96,6 +96,27 @@ jobs:
         with:
           environment-file: napari-packaging/environments/ci_packages_environment.yml
 
+      - name: Prevent issues with multiple tags
+        # the problem is that scm versioning is used `git describe`
+        # and when we have multiple tags on the same commit, it select most recent one
+        # https://git-scm.com/docs/git-describe#_search_strategy
+        # but it looks like, whe checking out a tag ref in "Checkout napari source"
+        # the checked out tag is first created and then the others are created.
+        # So it looks like setutools_scm picks the "wrong" tag.
+        # The tag that is older by our feeling, but newer because of actions/checkout strategy
+        shell: bash -el {0}
+        if: github.event.inputs.ref || github.ref_type == 'tag'
+        working-directory: napari-source
+        run: |
+          set -x
+          ref=$(git log -1 --format='%H')
+          last_tag=$(git -c 'versionsort.suffix=rc' tag -l --points-at "$ref" --sort version:refname | tail -1)
+          for tag in $(git -c 'versionsort.suffix=rc' tag -l --points-at "$ref" --sort version:refname); do
+            if [[ $tag != $last_tag ]]; then
+              git tag --delete $tag
+            fi
+          done
+
       - name: install napari
         shell: bash -el {0}
         working-directory: napari-source
@@ -108,9 +129,10 @@ jobs:
           echo "NAPARI_ARCH=$(python ../napari-packaging/build_installers.py --arch)" >> $GITHUB_ENV
 
       - name: Build sdist
+        working-directory: napari-source
         run: |
           python -m pip install build
-          python -m build --sdist napari-source
+          python -m build --sdist .
 
       - name: Patch and rerender feedstock
         shell: bash -el {0}
