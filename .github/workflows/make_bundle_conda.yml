@@ -96,20 +96,6 @@ jobs:
         with:
           environment-file: napari-packaging/environments/ci_packages_environment.yml
 
-      - name: Prevent issues with multiple tags
-        shell: bash -el {0}
-        if: github.event.inputs.ref || github.ref_type == 'tag'
-        working-directory: napari-source
-        run: |
-          set -x
-          ref=$(git log -1 --format='%H')
-          last_tag=$(git -c 'versionsort.suffix=rc' tag -l --points-at "$ref" --sort version:refname | tail -1)
-          for tag in $(git -c 'versionsort.suffix=rc' tag -l --points-at "$ref" --sort version:refname); do
-            if [[ $tag != $last_tag ]]; then
-              git tag --delete $tag
-            fi
-          done
-
       - name: install napari
         shell: bash -el {0}
         working-directory: napari-source
@@ -120,6 +106,11 @@ jobs:
           pip install -e . --no-deps
           echo "NAPARI_VERSION=$(python ../napari-packaging/build_installers.py --version)" >> $GITHUB_ENV
           echo "NAPARI_ARCH=$(python ../napari-packaging/build_installers.py --arch)" >> $GITHUB_ENV
+
+      - name: Build sdist
+        run: |
+          python -m pip install build
+          python -m build --sdist napari-source
 
       - name: Patch and rerender feedstock
         shell: bash -el {0}
@@ -135,12 +126,23 @@ jobs:
             exit 1
           fi
 
+          mapfile -t SDIST_FILES < <(find "${GITHUB_WORKSPACE}/napari-source/dist" -maxdepth 1 -type f -name 'napari-*.tar.gz' | sort)
+          if (( ${#SDIST_FILES[@]} == 0 )); then
+            echo "No napari sdist found under ${GITHUB_WORKSPACE}/napari-source/dist"
+            ls -R "${GITHUB_WORKSPACE}/napari-source" || true
+            exit 1
+          fi
+          SDIST_FILE="${SDIST_FILES[${#SDIST_FILES[@]}-1]}"
+          SDIST_BASENAME="$(basename "${SDIST_FILE}")"
+          SDIST_TARGET="/home/conda/feedstock_root/napari-source/dist/${SDIST_BASENAME}"
+
           sed -i -e "s|^  version: \".*\"|  version: \"${NAPARI_VERSION}\"|" \
                  -e "s|^  build_number: [0-9]+|  build_number: 0|" \
+                 -e "s|^  sdist_path: .*|  sdist_path: ${SDIST_TARGET}|" \
                  recipe/recipe.yaml
           # make sure the recipe.yaml points to the local source, in case we break
           # this when updating from upstream
-          grep -e "path: /home/conda" recipe/recipe.yaml
+          grep -e "sdist_path: /home/conda" recipe/recipe.yaml
 
           conda-smithy rerender
           git diff
@@ -223,7 +225,7 @@ jobs:
 
           elements = [
             {
-              "os": "ubuntu-2024",
+              "os": "ubuntu-24.04",
               "python-version": "3.11",
               "target-platform": "linux-64",
             },
