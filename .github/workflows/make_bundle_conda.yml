@@ -95,11 +95,11 @@ jobs:
         uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462 # v2
         with:
           environment-file: napari-packaging/environments/ci_packages_environment.yml
-      
+
       - name: Prevent issues with multiple tags
         # the problem is that scm versioning is used `git describe`
         # and when we have multiple tags on the same commit, it select most recent one
-        # https://git-scm.com/docs/git-describe#_search_strategy 
+        # https://git-scm.com/docs/git-describe#_search_strategy
         # but it looks like, whe checking out a tag ref in "Checkout napari source"
         # the checked out tag is first created and then the others are created.
         # So it looks like setutools_scm picks the "wrong" tag.
