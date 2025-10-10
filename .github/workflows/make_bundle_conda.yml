@@ -108,10 +108,11 @@ jobs:
           echo "NAPARI_ARCH=$(python ../napari-packaging/build_installers.py --arch)" >> $GITHUB_ENV
 
       - name: Build sdist
+        working-directory: napari-source
         run: |
           git describe --dirty --tags --long --abbrev=40 --match "*[0-9]*"
           python -m pip install build
-          python -m build --sdist napari-source
+          python -m build --sdist .
 
       - name: Patch and rerender feedstock
         shell: bash -el {0}
