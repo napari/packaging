@@ -1,9 +1,14 @@
+# This environment is used to provision a conda-forge-like context to
+# clone napari-feedstock and patch it with our in-repo recipe. We then
+# use conda-forge's scripts to actually build the packages. That's why
+# you don't see rattler-build here; it'll be installed by the conda-forge
+# scrips that come with the feedstock. See `.github/workflows/make_bundle_conda.yml`.
 name: packages
 channels:
   - conda-forge
 dependencies:
   - conda-smithy >=3.37.0
-  - python 3.10.*
+  - python 3.11.*
   - pip
   - tomlkit
   - ruamel.yaml

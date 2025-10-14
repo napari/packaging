@@ -164,6 +164,7 @@ jobs:
                  recipe/recipe.yaml
           # make sure the recipe.yaml points to the local source, in case we break
           # this when updating from upstream
+          git diff
           grep -e "sdist_path: /home/conda" recipe/recipe.yaml
 
           conda-smithy rerender
@@ -293,6 +294,7 @@ jobs:
       DISPLAY: ":99.0"
       CONDA_BLD_PATH: ${{ github.workspace }}/conda-bld
       CONDA_NUMBER_CHANNEL_NOTICES: 0
+      CONSTRUCTOR_PYTHON_VERSION: "${{ matrix.python-version }}"
 
     outputs:
       licenses-artifact: ${{ steps.licenses.outputs.licenses_artifact }}
@@ -318,7 +320,6 @@ jobs:
         uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462 # v2.0.7
         with:
           environment-file: napari-packaging/environments/ci_installers_environment.yml
-          create-args: python=${{ matrix.python-version }}
 
       - name: Conda info
         shell: bash -el {0}
