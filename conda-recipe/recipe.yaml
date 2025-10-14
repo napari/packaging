@@ -3,6 +3,8 @@ context:
   version: "REPLACE_ME"
   python_min: "3.10"
   build_number: 0
+  sdist_path: /home/conda/feedstock_root/napari-source
+  local_napari_source: /home/conda/feedstock_root/napari-source
 
 recipe:
   name: ${{ name|lower }}
@@ -11,7 +13,7 @@ recipe:
 source:
   # This section has been patched from the original conda-forge feedstock
   # so it uses the mounted volume of the cloned repo in a Docker image
-  - path: /home/conda/feedstock_root/napari-source
+  - path: ${{ sdist_path }}
 
 build:
   number: ${{ build_number }}
@@ -59,7 +61,7 @@ outputs:
         - pillow >=9.0
         - pint >=0.17
         - psutil >=5.9.0
-        - psygnal >=0.10.0
+        - psygnal >=0.14.2
         - pydantic >=2.2.0
         - pygments >=2.6.0
         - pyopengl >=3.1.5
@@ -157,10 +159,15 @@ outputs:
       noarch: python
       script:
         - mkdir -p "${{ PREFIX }}/Menu"
-        - sed "s/__PKG_VERSION__/${{ PKG_VERSION }}/" "${{ SRC_DIR }}/resources/conda_menu_config.json" > "${{ PREFIX }}/Menu/napari-menu.json"
-        - cp "${{ SRC_DIR }}/src/napari/resources/logo.png" "${{ PREFIX }}/Menu/napari.png"
-        - cp "${{ SRC_DIR }}/src/napari/resources/icon.icns" "${{ PREFIX }}/Menu/napari.icns"
-        - cp "${{ SRC_DIR }}/src/napari/resources/icon.ico" "${{ PREFIX }}/Menu/napari.ico"
+        - |
+          SRC_ROOT="${{ local_napari_source }}"
+          if [[ ! -d "${SRC_ROOT}" ]]; then
+            SRC_ROOT="${{ SRC_DIR }}"
+          fi
+          sed "s/__PKG_VERSION__/${{ PKG_VERSION }}/" "${SRC_ROOT}/resources/conda_menu_config.json" > "${{ PREFIX }}/Menu/napari-menu.json"
+          cp "${SRC_ROOT}/src/napari/resources/logo.png" "${{ PREFIX }}/Menu/napari.png"
+          cp "${SRC_ROOT}/src/napari/resources/icon.icns" "${{ PREFIX }}/Menu/napari.icns"
+          cp "${SRC_ROOT}/src/napari/resources/icon.ico" "${{ PREFIX }}/Menu/napari.ico"
     requirements:
       build:
         - if: unix

@@ -1,7 +1,6 @@
 # packaging - conda-based napari installers
 
-[![tests](https://github.com/napari/packaging/actions/workflows/tests.yml/badge.svg)](https://github.com/napari/packaging/actions/workflows/tests.yml)
-[![tests_ui](https://github.com/napari/packaging/actions/workflows/tests_ui.yml/badge.svg)](https://github.com/napari/packaging/actions/workflows/tests_ui.yml)
+[![make_bundle_conda](https://github.com/napari/napari/actions/workflows/make_bundle_conda.yml/badge.svg)](https://github.com/napari/napari/actions/workflows/make_bundle_conda.yml)
 
 **Important: This repo is used by napari core maintainers.**
 
