@@ -145,7 +145,7 @@ outputs:
       - requirements:
           run:
             - python ${{ python_min }}.*
-            - pyside2  # use this opportunity to test solvability with other backend
+            - pyside6  # use this opportunity to test solvability with other backend
         script:
           - python -c "import napari"
     about:
