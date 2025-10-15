@@ -131,7 +131,9 @@ outputs:
         - python >=${{ python_min }}
         - ${{ pin_subpackage('napari-base', exact=True) }}
         - bermuda >=0.1.5
+        - ffmpeg
         - fsspec
+        - imagecodecs
         - napari-plugin-manager >=0.1.3,<0.2.0a0
         - numba >=0.57.1
         - partsegcore-compiled-backend >=0.15.11
@@ -164,7 +166,7 @@ outputs:
           if [[ ! -d "${SRC_ROOT}" ]]; then
             SRC_ROOT="${{ SRC_DIR }}"
           fi
-          sed "s/__PKG_VERSION__/${{ PKG_VERSION }}/" "${SRC_ROOT}/resources/conda_menu_config.json" > "${{ PREFIX }}/Menu/napari-menu.json"
+          sed "s/__PKG_VERSION__/${{ PKG_VERSION }}/" "${{ RECIPE_DIR }}/menu.json"  > "${{ PREFIX }}/Menu/napari-menu.json"
           cp "${SRC_ROOT}/src/napari/resources/logo.png" "${{ PREFIX }}/Menu/napari.png"
           cp "${SRC_ROOT}/src/napari/resources/icon.icns" "${{ PREFIX }}/Menu/napari.icns"
           cp "${SRC_ROOT}/src/napari/resources/icon.ico" "${{ PREFIX }}/Menu/napari.ico"

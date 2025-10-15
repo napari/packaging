@@ -166,3 +166,6 @@ _work/
 
 # written by setuptools_scm
 **/_version.py
+
+# rattler-build
+output/
