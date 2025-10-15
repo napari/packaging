@@ -111,6 +111,7 @@ CONDA_TOOL_DEPS = (
     'conda-libmamba-solver',
     'mamba',
     'pip',
+    'uv',
 )
 
 
