@@ -31,7 +31,7 @@ outputs:
       host:
         - python ${{ python_min }}.*
         - pip
-        - setuptools >=69
+        - setuptools >=77.0.1
         - setuptools_scm >=8
       run:
         - python >=${{ python_min }}
