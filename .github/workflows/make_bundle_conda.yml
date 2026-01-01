@@ -65,7 +65,7 @@ jobs:
 
     steps:
       - name: Checkout packaging code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
           repository: napari/packaging
@@ -76,7 +76,7 @@ jobs:
           # ref: some-ref
 
       - name: Checkout napari source
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
           repository: napari/napari
@@ -85,7 +85,7 @@ jobs:
           ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: Checkout conda-forge feedstock
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
           repository: conda-forge/napari-feedstock
@@ -190,7 +190,7 @@ jobs:
           echo "name=${name}" >> $GITHUB_OUTPUT
 
       - name: Upload packages as artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: ${{ steps.artifact-id.outputs.name }}
           path: |
@@ -232,7 +232,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version: "3.11"
       - name: Prepare matrix
@@ -302,14 +302,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
           repository: napari/packaging
           path: napari-packaging
 
       - name: Checkout napari/napari
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
           repository: napari/napari
@@ -350,7 +350,7 @@ jobs:
           python -m pip install -e . --no-deps
 
       - name: Download local build artifacts (napari)
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: ${{ needs.packages.outputs.artifact-id }}
           path: ${{ env.CONDA_BLD_PATH }}/noarch
@@ -497,7 +497,7 @@ jobs:
           echo "licenses_artifact=${licenses_zip_path}" >> $GITHUB_OUTPUT
 
       - name: Upload License Artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           path: ${{ env.LICENSES_ARTIFACT_PATH }}
           name: ${{ env.LICENSES_ARTIFACT_NAME }}
@@ -512,7 +512,7 @@ jobs:
           echo "lockfile_artifact=${lockfile_path}" >> $GITHUB_OUTPUT
 
       - name: Upload lockfile artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         # NOTE: These lockfiles will only provide functional installations if the
         # napari packages in the 'packages' job above has been uploaded to anaconda.org/napari
         # and this only happens in scheduled jobs @ main and tagged releases.
@@ -569,7 +569,7 @@ jobs:
           spctl --assess -vv --type install "$INSTALLER_PATH" 2>&1 | tee /dev/stderr | grep accepted
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         # CI artifact uploads only on manual and scheduled runs
         # if: inputs.event_name == 'workflow_dispatch' || github.event_name == 'workflow_dispatch' || inputs.event_name == 'schedule'
         with:
