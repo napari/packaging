@@ -37,7 +37,7 @@ outputs:
         - python >=${{ python_min }}
 
         # dependencies matched to pyproject.toml
-        - app-model >=0.4.0,<0.5.0a
+        - app-model >=0.5.0,<0.6.0a
         - appdirs >=1.4.4
         - cachey >=0.2.1
         - certifi >=2018.1.18
