@@ -37,7 +37,7 @@ outputs:
         - python >=${{ python_min }}
 
         # dependencies matched to pyproject.toml
-        - app-model >=0.4.0,<0.5.0a
+        - app-model >=0.5.0,<0.6.0a
         - appdirs >=1.4.4
         - cachey >=0.2.1
         - certifi >=2018.1.18
@@ -56,7 +56,6 @@ outputs:
         - napari-svg >=0.1.8
         - npe2 >=0.7.9
         - numpy >=1.24.2
-        - numpydoc >=1.0.0
         - pandas >=1.3.3
         - pillow >=9.0
         - pint >=0.17
@@ -69,13 +68,13 @@ outputs:
         - pyyaml >=6.0
         - qtpy >=2.3.1
         - scikit-image >=0.19.1
-        - scipy >=1.10.1
+        - scipy >=1.14.0
         - superqt >=0.7.4
         - tifffile >=2022.7.28
         - toolz >=0.11.0
         - tqdm >=4.56.0
         - typing_extensions >=4.12
-        - vispy >=0.15.2,<0.16.0a0
+        - vispy >=0.16.1,<0.17.0a0
         - wrapt >=1.13.3
       run_constraints:
         - pyside2 >=5.15.1
@@ -135,7 +134,7 @@ outputs:
         - ffmpeg
         - fsspec
         - imagecodecs
-        - napari-plugin-manager >=0.1.3,<0.2.0a0
+        - napari-plugin-manager >=0.1.9,<0.2.0a0
         - numba >=0.57.1
         - obstore  # needed to open remote files by zarr
         - partsegcore-compiled-backend >=0.15.11
