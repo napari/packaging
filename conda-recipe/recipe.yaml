@@ -168,9 +168,9 @@ outputs:
             SRC_ROOT="${{ SRC_DIR }}"
           fi
           sed "s/__PKG_VERSION__/${{ PKG_VERSION }}/" "${SRC_ROOT}/resources/conda_menu_config.json"  > "${{ PREFIX }}/Menu/napari-menu.json"
-          cp "${SRC_ROOT}/src/napari/resources/logo.png" "${{ PREFIX }}/Menu/napari.png"
-          cp "${SRC_ROOT}/src/napari/resources/icon.icns" "${{ PREFIX }}/Menu/napari.icns"
-          cp "${SRC_ROOT}/src/napari/resources/icon.ico" "${{ PREFIX }}/Menu/napari.ico"
+          cp "${{ RECIPE_DIR }}/logo.png" "${{ PREFIX }}/Menu/napari.png"
+          cp "${{ RECIPE_DIR }}/icon.icns" "${{ PREFIX }}/Menu/napari.icns"
+          cp "${{ RECIPE_DIR }}/icon.ico" "${{ PREFIX }}/Menu/napari.ico"
     requirements:
       build:
         - if: unix

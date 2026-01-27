@@ -58,12 +58,6 @@ from subprocess import check_call, check_output
 from tempfile import NamedTemporaryFile
 from textwrap import dedent, indent
 
-try:
-    from importlib.resources import files as resources_files
-except ImportError:
-    # python < 3.9
-    from importlib_resources import files as resources_files
-
 import requests
 from ruamel.yaml import YAML
 
@@ -174,7 +168,7 @@ def _generate_background_images(
 
     from PIL import Image
 
-    logo_path = resources_files('napari') / 'resources/logo.png'
+    logo_path = Path(HERE) / 'conda-recipe' / 'logo.png'
     logo = Image.open(logo_path, 'r')
 
     global clean_these_files
@@ -356,7 +350,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
                 'welcome_image': os.path.join(resources, 'napari_164x314.png'),
                 'header_image': os.path.join(resources, 'napari_150x57.png'),
                 'icon_image': os.path.join(
-                    napari_repo, 'src', 'napari', 'resources', 'icon.ico'
+                    HERE, 'conda-recipe', 'icon.ico'
                 ),
                 'register_python': False,
                 'register_python_default': False,
