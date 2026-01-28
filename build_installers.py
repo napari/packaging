@@ -49,20 +49,15 @@ import json
 import os
 import platform
 import sys
+import tarfile
 import zipfile
 from argparse import ArgumentParser
 from functools import lru_cache, partial
 from pathlib import Path
 from shutil import which
 from subprocess import check_call, check_output
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, mkdtemp
 from textwrap import dedent, indent
-
-try:
-    from importlib.resources import files as resources_files
-except ImportError:
-    # python < 3.9
-    from importlib_resources import files as resources_files
 
 import requests
 from ruamel.yaml import YAML
@@ -79,6 +74,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 WINDOWS = os.name == 'nt'
 MACOS = sys.platform == 'darwin'
 LINUX = sys.platform.startswith('linux')
+ICONS_URL = "https://github.com/napari/resources/releases/latest/download/icons.tar.gz"
 CONDA_EXE = os.environ.get('CONSTRUCTOR_CONDA_EXE')
 TARGET_PLATFORM = os.environ.get('CONSTRUCTOR_TARGET_PLATFORM')
 if TARGET_PLATFORM:
@@ -121,6 +117,19 @@ def _use_local():
     (dev snapshots). This env var is set in the GHA workflow.
     """
     return os.environ.get('CONSTRUCTOR_USE_LOCAL')
+
+
+@lru_cache
+def _get_icons_dir():
+    """Download icons from napari/resources release and return the path."""
+    icons_dir = Path(mkdtemp(prefix="napari-icons-"))
+
+    response = requests.get(ICONS_URL, stream=True)
+    response.raise_for_status()
+    with tarfile.open(fileobj=response.raw, mode='r|gz') as tar:
+        tar.extractall(icons_dir)
+
+    return icons_dir / "artifacts" / "icons"
 
 
 # ignore: B008
@@ -174,7 +183,7 @@ def _generate_background_images(
 
     from PIL import Image
 
-    logo_path = resources_files('napari') / 'resources/logo.png'
+    logo_path = _get_icons_dir() / 'gradient-plain-light.png'
     logo = Image.open(logo_path, 'r')
 
     global clean_these_files
@@ -355,9 +364,7 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             {
                 'welcome_image': os.path.join(resources, 'napari_164x314.png'),
                 'header_image': os.path.join(resources, 'napari_150x57.png'),
-                'icon_image': os.path.join(
-                    napari_repo, 'src', 'napari', 'resources', 'icon.ico'
-                ),
+                'icon_image': str(_get_icons_dir() / 'gradient-plain-light.ico'),
                 'register_python': False,
                 'register_python_default': False,
                 'default_prefix': os.path.join(
