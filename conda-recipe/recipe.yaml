@@ -168,16 +168,23 @@ outputs:
             SRC_ROOT="${{ SRC_DIR }}"
           fi
           sed "s/__PKG_VERSION__/${{ PKG_VERSION }}/" "${SRC_ROOT}/resources/conda_menu_config.json"  > "${{ PREFIX }}/Menu/napari-menu.json"
-          cp "${SRC_ROOT}/src/napari/resources/logo.png" "${{ PREFIX }}/Menu/napari.png"
-          cp "${SRC_ROOT}/src/napari/resources/icon.icns" "${{ PREFIX }}/Menu/napari.icns"
-          cp "${SRC_ROOT}/src/napari/resources/icon.ico" "${{ PREFIX }}/Menu/napari.ico"
+  
+          # Download and extract icons from latest napari/resources release
+          mkdir -p /tmp/napari-icons
+          curl -sL https://github.com/napari/resources/releases/latest/download/icons.tar.gz | tar xz -C /tmp/napari-icons
+          cp /tmp/napari-icons/artifacts/icons/gradient-plain-light.png "${{ PREFIX }}/Menu/napari.png"
+          cp /tmp/napari-icons/artifacts/icons/gradient-padded-light.icns "${{ PREFIX }}/Menu/napari.icns"
+          cp /tmp/napari-icons/artifacts/icons/gradient-plain-light.ico "${{ PREFIX }}/Menu/napari.ico"
     requirements:
       build:
         - if: unix
           then:
             - sed
+            - tar
           else:
             - m2-sed
+            - m2-tar
+        - curl
       host:
         - python ${{ python_min }}.*
       run:
