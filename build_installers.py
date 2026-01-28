@@ -74,7 +74,9 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 WINDOWS = os.name == 'nt'
 MACOS = sys.platform == 'darwin'
 LINUX = sys.platform.startswith('linux')
-ICONS_URL = "https://github.com/napari/resources/releases/latest/download/icons.tar.gz"
+ICONS_URL = (
+    'https://github.com/napari/resources/releases/latest/download/icons.tar.gz'
+)
 CONDA_EXE = os.environ.get('CONSTRUCTOR_CONDA_EXE')
 TARGET_PLATFORM = os.environ.get('CONSTRUCTOR_TARGET_PLATFORM')
 if TARGET_PLATFORM:
@@ -122,14 +124,14 @@ def _use_local():
 @lru_cache
 def _get_icons_dir():
     """Download icons from napari/resources release and return the path."""
-    icons_dir = Path(mkdtemp(prefix="napari-icons-"))
+    icons_dir = Path(mkdtemp(prefix='napari-icons-'))
 
     response = requests.get(ICONS_URL, stream=True)
     response.raise_for_status()
     with tarfile.open(fileobj=response.raw, mode='r|gz') as tar:
         tar.extractall(icons_dir)
 
-    return icons_dir / "artifacts" / "icons"
+    return icons_dir / 'artifacts' / 'icons'
 
 
 # ignore: B008
@@ -364,7 +366,9 @@ def _definitions(version=_version(), extra_specs=None, napari_repo=HERE):
             {
                 'welcome_image': os.path.join(resources, 'napari_164x314.png'),
                 'header_image': os.path.join(resources, 'napari_150x57.png'),
-                'icon_image': str(_get_icons_dir() / 'gradient-plain-light.ico'),
+                'icon_image': str(
+                    _get_icons_dir() / 'gradient-plain-light.ico'
+                ),
                 'register_python': False,
                 'register_python_default': False,
                 'default_prefix': os.path.join(
