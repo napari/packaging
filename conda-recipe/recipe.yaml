@@ -52,6 +52,7 @@ outputs:
         - lazy_loader >=0.3
         - magicgui >=0.7.0
         - napari-console >=0.1.4
+        - napari-metadata >=0.1.1
         - napari-plugin-engine >=0.1.9
         - napari-svg >=0.1.8
         - npe2 >=0.7.9
