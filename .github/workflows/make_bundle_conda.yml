@@ -190,7 +190,7 @@ jobs:
           echo "name=${name}" >> $GITHUB_OUTPUT
 
       - name: Upload packages as artifacts
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ steps.artifact-id.outputs.name }}
           path: |
@@ -350,7 +350,7 @@ jobs:
           python -m pip install -e . --no-deps
 
       - name: Download local build artifacts (napari)
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: ${{ needs.packages.outputs.artifact-id }}
           path: ${{ env.CONDA_BLD_PATH }}/noarch
@@ -497,7 +497,7 @@ jobs:
           echo "licenses_artifact=${licenses_zip_path}" >> $GITHUB_OUTPUT
 
       - name: Upload License Artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           path: ${{ env.LICENSES_ARTIFACT_PATH }}
           name: ${{ env.LICENSES_ARTIFACT_NAME }}
@@ -512,7 +512,7 @@ jobs:
           echo "lockfile_artifact=${lockfile_path}" >> $GITHUB_OUTPUT
 
       - name: Upload lockfile artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         # NOTE: These lockfiles will only provide functional installations if the
         # napari packages in the 'packages' job above has been uploaded to anaconda.org/napari
         # and this only happens in scheduled jobs @ main and tagged releases.
@@ -569,7 +569,7 @@ jobs:
           spctl --assess -vv --type install "$INSTALLER_PATH" 2>&1 | tee /dev/stderr | grep accepted
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         # CI artifact uploads only on manual and scheduled runs
         # if: inputs.event_name == 'workflow_dispatch' || github.event_name == 'workflow_dispatch' || inputs.event_name == 'schedule'
         with:
