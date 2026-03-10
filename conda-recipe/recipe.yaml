@@ -146,7 +146,7 @@ outputs:
     tests:  # just to check that the environment can indeed solve
       - requirements:
           run:
-            - python >=${{ python_min }}.*
+            - python >=${{ python_min }}
             - pyside6  # use this opportunity to test solvability with other backend
         script:
           - python -c "import napari"
