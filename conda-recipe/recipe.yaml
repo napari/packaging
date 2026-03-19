@@ -52,7 +52,6 @@ outputs:
         - lazy_loader >=0.3
         - magicgui >=0.7.0
         - napari-console >=0.1.4
-        - napari-metadata >=0.1.1
         - napari-plugin-engine >=0.2.1
         - napari-svg >=0.1.8
         - npe2 >=0.8.1
@@ -137,7 +136,8 @@ outputs:
         - ffmpeg
         - fsspec
         - imagecodecs
-        - napari-plugin-manager >=0.1.10,<0.2.0a0
+        - napari-metadata >=0.1.1
+        - napari-plugin-manager >=0.1.11,<0.2.0a0
         - numba >=0.57.1
         - obstore  # needed to open remote files by zarr
         - partsegcore-compiled-backend >=0.15.11
