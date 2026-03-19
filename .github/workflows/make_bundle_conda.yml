@@ -392,10 +392,12 @@ jobs:
         shell: bash
         run: |
           if [ -n '${{ secrets.APPLE_APPLICATION_CERTIFICATE_BASE64 }}' ] && \
+             [ -n '${{ secrets.APPLE_APPLICATION_CERTIFICATE_PASSWORD }}' ] && \
              [ -n '${{ secrets.APPLE_INSTALLER_CERTIFICATE_BASE64 }}' ]   && \
              [ -n '${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}' ] && \
-             [ -n '${{ secrets.APPLE_NOTARIZATION_USERNAME }}' ] && \
-             [ -n '${{ secrets.APPLE_NOTARIZATION_PASSWORD }}' ] && \
+             [ -n '${{ secrets.APPLE_NOTARIZATION_ISSUER_ID }}' ] && \
+             [ -n '${{ secrets.APPLE_NOTARIZATION_KEY_ID }}' ] && \
+             [ -n '${{ secrets.APPLE_NOTARIZATION_AUTHKEY_BASE64 }}' ] && \
              [ -n '${{ secrets.TEMP_KEYCHAIN_PASSWORD }}' ]; then
               echo "SIGNING_SECRETS_AVAILABLE=1" >> $GITHUB_ENV
           fi
@@ -426,7 +428,7 @@ jobs:
 
           # import certificate to keychain
           security import $INSTALLER_CERTIFICATE_PATH -P ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }} -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security import $APPLICATION_CERTIFICATE_PATH -P ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }} -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security import $APPLICATION_CERTIFICATE_PATH -P ${{ secrets.APPLE_APPLICATION_CERTIFICATE_PASSWORD }} -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
           # export identity name
@@ -529,11 +531,12 @@ jobs:
         env:
           INSTALLER_PATH: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           # See https://keith.github.io/xcode-man-pages/notarytool.1.html for auth options
-          APPLE_NOTARIZATION_USERNAME: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
-          # This needs to be an application-specific password
-          APPLE_NOTARIZATION_PASSWORD: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
-          # 10 alphanumeric characters available in the AppleID UI
-          APPLE_NOTARIZATION_TEAM_ID: ${{ secrets.APPLE_NOTARIZATION_TEAM_ID }}
+          # These values can be obtained via https://appstoreconnect.apple.com, under
+          # Users and Access > Integrations > App Store Connect API.
+          APPLE_NOTARIZATION_ISSUER_ID: ${{ secrets.MACOS_NOTARIZATION_ISSUER_ID }}
+          APPLE_NOTARIZATION_KEY_ID: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
+          # base64-encoded contents of the generated .p8 file
+          APPLE_NOTARIZATION_AUTHKEY_BASE64: ${{ secrets.MACOS_NOTARIZATION_AUTHKEY_BASE64 }}
         run: |
           set -euxo pipefail
 
@@ -544,9 +547,9 @@ jobs:
           json_output_file="$RUNNER_TEMP/$(basename "$INSTALLER_PATH").notarization.json"
           set +e
           xcrun notarytool submit "$INSTALLER_PATH" \
-            --apple-id "$APPLE_NOTARIZATION_USERNAME" \
-            --password "$APPLE_NOTARIZATION_PASSWORD" \
-            --team-id "$APPLE_NOTARIZATION_TEAM_ID" \
+            --key "$APPLE_NOTARIZATION_AUTHKEY_PATH" \
+            --key-id "$APPLE_NOTARIZATION_KEY_ID" \
+            --issuer "$APPLE_NOTARIZATION_ISSUER_ID" \
             --output-format json \
             --wait \
             --timeout 30m \
@@ -556,9 +559,9 @@ jobs:
           if [[ $notary_exit_code != 0 ]]; then
             submission_id=$(jq -r '.id' "$json_output_file")
             xcrun notarytool log "$submission_id" \
-              --apple-id "$APPLE_NOTARIZATION_USERNAME" \
-              --password "$APPLE_NOTARIZATION_PASSWORD" \
-              --team-id "$APPLE_NOTARIZATION_TEAM_ID"
+              --key "$APPLE_NOTARIZATION_AUTHKEY_PATH" \
+              --key-id "$APPLE_NOTARIZATION_KEY_ID" \
+              --issuer "$APPLE_NOTARIZATION_ISSUER_ID"
             exit $notary_exit_code
           fi
 
