@@ -30,10 +30,12 @@ on:
         description: "Installer certificate issued by Apple, base64-encoded. Used to sign the PKG."
       APPLE_INSTALLER_CERTIFICATE_PASSWORD:
         description: "Password that protects the Installer and Application certificates (same for both)."
-      APPLE_NOTARIZATION_USERNAME:
-        description: "Apple.com email address used to submit the notarization request to Apple servers"
-      APPLE_NOTARIZATION_PASSWORD:
-        description: "Password for the apple.com email address used in notarization requests."
+      APPLE_NOTARIZATION_ISSUER_ID:
+        description: "Issuer ID for the App Store Connect API key used to submit notarization requests."
+      APPLE_NOTARIZATION_KEY_ID:
+        description: "Key ID for the App Store Connect API key used to submit notarization requests."
+      APPLE_NOTARIZATION_AUTHKEY_BASE64:
+        description: "App Store Connect API key (.p8 file), base64-encoded. Used to authenticate notarization requests."
       TEMP_KEYCHAIN_PASSWORD:
         description: "A password to temporarily create a keychain that stores the certificates (any value can do as long as it is a secret)"
   # Allows you to run this workflow manually from the Actions tab
@@ -533,12 +535,16 @@ jobs:
           # See https://keith.github.io/xcode-man-pages/notarytool.1.html for auth options
           # These values can be obtained via https://appstoreconnect.apple.com, under
           # Users and Access > Integrations > App Store Connect API.
-          APPLE_NOTARIZATION_ISSUER_ID: ${{ secrets.MACOS_NOTARIZATION_ISSUER_ID }}
-          APPLE_NOTARIZATION_KEY_ID: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
+          APPLE_NOTARIZATION_ISSUER_ID: ${{ secrets.APPLE_NOTARIZATION_ISSUER_ID }}
+          APPLE_NOTARIZATION_KEY_ID: ${{ secrets.APPLE_NOTARIZATION_KEY_ID }}
           # base64-encoded contents of the generated .p8 file
-          APPLE_NOTARIZATION_AUTHKEY_BASE64: ${{ secrets.MACOS_NOTARIZATION_AUTHKEY_BASE64 }}
+          APPLE_NOTARIZATION_AUTHKEY_BASE64: ${{ secrets.APPLE_NOTARIZATION_AUTHKEY_BASE64 }}
         run: |
           set -euxo pipefail
+
+          # Decode the .p8 authkey from base64 to a temp file
+          APPLE_NOTARIZATION_AUTHKEY_PATH="$RUNNER_TEMP/notarization_authkey.p8"
+          echo -n "$APPLE_NOTARIZATION_AUTHKEY_BASE64" | /usr/bin/base64 --decode > "$APPLE_NOTARIZATION_AUTHKEY_PATH"
 
           # Check signatures. If this fails, there's no point.
           pkgutil --check-signature "$INSTALLER_PATH"
