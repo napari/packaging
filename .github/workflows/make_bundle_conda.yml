@@ -28,8 +28,10 @@ on:
         description: "Application certificate issued by Apple, base64-encoded. Used to sign executables inside the PKG, and required for notarization."
       APPLE_INSTALLER_CERTIFICATE_BASE64:
         description: "Installer certificate issued by Apple, base64-encoded. Used to sign the PKG."
+      APPLE_APPLICATION_CERTIFICATE_PASSWORD:
+        description: "Password that protects the Application certificate."
       APPLE_INSTALLER_CERTIFICATE_PASSWORD:
-        description: "Password that protects the Installer and Application certificates (same for both)."
+        description: "Password that protects the Installer certificate."
       APPLE_NOTARIZATION_ISSUER_ID:
         description: "Issuer ID for the App Store Connect API key used to submit notarization requests."
       APPLE_NOTARIZATION_KEY_ID:
