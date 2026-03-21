@@ -28,12 +28,16 @@ on:
         description: "Application certificate issued by Apple, base64-encoded. Used to sign executables inside the PKG, and required for notarization."
       APPLE_INSTALLER_CERTIFICATE_BASE64:
         description: "Installer certificate issued by Apple, base64-encoded. Used to sign the PKG."
+      APPLE_APPLICATION_CERTIFICATE_PASSWORD:
+        description: "Password that protects the Application certificate."
       APPLE_INSTALLER_CERTIFICATE_PASSWORD:
-        description: "Password that protects the Installer and Application certificates (same for both)."
-      APPLE_NOTARIZATION_USERNAME:
-        description: "Apple.com email address used to submit the notarization request to Apple servers"
-      APPLE_NOTARIZATION_PASSWORD:
-        description: "Password for the apple.com email address used in notarization requests."
+        description: "Password that protects the Installer certificate."
+      APPLE_NOTARIZATION_ISSUER_ID:
+        description: "Issuer ID for the App Store Connect API key used to submit notarization requests."
+      APPLE_NOTARIZATION_KEY_ID:
+        description: "Key ID for the App Store Connect API key used to submit notarization requests."
+      APPLE_NOTARIZATION_AUTHKEY_BASE64:
+        description: "App Store Connect API key (.p8 file), base64-encoded. Used to authenticate notarization requests."
       TEMP_KEYCHAIN_PASSWORD:
         description: "A password to temporarily create a keychain that stores the certificates (any value can do as long as it is a secret)"
   # Allows you to run this workflow manually from the Actions tab
@@ -410,7 +414,7 @@ jobs:
         if: >
           runner.os == 'macOS'
           && env.SIGNING_SECRETS_AVAILABLE
-          && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+          && (inputs.event_name == 'schedule' || inputs.event_name == 'push' || (github.repository == 'napari/packaging' && github.event_name == 'pull_request'))
         run: |
           # create variables
           INSTALLER_CERTIFICATE_PATH="$RUNNER_TEMP/installer_developer_cert.p12"
@@ -457,7 +461,7 @@ jobs:
         if: >
           runner.os == 'Windows'
           && env.SIGNING_SECRETS_AVAILABLE
-          && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+          && (inputs.event_name == 'schedule' || inputs.event_name == 'push' || (github.repository == 'napari/packaging' && github.event_name == 'pull_request'))
         # We are signing with Apple's certificate to provide _something_
         # This is not trusted by Windows so the warnings are still there, but curious users
         # will be able to check it's actually us if necessary
@@ -466,7 +470,7 @@ jobs:
           certutil -decode "${{ runner.temp }}/certificate.b64.txt" "${{ runner.temp }}/certificate.pfx"
 
           echo "CONSTRUCTOR_SIGNING_CERTIFICATE=${{ runner.temp }}/certificate.pfx" >> $Env:GITHUB_ENV
-          echo "CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD=${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}" >> $Env:GITHUB_ENV
+          echo "CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD=${{ secrets.APPLE_APPLICATION_CERTIFICATE_PASSWORD }}" >> $Env:GITHUB_ENV
 
       # TODO: Consider a refactor here; maybe an org action we can reuse or at least a script
       - name: Make Bundle (Linux)
@@ -527,18 +531,22 @@ jobs:
         if: >
           runner.os == 'macOS'
           && env.SIGNING_SECRETS_AVAILABLE
-          && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+          && (inputs.event_name == 'schedule' || inputs.event_name == 'push' || (github.repository == 'napari/packaging' && github.event_name == 'pull_request'))
         env:
           INSTALLER_PATH: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           # See https://keith.github.io/xcode-man-pages/notarytool.1.html for auth options
           # These values can be obtained via https://appstoreconnect.apple.com, under
           # Users and Access > Integrations > App Store Connect API.
-          APPLE_NOTARIZATION_ISSUER_ID: ${{ secrets.MACOS_NOTARIZATION_ISSUER_ID }}
-          APPLE_NOTARIZATION_KEY_ID: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
+          APPLE_NOTARIZATION_ISSUER_ID: ${{ secrets.APPLE_NOTARIZATION_ISSUER_ID }}
+          APPLE_NOTARIZATION_KEY_ID: ${{ secrets.APPLE_NOTARIZATION_KEY_ID }}
           # base64-encoded contents of the generated .p8 file
-          APPLE_NOTARIZATION_AUTHKEY_BASE64: ${{ secrets.MACOS_NOTARIZATION_AUTHKEY_BASE64 }}
+          APPLE_NOTARIZATION_AUTHKEY_BASE64: ${{ secrets.APPLE_NOTARIZATION_AUTHKEY_BASE64 }}
         run: |
           set -euxo pipefail
+
+          # Decode the .p8 authkey from base64 to a temp file
+          APPLE_NOTARIZATION_AUTHKEY_PATH="$RUNNER_TEMP/notarization_authkey.p8"
+          echo -n "$APPLE_NOTARIZATION_AUTHKEY_BASE64" | /usr/bin/base64 --decode > "$APPLE_NOTARIZATION_AUTHKEY_PATH"
 
           # Check signatures. If this fails, there's no point.
           pkgutil --check-signature "$INSTALLER_PATH"
