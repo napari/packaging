@@ -468,7 +468,7 @@ jobs:
           certutil -decode "${{ runner.temp }}/certificate.b64.txt" "${{ runner.temp }}/certificate.pfx"
 
           echo "CONSTRUCTOR_SIGNING_CERTIFICATE=${{ runner.temp }}/certificate.pfx" >> $Env:GITHUB_ENV
-          echo "CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD=${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}" >> $Env:GITHUB_ENV
+          echo "CONSTRUCTOR_PFX_CERTIFICATE_PASSWORD=${{ secrets.APPLE_APPLICATION_CERTIFICATE_PASSWORD }}" >> $Env:GITHUB_ENV
 
       # TODO: Consider a refactor here; maybe an org action we can reuse or at least a script
       - name: Make Bundle (Linux)
