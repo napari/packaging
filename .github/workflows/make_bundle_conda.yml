@@ -412,7 +412,7 @@ jobs:
         if: >
           runner.os == 'macOS'
           && env.SIGNING_SECRETS_AVAILABLE
-          && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+          && (inputs.event_name == 'schedule' || inputs.event_name == 'push' || (github.repository == 'napari/packaging' && github.event_name == 'pull_request'))
         run: |
           # create variables
           INSTALLER_CERTIFICATE_PATH="$RUNNER_TEMP/installer_developer_cert.p12"
@@ -459,7 +459,7 @@ jobs:
         if: >
           runner.os == 'Windows'
           && env.SIGNING_SECRETS_AVAILABLE
-          && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+          && (inputs.event_name == 'schedule' || inputs.event_name == 'push' || (github.repository == 'napari/packaging' && github.event_name == 'pull_request'))
         # We are signing with Apple's certificate to provide _something_
         # This is not trusted by Windows so the warnings are still there, but curious users
         # will be able to check it's actually us if necessary
