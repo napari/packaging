@@ -529,7 +529,7 @@ jobs:
         if: >
           runner.os == 'macOS'
           && env.SIGNING_SECRETS_AVAILABLE
-          && (inputs.event_name == 'schedule' || inputs.event_name == 'push')
+          && (inputs.event_name == 'schedule' || inputs.event_name == 'push' || (github.repository == 'napari/packaging' && github.event_name == 'pull_request'))
         env:
           INSTALLER_PATH: ${{ github.workspace }}/napari-packaging/_work/napari-${{ env.version }}-${{ runner.os }}-${{ env.arch-suffix }}.${{ env.extension }}
           # See https://keith.github.io/xcode-man-pages/notarytool.1.html for auth options
