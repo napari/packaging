@@ -96,7 +96,7 @@ jobs:
           path: napari-feedstock
 
       - name: install micromamba
-        uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462 # v2
+        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476 # v3.0.0
         with:
           environment-file: napari-packaging/environments/ci_packages_environment.yml
 
@@ -321,7 +321,7 @@ jobs:
           ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: install micromamba
-        uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462 # v2.0.7
+        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476 # v3.0.0
         with:
           environment-file: napari-packaging/environments/ci_installers_environment.yml
 
@@ -354,7 +354,7 @@ jobs:
           python -m pip install -e . --no-deps
 
       - name: Download local build artifacts (napari)
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ needs.packages.outputs.artifact-id }}
           path: ${{ env.CONDA_BLD_PATH }}/noarch
