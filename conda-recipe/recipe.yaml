@@ -19,8 +19,8 @@ build:
   number: ${{ build_number }}
 
 # The bundled installer environment is built from the `napari` and
-# `napari-menu` outputs below. Tests in this recipe only validate package
-# solvability and entry points; they are not extra bundle contents.
+# `napari-menu` outputs below. The `napari-base` is the core required dependencies of napari
+# and is used as a dependency of the `napari` recipe.
 outputs:
   - package:
       name: napari-base
