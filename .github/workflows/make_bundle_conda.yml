@@ -581,8 +581,7 @@ jobs:
 
       - name: Azure login (Windows)
         uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
-        # if: runner.os == 'Windows' && inputs.event_name == 'push'
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         with:
           creds: >-
             {
@@ -598,8 +597,7 @@ jobs:
       # sign on regular PRs CI or upon merges to main. Only releases!
       - name: Sign files with Artifact Signing (Windows)
         uses: azure/artifact-signing-action@b443cf8ea4124818d2ea9f043cba29fc3ec47b16 # v1.2.0
-        # if: runner.os == 'Windows' && inputs.event_name == 'push'
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         with:
           endpoint: ${{ secrets.WINDOWS_SIGNING_ENDPOINT }}
           signing-account-name: ${{ secrets.WINDOWS_SIGNING_ACCOUNT_NAME }}
@@ -611,8 +609,7 @@ jobs:
           timestamp-digest: SHA256
 
       - name: Verify signatures (Windows)
-        # if: runner.os == 'Windows' && inputs.event_name == 'push'
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
           $exitCode = 0
           foreach ($executable in (Get-ChildItem "${{ github.workspace }}/napari-packaging/_work/*.exe")) {
@@ -629,8 +626,7 @@ jobs:
           exit $exitCode
 
       - name: Generate SHA256 files (Windows)
-        # if: runner.os == 'Windows' && inputs.event_name == 'push'
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
           foreach ($executable in (Get-ChildItem "${{ github.workspace }}/napari-packaging/_work/*.exe")) {
             $hashObject = Get-FileHash $executable.FullName
