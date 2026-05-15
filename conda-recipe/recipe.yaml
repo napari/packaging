@@ -18,6 +18,9 @@ source:
 build:
   number: ${{ build_number }}
 
+# The bundled installer environment is built from the `napari` and
+# `napari-menu` outputs below. The `napari-base` is the core required dependencies of napari
+# and is used as a dependency of the `napari` recipe.
 outputs:
   - package:
       name: napari-base
@@ -38,15 +41,9 @@ outputs:
 
         # dependencies matched to pyproject.toml
         - app-model >=0.5.0,<0.6.0a
-        - appdirs >=1.4.4
         - cachey >=0.2.1
         - certifi >=2018.1.18
-        # Do not depend on base "dask" package since it pulls
-        # in the distributed dependency
-        # conda-forge doesn't have the dask-array subpackage
-        # so depend on cytoolz and numpy manually
-        - cytoolz >=0.11.0
-        - dask-core >=2021.10.0
+        - dask >=2021.10.0
         - imageio >=2.20,!=2.22.1
         - jsonschema >=3.2.0
         - lazy_loader >=0.3
@@ -59,6 +56,7 @@ outputs:
         - pandas >=1.3.3
         - pillow >=10.0
         - pint >=0.17
+        - platformdirs >=4.3.0
         - psutil >=5.9.0
         - psygnal >=0.14.2
         - pydantic >=2.8.0
@@ -131,17 +129,21 @@ outputs:
       run:
         - python >=${{ python_min }}
         - ${{ pin_subpackage('napari-base', exact=True) }}
+
+        # optional runtime deps matched to pyproject.toml
         - aiohttp  # needed to open remote files by zarr
         - bermuda >=0.1.5
+        - napari-metadata >=0.1.0
+        - napari-plugin-manager >=0.1.10,<0.2.0a0
+        - numba >=0.57.1
+        - partsegcore-compiled-backend >=0.15.11
+        - zarr >=2.12.0
+
+        # bundle-only convenience deps beyond pyproject optional extras
         - ffmpeg
         - fsspec
         - imagecodecs
-        - napari-metadata >=0.1.1
-        - napari-plugin-manager >=0.1.11,<0.2.0a0
-        - numba >=0.57.1
-        - partsegcore-compiled-backend >=0.15.11
         - pooch >=1.3.0
-        - zarr >=2.12.0
     tests:  # just to check that the environment can indeed solve
       - requirements:
           run:
