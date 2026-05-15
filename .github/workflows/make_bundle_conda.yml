@@ -96,7 +96,7 @@ jobs:
           path: napari-feedstock
 
       - name: install micromamba
-        uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462 # v2
+        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476 # v3.0.0
         with:
           environment-file: napari-packaging/environments/ci_packages_environment.yml
 
@@ -194,7 +194,7 @@ jobs:
           echo "name=${name}" >> $GITHUB_OUTPUT
 
       - name: Upload packages as artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.artifact-id.outputs.name }}
           path: |
@@ -321,7 +321,7 @@ jobs:
           ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: install micromamba
-        uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462 # v2.0.7
+        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476 # v3.0.0
         with:
           environment-file: napari-packaging/environments/ci_installers_environment.yml
 
@@ -354,7 +354,7 @@ jobs:
           python -m pip install -e . --no-deps
 
       - name: Download local build artifacts (napari)
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ needs.packages.outputs.artifact-id }}
           path: ${{ env.CONDA_BLD_PATH }}/noarch
@@ -503,7 +503,7 @@ jobs:
           echo "licenses_artifact=${licenses_zip_path}" >> $GITHUB_OUTPUT
 
       - name: Upload License Artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           path: ${{ env.LICENSES_ARTIFACT_PATH }}
           name: ${{ env.LICENSES_ARTIFACT_NAME }}
@@ -518,7 +518,7 @@ jobs:
           echo "lockfile_artifact=${lockfile_path}" >> $GITHUB_OUTPUT
 
       - name: Upload lockfile artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         # NOTE: These lockfiles will only provide functional installations if the
         # napari packages in the 'packages' job above has been uploaded to anaconda.org/napari
         # and this only happens in scheduled jobs @ main and tagged releases.
@@ -596,7 +596,7 @@ jobs:
       # other NumFOCUS projects, so we only sign final releases. We don't want to
       # sign on regular PRs CI or upon merges to main. Only releases!
       - name: Sign files with Artifact Signing (Windows)
-        uses: azure/artifact-signing-action@b443cf8ea4124818d2ea9f043cba29fc3ec47b16 # v1.2.0
+        uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
         if: runner.os == 'Windows' && inputs.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         with:
           endpoint: ${{ secrets.WINDOWS_SIGNING_ENDPOINT }}
@@ -635,7 +635,7 @@ jobs:
           }
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         # CI artifact uploads only on manual and scheduled runs
         # if: inputs.event_name == 'workflow_dispatch' || github.event_name == 'workflow_dispatch' || inputs.event_name == 'schedule'
         with:
