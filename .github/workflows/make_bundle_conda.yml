@@ -56,6 +56,15 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
+# The Python version chosen below will determine which
+# Python version the installers will bundle. The general
+# principle is to follow the SPEC-0 recommendation:
+# https://scientific-python.org/specs/spec-0000/
+# a specific Python could be defined for a platform in the `prepare_matrix` job
+# but should only be used in exceptional cases
+env:
+  INSTALLER_PYTHON_VERSION: "3.13"
+
 jobs:
   packages:
     name: Create packages
@@ -238,14 +247,10 @@ jobs:
     steps:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: "3.11"
+          python-version: ${{ env.INSTALLER_PYTHON_VERSION }}
       - name: Prepare matrix
         id: set-matrix
         shell: python
-        # The Python versions chosen below will determine which
-        # Python versions the installers will bundle. The general
-        # principle is to follow the SPEC-0 recommendation:
-        # https://scientific-python.org/specs/spec-0000/
         run: |
           import os
           import json
@@ -253,22 +258,22 @@ jobs:
           elements = [
             {
               "os": "ubuntu-24.04",
-              "python-version": "3.11",
+              "python-version": ${{ env.INSTALLER_PYTHON_VERSION }},
               "target-platform": "linux-64",
             },
             {
               "os": "macos-15-intel",
-              "python-version": "3.11",
+              "python-version": ${{ env.INSTALLER_PYTHON_VERSION }},
               "target-platform": "osx-64",
             },
             {
               "os": "macos-15",
-              "python-version": "3.11",
+              "python-version": ${{ env.INSTALLER_PYTHON_VERSION }},
               "target-platform": "osx-arm64",
             },
             {
               "os": "windows-2025",
-              "python-version": "3.11",
+              "python-version": ${{ env.INSTALLER_PYTHON_VERSION }},
               "target-platform": "win-64",
             },
           ]

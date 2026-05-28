@@ -4,7 +4,7 @@ name: build-bundle
 channels:
   - conda-forge
 dependencies:
-  - python 3.11.*
+  - python 3.13.*
   - pip
   - constructor >=3.11.0
   - conda-build >=3.28
