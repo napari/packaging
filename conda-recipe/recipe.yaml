@@ -38,7 +38,6 @@ outputs:
 
         # dependencies matched to pyproject.toml
         - app-model >=0.5.0,<0.6.0a
-        - appdirs >=1.4.4
         - cachey >=0.2.1
         - certifi >=2018.1.18
         # Do not depend on base "dask" package since it pulls
@@ -59,6 +58,7 @@ outputs:
         - pandas >=1.3.3
         - pillow >=10.0
         - pint >=0.17
+        - platformdirs >=4.3.0s
         - psutil >=5.9.0
         - psygnal >=0.14.2
         - pydantic >=2.8.0
@@ -79,9 +79,9 @@ outputs:
         - vispy >=0.16.1,<0.17.0a0
         - wrapt >=1.13.3
       run_constraints:
-        - pyside2 >=5.15.1
         - pyside6 >=6.7.1,<6.11
-        - pyqt >=5.15.8,<6.0a0|>=6.5,!=6.6.1,<6.11
+        - pyqt >=5.15.8,<6.0a0
+        - pyqt6 >=6.5,!=6.6.1,<6.11
     tests:
       - python:
           pip_check: true
@@ -89,7 +89,7 @@ outputs:
             - napari
           python_version: ${{ python_min }}.*
       - script:
-          - ${{ 'setx QT_API pyqt5' if win else 'export QT_API=pyqt5' }}
+          - ${{ 'setx QT_API pyqt6' if win else 'export QT_API=pyqt6' }}
           - ${{ 'where napari' if win else 'which napari' }}
           - if: unix
             then:
@@ -101,7 +101,7 @@ outputs:
           # - pytest --pyargs napari
         requirements:
           run:
-            - pyqt
+            - pyqt6
             # needed if pytest is uncommented above in 'script'
             #   - hypothesis
             #   - pytest
