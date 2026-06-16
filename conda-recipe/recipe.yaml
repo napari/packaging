@@ -82,9 +82,9 @@ outputs:
         - vispy >=0.16.1,<0.17.0a0
         - wrapt >=1.13.3
       run_constraints:
-        - pyside2 >=5.15.1
         - pyside6 >=6.7.1,<6.11
-        - pyqt >=5.15.8,<6.0a0|>=6.5,!=6.6.1,<6.11
+        - pyqt >=5.15.8,<6.0a0
+        - pyqt6 >=6.5,!=6.6.1,<6.11
     tests:
       - python:
           pip_check: true
@@ -92,7 +92,7 @@ outputs:
             - napari
           python_version: ${{ python_min }}.*
       - script:
-          - ${{ 'setx QT_API pyqt5' if win else 'export QT_API=pyqt5' }}
+          - ${{ 'setx QT_API pyqt6' if win else 'export QT_API=pyqt6' }}
           - ${{ 'where napari' if win else 'which napari' }}
           - if: unix
             then:
@@ -104,7 +104,7 @@ outputs:
           # - pytest --pyargs napari
         requirements:
           run:
-            - pyqt
+            - pyqt6
             # needed if pytest is uncommented above in 'script'
             #   - hypothesis
             #   - pytest
