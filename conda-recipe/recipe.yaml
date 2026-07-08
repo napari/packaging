@@ -119,7 +119,6 @@ outputs:
       license: BSD-3-Clause AND MIT
       license_file:
         - LICENSE
-        - src/napari/_vendor/darkdetect/LICENSE
         - src/napari/_vendor/qt_json_builder/LICENSE
       documentation: http://napari.org
       repository: https://github.com/napari/napari
