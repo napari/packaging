@@ -1,7 +1,7 @@
 context:
   name: napari
   version: "REPLACE_ME"
-  python_min: "3.10"
+  python_min: "3.11"
   build_number: 0
   sdist_path: /home/conda/feedstock_root/napari-source
   local_napari_source: /home/conda/feedstock_root/napari-source
@@ -58,7 +58,7 @@ outputs:
         - napari-svg >=0.1.8
         - npe2 >=0.8.1
         - numpy >=1.24.2
-        - pandas >=1.3.3
+        - pandas >=1.5.0
         - pillow >=10.0
         - pint >=0.17
         - platformdirs >=4.3.0
@@ -72,19 +72,19 @@ outputs:
         - pywin32 >=302
         - pyyaml >=6.0
         - qtpy >=2.4.0
-        - scikit-image >=0.19.1
+        - scikit-image >=0.20.0
         - scipy >=1.14.0
         - superqt >=0.7.8
         - tifffile >=2022.7.28
-        - toolz >=0.11.0
+        - toolz >=0.12.1
         - tqdm >=4.56.0
         - typing_extensions >=4.12
         - vispy >=0.16.1,<0.17.0a0
-        - wrapt >=1.13.3
+        - wrapt >=1.14.1
       run_constraints:
-        - pyside2 >=5.15.1
         - pyside6 >=6.7.1,<6.11
-        - pyqt >=5.15.8,<6.0a0|>=6.5,!=6.6.1,<6.11
+        - pyqt >=5.15.8,<6.0a0
+        - pyqt6 >=6.5,!=6.6.1,<6.11
     tests:
       - python:
           pip_check: true
@@ -92,7 +92,7 @@ outputs:
             - napari
           python_version: ${{ python_min }}.*
       - script:
-          - ${{ 'setx QT_API pyqt5' if win else 'export QT_API=pyqt5' }}
+          - ${{ 'setx QT_API pyqt6' if win else 'export QT_API=pyqt6' }}
           - ${{ 'where napari' if win else 'which napari' }}
           - if: unix
             then:
@@ -104,7 +104,7 @@ outputs:
           # - pytest --pyargs napari
         requirements:
           run:
-            - pyqt
+            - pyqt6
             # needed if pytest is uncommented above in 'script'
             #   - hypothesis
             #   - pytest
@@ -119,7 +119,6 @@ outputs:
       license: BSD-3-Clause AND MIT
       license_file:
         - LICENSE
-        - src/napari/_vendor/darkdetect/LICENSE
         - src/napari/_vendor/qt_json_builder/LICENSE
       documentation: http://napari.org
       repository: https://github.com/napari/napari
@@ -142,7 +141,7 @@ outputs:
         - napari-plugin-manager >=0.1.10,<0.2.0a0
         - numba >=0.57.1
         - partsegcore-compiled-backend >=0.15.11
-        - zarr >=2.12.0
+        - zarr >=3.0.8
 
         # bundle-only convenience deps beyond pyproject optional extras
         - ffmpeg
