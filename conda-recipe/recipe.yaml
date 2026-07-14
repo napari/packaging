@@ -57,7 +57,7 @@ outputs:
         - napari-plugin-engine >=0.2.1
         - napari-svg >=0.1.8
         - npe2 >=0.8.1
-        - numpy >=1.24.2
+        - numpy >=1.25.0
         - pandas >=1.5.0
         - pillow >=10.0
         - pint >=0.17
@@ -139,7 +139,7 @@ outputs:
         - bermuda >=0.1.5
         - napari-metadata >=0.1.0
         - napari-plugin-manager >=0.1.10,<0.2.0a0
-        - numba >=0.57.1
+        - numba >=0.58.0
         - partsegcore-compiled-backend >=0.15.11
         - zarr >=3.0.8
 
