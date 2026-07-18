@@ -48,7 +48,7 @@ outputs:
         # conda-forge doesn't have the dask-array subpackage
         # so depend on cytoolz and numpy manually
         - cytoolz >=0.11.0
-        - dask-core >=2021.10.0
+        - dask-core >=2022.1.1
         - imageio >=2.20,!=2.22.1
         - jsonschema >=3.2.0
         - lazy_loader >=0.3
@@ -57,7 +57,7 @@ outputs:
         - napari-plugin-engine >=0.2.1
         - napari-svg >=0.1.8
         - npe2 >=0.8.1
-        - numpy >=1.24.2
+        - numpy >=1.25.0
         - pandas >=1.5.0
         - pillow >=10.0
         - pint >=0.17
@@ -79,7 +79,7 @@ outputs:
         - toolz >=0.12.1
         - tqdm >=4.56.0
         - typing_extensions >=4.12
-        - vispy >=0.16.1,<0.17.0a0
+        - vispy >=0.16.2,<0.17.0a0
         - wrapt >=1.14.1
       run_constraints:
         - pyside6 >=6.7.1,<6.11
@@ -139,7 +139,7 @@ outputs:
         - bermuda >=0.1.5
         - napari-metadata >=0.1.0
         - napari-plugin-manager >=0.1.10,<0.2.0a0
-        - numba >=0.57.1
+        - numba >=0.58.0
         - partsegcore-compiled-backend >=0.15.11
         - zarr >=3.0.8
 
