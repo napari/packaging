@@ -184,8 +184,8 @@ jobs:
           git diff
           mv ${GITHUB_WORKSPACE}/napari-source .
           echo "####################"
-          pwd 
-          ls 
+          pwd
+          ls
           echo "################"
           cat .ci_support/${conda_build_config}.yaml)
           cho "##############"
