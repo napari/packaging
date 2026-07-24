@@ -153,6 +153,10 @@ jobs:
         run: |
           set -euxo pipefail
           # rm recipe from conda-forge's feedstock and replace with our napari/packaging version
+          echo "################"
+          cat .ci_support/${conda_build_config}.yaml
+          echo "##############"
+
           rm -rf recipe/
           cp -r ../napari-packaging/conda-recipe recipe
 
@@ -183,6 +187,12 @@ jobs:
           conda-smithy rerender
           git diff
           mv ${GITHUB_WORKSPACE}/napari-source .
+          echo "####################"
+          pwd
+          ls
+          echo "################"
+          cat .ci_support/${conda_build_config}.yaml
+          echo "##############"
           echo "DOCKER_IMAGE=$(shyaml -y get-value docker_image.0 < .ci_support/${conda_build_config}.yaml)" >> $GITHUB_ENV
 
       - name: Run build scripts
