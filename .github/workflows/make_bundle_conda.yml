@@ -78,7 +78,7 @@ jobs:
 
     steps:
       - name: Checkout packaging code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           repository: napari/packaging
@@ -89,7 +89,7 @@ jobs:
           # ref: some-ref
 
       - name: Checkout napari source
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           repository: napari/napari
@@ -98,14 +98,14 @@ jobs:
           ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: Checkout conda-forge feedstock
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           repository: conda-forge/napari-feedstock
           path: napari-feedstock
 
       - name: install micromamba
-        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476 # v3.0.0
+        uses: mamba-org/setup-micromamba@ce51e99f4bb8a82ab7158c4dc59ef4634c59c4f9 # v3.1.0
         with:
           environment-file: napari-packaging/environments/ci_packages_environment.yml
 
@@ -245,7 +245,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ env.INSTALLER_PYTHON_VERSION }}
       - name: Prepare matrix
@@ -311,14 +311,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           repository: napari/packaging
           path: napari-packaging
 
       - name: Checkout napari/napari
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           repository: napari/napari
@@ -326,7 +326,7 @@ jobs:
           ref: ${{ github.event_name != 'workflow_dispatch' && '' || github.event.inputs.ref }}
 
       - name: install micromamba
-        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476 # v3.0.0
+        uses: mamba-org/setup-micromamba@ce51e99f4bb8a82ab7158c4dc59ef4634c59c4f9 # v3.1.0
         with:
           environment-file: napari-packaging/environments/ci_installers_environment.yml
 
