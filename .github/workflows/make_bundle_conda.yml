@@ -180,7 +180,7 @@ jobs:
           git diff
           grep -e "sdist_path: /home/conda" recipe/recipe.yaml
 
-          conda-smithy rerender
+          # conda-smithy rerender
           git diff
           mv ${GITHUB_WORKSPACE}/napari-source .
           echo "DOCKER_IMAGE=$(shyaml -y get-value docker_image.0 < .ci_support/${conda_build_config}.yaml)" >> $GITHUB_ENV
