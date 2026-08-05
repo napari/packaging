@@ -35,7 +35,7 @@ cd napari-packaging
 conda env create -n napari-packaging-installers --file environments/ci_installers_environment.yml
 conda activate napari-packaging-installers
 pip install -e ../napari --no-deps
-CONSTRUCTOR_PYTHON_VERSION="3.11" python build_installers.py --location ../napari
+CONSTRUCTOR_PYTHON_VERSION="3.13" python build_installers.py --location ../napari
 # Installers will be generated under `_work/`.
 ```
 
@@ -88,7 +88,7 @@ The installers can now be built from the local packages with:
 
 ```bash
 conda activate napari-packaging-installers
-CONSTRUCTOR_USE_LOCAL=1 CONDA_BLD_PATH=_work/packages/ CONSTRUCTOR_PYTHON_VERSION="3.11" python build_installers.py --location ../napari
+CONSTRUCTOR_USE_LOCAL=1 CONDA_BLD_PATH=_work/packages/ CONSTRUCTOR_PYTHON_VERSION="3.13" python build_installers.py --location ../napari
 ```
 
 The artifacts will be available in `_work/`.
