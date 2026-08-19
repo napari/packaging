@@ -56,7 +56,7 @@ outputs:
         - napari-console >=0.1.4
         - napari-plugin-engine >=0.2.1
         - napari-svg >=0.1.8
-        - npe2 >=0.8.3
+        - npe2 >=0.9.0
         - numpy >=1.25.0
         - pandas >=1.5.0
         - pillow >=10.0
@@ -95,12 +95,12 @@ outputs:
       - script:
           - ${{ 'setx QT_API pyqt6' if win else 'export QT_API=pyqt6' }}
           - ${{ 'where napari' if win else 'which napari' }}
-          - if: unix
+          - if: linux
             then:
               - napari --version
               - echo $(napari --version | sed -re 's/(\.[0-9]+)\.dev/\1dev/') | grep "$(echo ${PKG_VERSION} | sed -re 's/(\.[0-9]+)\.dev/\1dev/')"
             else:
-              - napari --version
+              - napari --info
           # If the following line is uncommented, also uncomment requirements.
           # - pytest --pyargs napari
         requirements:
@@ -138,24 +138,24 @@ outputs:
         # optional runtime deps matched to pyproject.toml
         - aiohttp  # needed to open remote files by zarr
         - bermuda >=0.1.5
+        - fsspec
         - napari-metadata >=0.1.0
         - napari-plugin-manager >=0.1.10,<0.2.0a0
         - numba >=0.58.0
         - partsegcore-compiled-backend >=0.15.11
+        - pooch >=1.6.0
         - zarr >=3.0.8
 
         # bundle-only convenience deps beyond pyproject optional extras
         - ffmpeg
-        - fsspec
         - imagecodecs
-        - pooch >=1.3.0
     tests:  # just to check that the environment can indeed solve
       - requirements:
           run:
             - python >=${{ python_min }}
             - pyside6  # use this opportunity to test solvability with other backend
         script:
-          - python -c "import napari"
+          - python -c "from napari import Viewer"
     about:
       homepage: http://napari.org
       summary: a fast n-dimensional image viewer in Python
@@ -227,11 +227,9 @@ about:
 extra:
   feedstock-name: napari
   recipe-maintainers:
+    - brisvag
+    - kephale
+    - DragaDoncila
     - Czaki
     - jni
-    - sofroniewn
-    - kne42
-    - royerloic
-    - AhmetCanSolak
-    - goanpeca
     - jaimergp
