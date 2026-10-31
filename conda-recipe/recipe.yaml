@@ -85,7 +85,7 @@ outputs:
         - wrapt >=1.14.1
       run_constraints:
         - pyside6 >=6.8.3,!=6.11.0,!=6.11.1
-        - pyqt6 >=6.8.3,!=6.11.0,!=6.11.1
+        - pyqt6 >=6.7,!=6.11.0,!=6.11.1
     tests:
       - python:
           pip_check: true
