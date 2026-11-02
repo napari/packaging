@@ -108,8 +108,6 @@ jobs:
         uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39 # v3.2.1
         with:
           environment-file: napari-packaging/environments/ci_packages_environment.yml
-        env:
-          GITHUB_TOKEN: ''
 
       - name: Prevent issues with multiple tags
         # the problem is that scm versioning is used `git describe`
@@ -331,6 +329,8 @@ jobs:
         uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39 # v3.2.1
         with:
           environment-file: napari-packaging/environments/ci_installers_environment.yml
+        env:
+          GITHUB_TOKEN: ''
 
       - name: Conda info
         shell: bash -el {0}
