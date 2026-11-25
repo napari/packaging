@@ -29,7 +29,7 @@ outputs:
       script: python -m pip install . -vv
       python:
         entry_points:
-          - napari = napari.__main__:main
+          - napari = napari._main:main
     requirements:
       host:
         - python ${{ python_min }}.*
@@ -75,17 +75,25 @@ outputs:
         - rapidfuzz >=3
         - qtpy >=2.4.0
         - scikit-image >=0.20.0
+        # pyproject.toml depends on scikit-image[data]: it only adds pooch,
+        # which napari_builtins needs to download scikit-image sample data
+        # (cells3d, kidney, lily, ...)
+        - pooch >=1.6.0
         - scipy >=1.14.0
         - superqt >=0.7.8
         - tifffile >=2022.7.28
         - toolz >=0.12.1
         - tqdm >=4.56.0
-        - typing_extensions >=4.12
+        - typing_extensions >=4.14
         - vispy >=0.17.0,<0.18.0a0
         - wrapt >=1.14.1
       run_constraints:
-        - pyside6 >=6.8.3,!=6.11.0,!=6.11.1
-        - pyqt6 >=6.7,!=6.11.0,!=6.11.1
+        - pyside6 >=6.8.3
+        - pyqt6 >=6.7
+        # pyproject.toml blocks Qt 6.11.0 and 6.11.1 through the pyside6 and
+        # pyqt6-qt6 versions; on conda-forge the Qt version is set by
+        # qt6-main, which both pyside6 and pyqt6 depend on
+        - qt6-main !=6.11.0,!=6.11.1
     tests:
       - python:
           pip_check: true
@@ -138,16 +146,15 @@ outputs:
         # optional runtime deps matched to pyproject.toml
         - aiohttp  # needed to open remote files by zarr
         - bermuda >=0.1.5
-        - fsspec
         - napari-metadata >=0.1.0
         - napari-plugin-manager >=0.1.10,<0.2.0a0
         - numba >=0.58.0
         - partsegcore-compiled-backend >=0.15.11
-        - pooch >=1.6.0
         - zarr >=3.0.8
 
         # bundle-only convenience deps beyond pyproject optional extras
         - ffmpeg
+        - fsspec  # with aiohttp, lets zarr open remote files
         - imagecodecs
     tests:  # just to check that the environment can indeed solve
       - requirements:
