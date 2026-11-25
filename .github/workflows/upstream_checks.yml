@@ -24,27 +24,36 @@ jobs:
     name: Report pyproject.toml changes
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: napari/napari
-          fetch-depth: 0
-
-      - name: Did pyproject.toml change since yesterday
-        run: |
-          changes="$(git diff $(git log -1 --before=@{last.day} --format=%H) pyproject.toml)"
-          echo "$changes"
-          if [[ -n "$changes" ]]; then
-            echo 'PYPROJECT_TOML_CHANGES<<EOF${{ github.run_id }}' >> $GITHUB_ENV
-            echo "$changes" >> $GITHUB_ENV
-            echo 'EOF${{ github.run_id }}' >> $GITHUB_ENV
-            echo "PYPROJECT_TOML_TODAY=$(date -I)" >> $GITHUB_ENV
-          fi
-
       - name: Checkout packaging code
-        if: env.PYPROJECT_TOML_CHANGES && github.event_name == 'schedule'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: napari/packaging
+          persist-credentials: false
+
+      - name: Checkout napari code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: napari/napari
+          path: napari
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Did packaging-relevant parts of pyproject.toml change since yesterday
+        run: |
+          base="$(git -C napari log -1 --before='@{last.day}' --format=%H)"
+          changes="$(python .github/scripts/pyproject_relevant_diff.py --repo napari "$base" HEAD)"
+          echo "$changes"
+          if [[ -n "$changes" ]]; then
+            {
+              echo 'PYPROJECT_TOML_CHANGES<<EOF${{ github.run_id }}'
+              echo "$changes"
+              echo 'EOF${{ github.run_id }}'
+              echo "PYPROJECT_TOML_TODAY=$(date -I)"
+            } >> "$GITHUB_ENV"
+          fi
 
       - name: Create issue
         if: env.PYPROJECT_TOML_CHANGES && github.event_name == 'schedule'

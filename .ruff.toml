@@ -79,6 +79,7 @@ ignore = [
 [lint.per-file-ignores]
 "**/_tests/*.py" = ["B011", "INP001", "TRY301", "B018", "RUF012"]
 "build_installers.py" = ["B008", "SIM115"]
+".github/scripts/*.py" = ["INP001"]
 
 [lint.flake8-builtins]
 builtins-allowed-modules = ["io", "types", "threading"]
